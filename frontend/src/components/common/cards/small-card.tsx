@@ -1,29 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dateIcon from "@/assets/land-assets/date-icon.svg";
-import timeIcon from "@/assets/land-assets/time-icon.svg";
-import presenterIcon from "@/assets/land-assets/presenter-icon.svg";
+import dateIcon from "@/assets/icons/calender-outline.svg";
+import timeIcon from "@/assets/icons/time-outline.svg";
+import presenterIcon from "@/assets/icons/presenter-outline.svg";
 import signout from "@/assets/icons/signout.svg";
 import dots from "@/assets/icons/dots.svg";
-import { Separator } from "./shadcn-ui/separator";
-import rateIcon from "@/assets/land-assets/rate-icon.svg";
+import { Separator } from "@/components/common/shadcn-ui/separator";
+import rateIcon from "@/assets/icons/star-outline.svg";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
-} from "./shadcn-ui/dropdown-menu";
+} from "@/components/common/shadcn-ui/dropdown-menu";
 import Image from "next/image";
-import Button from "./button";
+import Button from "@/components/common/buttons/button";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Link from "next/link";
 import getUserAction from "@/proxy/user/get-user-using-id-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import { Skeleton } from "./shadcn-ui/skeleton";
+import { Skeleton } from "@/components/common/shadcn-ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import cancelEventAction from "@/proxy/event/cancel-event-action";
 import leaveEventAction from "@/proxy/event/leave-event-action";
-import LogoLoading from "./logo-loading";
+import LogoLoading from "@/components/common/logo-loading";
 
 export default function SmallCard({
     image,

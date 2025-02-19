@@ -1,9 +1,9 @@
 import Image from "next/image";
 import puzzleIcon from "@/assets/icons/participants-gradient.svg";
 import CreateEventCard from "./create-event-card";
-import TextField from "@/components/common/text-field";
+import TextField from "@/components/common/text/text-field";
 import { Input } from "@/components/common/shadcn-ui/input";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import Radio from "@/components/common/radio-group";
 export default function ParticipantsForm({
     nextStepHandler,

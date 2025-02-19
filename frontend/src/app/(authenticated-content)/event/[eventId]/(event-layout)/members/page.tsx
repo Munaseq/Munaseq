@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import userIcon from "@/assets/icons/user-gradiant.svg";
-import Subtitle from "@/components/common/subtitle";
+import Subtitle from "@/components/common/text/subtitle";
 import getAllUsers from "@/proxy/user/get-all-user-event-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
 

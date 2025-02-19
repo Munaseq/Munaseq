@@ -1,5 +1,5 @@
 import Tag from "@/components/common/category";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import mail from "@/assets/icons/mail.svg";

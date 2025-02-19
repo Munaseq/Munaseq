@@ -10,7 +10,7 @@ import {
     ToastViewport,
 } from "@/components/common/shadcn-ui/toast";
 import Image from "next/image";
-import check from "@/assets/auth-assets/icons/check-circle-gradient.svg";
+import check from "@/assets/auth-assets/signup-step-indicator-icons/check-circle-gradient.svg";
 
 export function Toaster() {
     const { toasts } = useToast();

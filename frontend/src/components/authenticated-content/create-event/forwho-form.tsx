@@ -205,12 +205,12 @@ import plusIcon from "@/assets/icons/plus-circle.svg";
 import userIcon from "@/assets/icons/user-black.svg";
 
 import CreateEventCard from "./create-event-card";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import LoadingWrapper from "@/components/common/loading-wrapper";
 import Catagory from "@/components/common/category";
-import AddCatagoryDropdown from "@/components/common/add-category-dropdown";
+import AddCatagoryDropdown from "@/components/common/buttons/add-category-dropdown";
 import getUserAction from "@/proxy/user/get-user-using-username-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
 

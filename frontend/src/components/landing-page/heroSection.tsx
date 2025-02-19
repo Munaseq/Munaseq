@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Button from "../common/button";
+import Button from "../common/buttons/button";
 import Image from "next/image";
 import userIcon from "@/assets/land-assets/user-icon.svg";
 import eventIcon from "@/assets/land-assets/event-icon.svg";

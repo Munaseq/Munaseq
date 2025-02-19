@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import puzzleIcon from "@/assets/icons/time-gradient.svg";
+import timeIcon from "@/assets/icons/time-filled.svg";
 import CreateEventCard from "./create-event-card";
 import { Input } from "@/components/common/shadcn-ui/input";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import Radio from "@/components/common/radio-group";
 import {useState } from "react";
 export default function TimeForm({
@@ -24,7 +24,7 @@ export default function TimeForm({
   return (
     <CreateEventCard actual={step} goal={3}>
       <h1 className="flex items-center gap-2 font-bold text-xl">
-        <Image src={puzzleIcon} alt="puzzle icon" />
+        <Image src={timeIcon} alt="puzzle icon" />
         جدولة الفعالية
       </h1>
       <div className="max-w-96 w-full grid gap-5 mt-2">

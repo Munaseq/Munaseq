@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Title from "@/components/common/title";
+import Title from "@/components/common/text/title";
 import penIcon from "@/assets/icons/edit-gradient.svg";
 import xIcon from '@/assets/icons/x.svg'
 import Image from "next/image";

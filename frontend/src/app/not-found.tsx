@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import logo from "@/assets/logo/munaseq-logo.svg";
 
 export default function NotFound() {

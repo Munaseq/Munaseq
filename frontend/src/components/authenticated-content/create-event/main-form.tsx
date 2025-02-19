@@ -1,11 +1,11 @@
 import Image from "next/image";
 import puzzleIcon from "@/assets/icons/puzzle-gradient.svg";
 import CreateEventCard from "./create-event-card";
-import TextField from "@/components/common/text-field";
-import TextArea from "@/components/common/text-area";
+import TextField from "@/components/common/text/text-field";
+import TextArea from "@/components/common/text/text-area";
 import { Input } from "@/components/common/shadcn-ui/input";
 import { useState, useRef } from "react";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 export default function MainForm({
     nextStepHandler,
     step

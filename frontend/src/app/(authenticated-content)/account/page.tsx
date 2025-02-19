@@ -1,18 +1,19 @@
 import { Metadata } from "next";
-import Title from "@/components/common/title";
+import Title from "@/components/common/text/title";
 import userIcon from "@/assets/icons/user-gradiant.svg";
 import editIcon from "@/assets/icons/edit.svg";
 import Image from "next/image";
 import userCircle from "@/assets/icons/user-circle.svg";
 import Label from "@/components/common/lable";
-import Subtitle from "@/components/common/subtitle";
+import Subtitle from "@/components/common/text/subtitle";
 import Category from "@/components/common/category";
 import { cookies } from "next/headers";
 import getProfileAction from "@/proxy/user/get-profile-action";
-import cvIcon from "@/assets/auth-content-assets/CV-Icon.svg";
+import cvIcon from "@/assets/icons/CV-Icon.svg";
 import { redirect } from "next/navigation";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import Link from "next/link";
+import TooltipWrapper from "@/components/common/tooltip";
 
 export const metadata: Metadata = {
   title: "معلومات الحساب",
@@ -73,6 +74,7 @@ export default async function Account() {
             </Label>
             <Label label="السيرة الذاتيه">
               {data.cvUrl ? (
+                 <TooltipWrapper text="عرض السيرة الذاتية">
                 <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
                   <Image
                     src={cvIcon}
@@ -80,6 +82,7 @@ export default async function Account() {
                     className="w-10 cursor-pointer"
                   />
                 </a>
+                </TooltipWrapper>
               ) : (
                 ""
               )}

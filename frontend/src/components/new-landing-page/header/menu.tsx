@@ -8,7 +8,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/common/shadcn-ui/sheet";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import Image from "next/image";
 import bars from "@/assets/icons/bars-white.svg";
 import { useState } from "react";

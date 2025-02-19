@@ -3,7 +3,7 @@ import dateIcon from "@/assets/land-assets/date-icon.svg";
 import presenterIcon from "@/assets/land-assets/presenter-icon.svg";
 import rateIcon from "@/assets/land-assets/rate-icon.svg";
 import Image from "next/image";
-import Button from "./button";
+import Button from "../buttons/button";
 import Link from "next/link";
 
 export default function largeCard({

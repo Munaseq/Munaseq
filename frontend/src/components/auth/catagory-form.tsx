@@ -1,5 +1,5 @@
 import Catagory from "@/components/common/category";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
 import { catagories } from "@/util/categories";
 import { MutableRefObject, useRef, useState } from "react";

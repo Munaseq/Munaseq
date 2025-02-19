@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Button from "../common/button";
+import Button from "../common/buttons/button";
 
 export default function ErrorForm({message}: {message?: string}) {
     return (

@@ -3,7 +3,7 @@
 // import CreateEventProgress from "@/components/authenticated-content/create-event/create-event-progress";
 import Image from "next/image";
 import plusCricle from "@/assets/icons/plus-circle-gradient.svg";
-import Title from "@/components/common/title";
+import Title from "@/components/common/text/title";
 import { Metadata } from "next";
 import MainForm from "@/components/authenticated-content/create-event/main-form";
 import { useRef, useState } from "react";

@@ -1,7 +1,7 @@
 "use client";
 
 import LogoLoading from "@/components/common/logo-loading";
-import SmallCard from "@/components/common/small-card";
+import SmallCard from "@/components/common/cards/small-card";
 import { useEventContext } from "@/store/eventContext";
 import { checkData } from "@/util/check-date";
 import getDate from "@/util/get-date";

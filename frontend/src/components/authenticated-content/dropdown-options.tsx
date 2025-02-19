@@ -7,9 +7,9 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
-} from "./shadcn-ui/dropdown-menu";
+} from "../common/shadcn-ui/dropdown-menu";
 import Link from "next/link";
-import { Separator } from "./shadcn-ui/separator";
+import { Separator } from "../common/shadcn-ui/separator";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

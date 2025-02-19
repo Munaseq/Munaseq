@@ -1,8 +1,8 @@
-import Subtitle from "@/components/common/subtitle";
+import Subtitle from "@/components/common/text/subtitle";
 import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
-import SelectEvents from "@/components/common/select-events";
-import Title from "@/components/common/title";
+import SelectEvents from "@/components/authenticated-content/event-lists/select-events";
+import Title from "@/components/common/text/title";
 import Image from "next/image";
 import { EventProvider } from "@/store/eventContext";
 import StoreEventData from "@/components/authenticated-content/event-lists/store-event-data";

@@ -5,7 +5,7 @@ import logoIcon from '@/assets/logo/logo-small-white.svg';
 import munaseq from '@/assets/logo/munaseq-text.svg';
 import fullLogo from '@/assets/logo/munaseq-logo-dark-white.svg'
 import logo from '@/assets/logo/munaseq-logo.svg';
-import TextField from '@/components/common/text-field';
+import TextField from '@/components/common/text/text-field';
 import { motion, Transition, useAnimate } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

@@ -1,22 +1,26 @@
 "use client";
 
-import TextField from "@/components/common/text-field";
+import TextField from "@/components/common/text/text-field";
 import Catagory from "@/components/common/category";
-import Subtitle from "@/components/common/subtitle";
-import TextArea from "@/components/common/text-area";
+import Subtitle from "@/components/common/text/subtitle";
+import TextArea from "@/components/common/text/text-area";
 import Radio from "@/components/common/radio-group";
-import AddCatagoryDropdown from "@/components/common/add-category-dropdown";
+import AddCatagoryDropdown from "@/components/common/buttons/add-category-dropdown";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import Image from "next/image";
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/common/shadcn-ui/input";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import LoadingWapper from "@/components/common/loading-wrapper";
 import isUsernameUniqueAction from "@/proxy/user/is-username-unique-action";
 import isEmailUniqueAction from "@/proxy/user/is-email-unique-action";
 import Link from "next/link";
 import editProfileAction from "@/proxy/user/edit-profile-action";
+import TooltipWrapper from "@/components/common/tooltip";
+import deleteIcon from "@/assets/icons/x.svg";
+import editIcon from "@/assets/icons/edit.svg";
+import cvIcon from "@/assets/icons/CV-Icon.svg";
 
 export default function EditForm({
     userData,
@@ -38,7 +42,7 @@ export default function EditForm({
     const lastNameRef = useRef({} as HTMLInputElement);
     const xLinkRef = useRef({} as HTMLInputElement);
     const linkedinLinkRef = useRef({} as HTMLInputElement);
-    const ref = useRef({} as HTMLInputElement);
+    const profileImageRef = useRef({} as HTMLInputElement);
     const cvRef = useRef({} as HTMLInputElement);
 
     if (typeof userData.socialAccounts === "string") {
@@ -341,16 +345,40 @@ export default function EditForm({
                                 >
                                     <Image src={image} alt="preview" fill />
                                 </motion.div>
-                                <motion.button
-                                    layout
-                                    className="rounded-3xl p-2"
-                                    onClick={e => {
-                                        e.preventDefault();
-                                        ref.current.click();
-                                    }}
-                                >
-                                    تغيير الصورة
-                                </motion.button>
+                                <TooltipWrapper text="تعديل الصورة">
+                                    <motion.button
+                                        layout
+                                        className="ms-5"
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            profileImageRef.current.click();
+                                        }}
+                                    >
+                                        <Image
+                                            className="w-10 aspect-square"
+                                            src={editIcon}
+                                            alt="edit image"
+                                        />
+                                    </motion.button>
+                                </TooltipWrapper>
+
+                                <TooltipWrapper text="حذف الصورة">
+                                    <motion.button
+                                        layout
+                                        className=""
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            setImage("");
+                                            profileImageRef.current.value = "";
+                                        }}
+                                    >
+                                        <Image
+                                            className="w-10"
+                                            src={deleteIcon}
+                                            alt="delete image"
+                                        />
+                                    </motion.button>
+                                </TooltipWrapper>
                             </div>
                         ) : null}
                         <Input
@@ -362,7 +390,7 @@ export default function EditForm({
                             }
                             accept="image/png, image/jpeg , image/jpg"
                             onChange={handleImageUpload}
-                            ref={ref}
+                            ref={profileImageRef}
                         />
                     </motion.div>
                     <motion.div className="grid gap-3 mt-5">
@@ -375,24 +403,54 @@ export default function EditForm({
                         </motion.label>
                         {cvFile ? (
                             <div className="flex items-center gap-5">
-                                <a
-                                    href={cvFile}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-custom-gray"
-                                >
-                                    عرض السيرة الذاتية
-                                </a>
-                                <motion.button
-                                    layout
-                                    className="rounded-3xl p-2"
-                                    onClick={e => {
-                                        e.preventDefault();
-                                        cvRef.current.click();
-                                    }}
-                                >
-                                    تغيير السيرة الذاتية
-                                </motion.button>
+                                <TooltipWrapper text="عرض السيرة الذاتية">
+                                    <a
+                                        href={cvFile}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-custom-gray"
+                                    >
+                                        <Image
+                                            src={cvIcon}
+                                            alt="CV icon"
+                                            className="w-10 cursor-pointer"
+                                        />
+                                    </a>
+                                </TooltipWrapper>
+                                <TooltipWrapper text="تعديل السيرة الذاتية">
+                                    <motion.button
+                                        layout
+                                        className="ms-5"
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            cvRef.current.click();
+                                        }}
+                                    >
+                                        <Image
+                                            className="w-10 aspect-square"
+                                            src={editIcon}
+                                            alt="edit cv"
+                                        />
+                                    </motion.button>
+                                </TooltipWrapper>
+
+                                <TooltipWrapper text="حذف السيرة الذاتية">
+                                    <motion.button
+                                        layout
+                                        className=""
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            setCvFile("");
+                                            cvRef.current.value = "";
+                                        }}
+                                    >
+                                        <Image
+                                            className="w-10"
+                                            src={deleteIcon}
+                                            alt="delete cv"
+                                        />
+                                    </motion.button>
+                                </TooltipWrapper>
                             </div>
                         ) : null}
                         <Input

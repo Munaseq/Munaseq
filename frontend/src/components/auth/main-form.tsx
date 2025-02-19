@@ -1,5 +1,5 @@
-import TextField from "@/components/common/text-field";
-import Button from "@/components/common/button";
+import TextField from "@/components/common/text/text-field";
+import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
 import { useRef, useState } from "react";
 import LogoLoading from "../common/logo-loading";

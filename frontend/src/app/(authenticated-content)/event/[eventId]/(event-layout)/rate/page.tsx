@@ -5,7 +5,7 @@ import Image from "next/image";
 import ratingIcon from "@/assets/icons/rating-star.svg";
 import ratingFilledIcon from "@/assets/icons/rating-star.svg"; // Replace with filled star icon
 import ratingEmptyIcon from "@/assets/icons/rating-empty-star.svg"; // Replace with empty star icon
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import rateEventAction from "@/proxy/event/add-rate-event-action";
 
 export default function RatePage({ params }: { params: { eventId: string } }) {

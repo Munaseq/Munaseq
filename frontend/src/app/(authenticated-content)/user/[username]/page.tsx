@@ -2,19 +2,20 @@ import Image from 'next/image';
 import userCircle from '@/assets/icons/user-circle.svg';
 import Link from 'next/link';
 import edit from '@/assets/icons/edit.svg';
-import Subtitle from '@/components/common/subtitle';
+import Subtitle from '@/components/common/text/subtitle';
 import { cookies } from 'next/headers';
 import getProfileAction from '@/proxy/user/get-profile-action';
 import { notFound, redirect } from 'next/navigation';
-import tag from '@/assets/auth-content-assets/tag.svg';
-import rateIcon from '@/assets/auth-content-assets/Rate-Icon.svg';
-import XIcon from '@/assets/auth-content-assets/X-Icon.svg';
-import linkedinIcon from '@/assets/auth-content-assets/Linkedin-Icon.svg';
-import cvIcon from '@/assets/auth-content-assets/CV-Icon.svg';
-import emailIcon from '@/assets/auth-content-assets/Email-Icon.svg';
+import tag from '@/assets/icons/tag.svg';
+import rateIcon from '@/assets/icons/rate-icon.svg';
+import XIcon from '@/assets/icons/x-icon.svg';
+import linkedinIcon from '@/assets/icons/linkedin-icon.svg';
+import cvIcon from '@/assets/icons/cv-icon.svg';
+import emailIcon from '@/assets/icons/email-icon.svg';
 import Tag from '@/components/common/category';
 import { UserDataDto } from '@/dtos/user-data.dto';
 import getUserAction from '@/proxy/user/get-user-using-username-action';
+import TooltipWrapper from '@/components/common/tooltip';
 
 export function generateMetadata({
   params,
@@ -93,6 +94,7 @@ export default async function UserProfile({
         </div>
         <div className="flex gap-3 mt-3">
           {data.cvUrl && (
+            <TooltipWrapper text="السيرة الذاتية">
             <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
               <Image
                 src={cvIcon}
@@ -100,8 +102,10 @@ export default async function UserProfile({
                 className="w-10 cursor-pointer"
               />
             </a>
+            </TooltipWrapper>
           )}
           {data.email && (
+            <TooltipWrapper text="البريد الالكتروني">
             <a href={`mailto:${data.email}`}>
               <Image
                 src={emailIcon}
@@ -109,6 +113,7 @@ export default async function UserProfile({
                 className="w-10 cursor-pointer"
               />
             </a>
+            </TooltipWrapper>
           )}
         </div>
         <div className="mt-5 flex gap-24">

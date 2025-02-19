@@ -1,9 +1,9 @@
-import Subtitle from "@/components/common/subtitle";
-import Title from "@/components/common/title";
+import Subtitle from "@/components/common/text/subtitle";
+import Title from "@/components/common/text/title";
 import discover from "@/assets/icons/discover-active.svg";
 import Image from "next/image";
 import { Metadata } from "next";
-import SmallCard from "@/components/common/small-card";
+import SmallCard from "@/components/common/cards/small-card";
 import getDate from "@/util/get-date";
 
 import getEventsAction from "@/proxy/event/get-events-action";

@@ -1,5 +1,5 @@
 import React from "react";
-import LargeCard from "@/components/common/large-card";
+import LargeCard from "@/components/common/cards/large-card";
 import Image from "next/image";
 import titleEffect from "@/assets/land-assets/title-effect.svg";
 import getEventsAction from "@/proxy/event/get-events-action";

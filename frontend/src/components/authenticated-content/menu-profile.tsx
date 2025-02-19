@@ -1,6 +1,6 @@
 import userCircle from "@/assets/icons/user-circle.svg";
 import Image from "next/image";
-import Dropdown from "../common/dropdown-options";
+import Dropdown from "./dropdown-options";
 import { UserDataDto } from "@/dtos/user-data.dto";
 
 export default function MenuProfile({ profileData, onLinkClick }: { profileData: UserDataDto, onLinkClick?: () => void }) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Button from "../common/button";
+import Button from "../common/buttons/button";
 import Image from "next/image";
 import logo from "@/assets/logo/munaseq-logo.svg";
 import Menu from "../new-landing-page/header/menu";

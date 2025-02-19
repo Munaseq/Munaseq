@@ -6,7 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from './shadcn-ui/dropdown-menu';
+} from '../shadcn-ui/dropdown-menu';
 import Image from 'next/image';
 
 export default function addCatagoryDropdown({

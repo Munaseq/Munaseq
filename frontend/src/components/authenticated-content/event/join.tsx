@@ -1,5 +1,5 @@
 "use client";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import { useToast } from "@/hooks/use-toast";
 import joinEventAction from "@/proxy/event/join-event-action";
 import { useRouter } from "next/navigation";

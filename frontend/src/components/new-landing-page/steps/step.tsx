@@ -1,4 +1,4 @@
-import GradientText from "@/components/common/gradient-text";
+import GradientText from "@/components/common/text/gradient-text";
 import Image from "next/image";
 import bottomLeftDeco from "@/assets/new-landing-assets/steps/bottom-left-deco.svg";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
