@@ -12,7 +12,7 @@ export default async function PresentedEvents({
     return (
         <EventsLayout
             eventType={EventType.PRESENTED}
-            eventString="الفعاليات المقدمة"
+            eventString="الفعاليات التي قدمتها"
             eventIcon={presentIcon}
             eventData={eventList}
         >

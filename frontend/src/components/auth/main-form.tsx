@@ -21,7 +21,7 @@ export default function mainForm(props: {
 
     const variants: Variants = useFormVariants()
     const isEmailCorrect: () => boolean = () => {
-        const re = /\S+@\S+\.\S+/;
+        const re = /\S{2,}@\S{2,}\.\S{2,}/;
         if (!re.test(emailRef.current.value)) {
             if (!formError.includes("EMAIL_INVALID")) {
                 setFormError(prev => [...prev, "EMAIL_INVALID"]);

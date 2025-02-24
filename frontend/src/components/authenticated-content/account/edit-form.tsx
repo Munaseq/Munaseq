@@ -24,10 +24,8 @@ import cvIcon from "@/assets/icons/CV-Icon.svg";
 
 export default function EditForm({
     userData,
-    token,
 }: {
     userData: UserDataDto;
-    token: string;
 }) {
     const [formError, setFormError] = useState([] as string[]);
     const [isLoading, setIsLoading] = useState(false);
@@ -252,7 +250,6 @@ export default function EditForm({
 
                 const error: { message: string } = await editProfileAction(
                     formData,
-                    token
                 );
                 if (error.message) {
                     setFormError(prevErrors => [...prevErrors, error.message]);
@@ -319,15 +316,6 @@ export default function EditForm({
                             error={formError.includes("LASTNAME_EMPTY")}
                         />
                     </div>
-                    <TextField
-                        placeholder="الاسم المعروض"
-                        name="visibleName"
-                        defaultValue={
-                            userData.visibleName !== "null"
-                                ? userData.visibleName
-                                : ""
-                        }
-                    />
                     <motion.div className="grid gap-3 mt-5">
                         <motion.label
                             layout

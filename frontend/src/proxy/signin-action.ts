@@ -18,6 +18,8 @@ export async function signinAction(formData: FormData) {
       body: JSON.stringify(signinData),
     });
 
+    console.log(response)
+
 
     if (response.status === 404 || response.status === 401) {
       throw new Error('AUTHENTICATION_FAILED');

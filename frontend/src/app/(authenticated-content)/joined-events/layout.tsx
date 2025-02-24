@@ -11,7 +11,7 @@ export default async function JoinedEvents({
     return (
         <EventsLayout
             eventType={EventType.JOINED}
-            eventString="الفعاليات المنضم إليها"
+            eventString="الفعاليات التي انضممت إليها"
             eventIcon={joinIcon}
             eventData={eventList}
         >

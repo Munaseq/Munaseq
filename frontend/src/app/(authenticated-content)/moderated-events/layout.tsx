@@ -12,7 +12,7 @@ export default async function ModeratedEvents({
     return (
         <EventsLayout
             eventType={EventType.MODERATED}
-            eventString="الفعاليات المنظمة"
+            eventString="الفعاليات التي نظمتها"
             eventIcon={modeIcon}
             eventData={eventList}
         >

@@ -52,19 +52,19 @@ export default function Nav(props: {
     ];
     const eventLinks = [
         {
-            name: "المنسقة",
+            name: "الفعاليات التي نسقتها",
             path: "/coordinated-events/active",
         },
         {
-            name: "المنظمة",
+            name: "الفعاليات التي نظمتها",
             path: "/moderated-events/active",
         },
         {
-            name: "المقدمة",
+            name: "الفعاليات التي قدمتها",
             path: "/presented-events/active",
         },
         {
-            name: "المنضم إليها",
+            name: "الفعاليات التي انضممت إليها",
             path: "/joined-events/active",
         },
     ];

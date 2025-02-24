@@ -12,7 +12,7 @@ export default async function CoordinatedEvents({
     return (
         <EventsLayout
             eventType={EventType.COORDINATED}
-            eventString="الفعاليات القادمة"
+            eventString="الفعاليات التي نسقتها"
             eventIcon={calenderIcon}
             eventData={eventList}
         >

@@ -38,7 +38,7 @@ export default async function Account() {
           
         </Title>
 
-        <EditForm token={token.value} userData={data} />
+        <EditForm userData={data} />
       </section>
     );
   }
