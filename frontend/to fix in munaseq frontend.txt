@@ -1,0 +1,15 @@
+- side menu reloads when going to discover and out of discover
+- mobile menu fix by lifting the state up (or just make one request in the whole layout)
+- in edit account cant change account when only a single category is selected
+- date at create form not being set to current day
+- sub menu for leaving event appears when in past joined events
+- leave event menu button now says cancel instade of leave
+- maybe remove middleware and put it's logic into each layout
+- change redirect of join event and create event to actual event page.
+- rename coordinated event/presented events/modreted events pages. (الفعاليت التي نسقتها - الفعاليات التي قدمتها - الفعاليات التي انضممت لها )
+- make add mod and add presneter like github.
+- change order of add mod and add presenter inputs in create event form.
+- add indicator of event create step in create event form.
+- change location of delete/cancel event and add confirmation modal.
+- add event presenters and modreators in the event before joining page and make them linkable
+- in mobile inside event cant go between sections in event itself
