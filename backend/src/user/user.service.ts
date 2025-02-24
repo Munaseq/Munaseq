@@ -124,6 +124,8 @@ export class UserService {
     EditUserDto: EditUserInfoDto,
     cvUrl?,
     profilePictureUrl?,
+    removeImage?: boolean,
+    removeCV?: boolean,
   ) {
     try {
       const user = await this.prisma.user.findUnique({
@@ -131,17 +133,20 @@ export class UserService {
       });
       cvUrl = cvUrl ?? user.cvUrl;
       profilePictureUrl = profilePictureUrl ?? user.profilePictureUrl;
-      
-      EditUserDto.categories = Array.isArray(EditUserDto.categories)
-      ? EditUserDto.categories
-      : [EditUserDto.categories];
+      //Check if the updated categrories exist, if so, it will ensure that the single value will be stored as an array (to avoid confilcting with Prisma model )
+
+      if (EditUserDto.categories) {
+        EditUserDto.categories = Array.isArray(EditUserDto.categories)
+          ? EditUserDto.categories
+          : [EditUserDto.categories];
+      }
 
       return this.prisma.user.update({
         where: { id: id },
         data: {
           ...EditUserDto,
-          profilePictureUrl,
-          cvUrl,
+          profilePictureUrl: removeImage ? '' : profilePictureUrl,
+          cvUrl: removeCV ? '' : cvUrl,
         },
         omit: {
           password: true,
@@ -206,9 +211,9 @@ export class UserService {
             id: true,
           },
         },
-presentedEvents:{
-         select:{
-            id:true,
+        presentedEvents: {
+          select: {
+            id: true,
           },
         },
       },

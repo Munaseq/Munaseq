@@ -10,7 +10,7 @@ import {
   IsUrl,
   IsJSON,
   IsEnum,
-  IsNotEmpty
+  IsNotEmpty,
 } from 'class-validator';
 
 export class EditUserInfoDto {
@@ -30,10 +30,6 @@ export class EditUserInfoDto {
   @IsEmail()
   email?: string;
 
- 
-
-
-
   @IsOptional()
   @IsString()
   visibleName?: string; // Can be name or organization name
@@ -42,8 +38,7 @@ export class EditUserInfoDto {
   @IsEnum(Gender)
   gender?: Gender;
 
-  
-  @IsNotEmpty()
+  @IsOptional()
   @IsString({ each: true })
   categories?: string[]; // Array of interests
 

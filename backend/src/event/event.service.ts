@@ -26,6 +26,21 @@ export class EventService {
         imageUrl,
         eventCreatorId,
       },
+      omit: {
+        eventCreatorId: true,
+      },
+      include: {
+        eventCreator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePictureUrl: true,
+            username: true,
+            visibleName: true,
+          },
+        },
+      },
     });
   }
   //--------------------------------------------------
@@ -36,6 +51,7 @@ export class EventService {
     eventId: string,
     updateEventDto: UpdateEventDto,
     imageUrl?: any,
+    removeImage?: boolean,
   ) {
     const eventIds = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -46,7 +62,9 @@ export class EventService {
     });
     //Check wether the event exist or not
     if (!eventIds) {
-      throw new NotFoundException('Event not found');
+      throw new NotFoundException(
+        `Event not found with the following id: ${eventId}`,
+      );
     }
     // Check if the userId matches any of the roles
     const isAuthorized =
@@ -59,10 +77,25 @@ export class EventService {
       );
     }
 
-    if (imageUrl) {
+    if (imageUrl || removeImage) {
       return this.prisma.event.update({
         where: { id: eventId },
-        data: { ...updateEventDto, imageUrl },
+        data: { ...updateEventDto, imageUrl: imageUrl || '' },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
+        },
       });
     } else {
       return this.prisma.event.update({
@@ -121,7 +154,21 @@ export class EventService {
             contains: title,
           },
         },
-
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
+        },
         take: pageSize,
         skip: skipedRecords,
       });
@@ -129,6 +176,21 @@ export class EventService {
       return this.prisma.event.findMany({
         where: {
           isPublic: true,
+        },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
         },
         take: pageSize,
         skip: skipedRecords,
@@ -150,6 +212,21 @@ export class EventService {
             contains: title,
           },
         },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
+        },
         take: pageSize,
         skip: skipedRecords,
       });
@@ -157,6 +234,21 @@ export class EventService {
       return this.prisma.event.findMany({
         where: {
           eventCreatorId,
+        },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
         },
         take: pageSize,
         skip: skipedRecords,
@@ -167,6 +259,21 @@ export class EventService {
   async getById(eventId: string) {
     const result = await this.prisma.event.findUnique({
       where: { id: eventId },
+      include: {
+        eventCreator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePictureUrl: true,
+            username: true,
+            visibleName: true,
+          },
+        },
+      },
+      omit: {
+        eventCreatorId: true,
+      },
     });
     if (result) {
       return result;
@@ -194,6 +301,21 @@ export class EventService {
             contains: title,
           },
         },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
+        },
         take: pageSize,
         skip: skipedRecords,
       });
@@ -205,6 +327,21 @@ export class EventService {
               id: userId,
             },
           },
+        },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+            },
+          },
+        },
+        omit: {
+          eventCreatorId: true,
         },
         take: pageSize,
         skip: skipedRecords,
@@ -1512,7 +1649,7 @@ export class EventService {
     );
     const avgRating = sumOfRating / numberOfRatings;
     return {
-      avgRating,
+      avgRating: avgRating || 0,
       numberOfRatings,
     };
   }

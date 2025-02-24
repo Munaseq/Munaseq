@@ -104,6 +104,8 @@ export class UserController {
       cv?: any;
       profilePicture?: any;
     },
+    @Query('removeImage') removeImage?: boolean,
+    @Query('removeCV') removeCV?: boolean,
   ) {
     const cvUrl = files?.cv ? files.cv[0].location : null;
     const profilePictureUrl = files?.profilePicture ? files.profilePicture[0].location : null;
@@ -112,6 +114,8 @@ export class UserController {
       EditUserDto,
       cvUrl,
       profilePictureUrl,
+      removeImage,
+      removeCV,
     );
   }
 
