@@ -6,7 +6,7 @@ import CreateEventCard from "./create-event-card";
 import { Input } from "@/components/common/shadcn-ui/input";
 import Button from "@/components/common/buttons/button";
 import Radio from "@/components/common/radio-group";
-import {useState } from "react";
+import { useState } from "react";
 export default function TimeForm({
   step,
   prevStepHandler,
@@ -16,7 +16,7 @@ export default function TimeForm({
   prevStepHandler: () => void;
   nextStepHandler: () => void;
 }>) {
-  const today = new Date().toISOString();
+  const today = new Date().toISOString().split("T")[0];
   const [endDateMin, setEndDateMin] = useState(today);
   const [endDateVal, setEndDateVal] = useState(today);
   const [startDate, setStartDate] = useState(today);
@@ -73,30 +73,28 @@ export default function TimeForm({
           values={["true", "false"]}
         />
       </div>
-    
-     
-        <div className="flex flex-row-reverse justify-between w-full mt-10">
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              nextStepHandler();
-            }}
-            gradient
-            className="!px-10"
-          >
-            التالي
-          </Button>
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              prevStepHandler();
-            }}
-            className="!px-10"
-          >
-            السابق
-          </Button>
-        </div>
 
+      <div className="flex flex-row-reverse justify-between w-full mt-10">
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            nextStepHandler();
+          }}
+          gradient
+          className="!px-10"
+        >
+          التالي
+        </Button>
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            prevStepHandler();
+          }}
+          className="!px-10"
+        >
+          السابق
+        </Button>
+      </div>
     </CreateEventCard>
   );
 }

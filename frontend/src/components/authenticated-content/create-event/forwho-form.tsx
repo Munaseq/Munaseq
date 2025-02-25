@@ -1,202 +1,3 @@
-// "use client";
-
-// import Image from "next/image";
-// import tagIcon from "@/assets/icons/tag-gradient.svg";
-// import CreateEventCard from "./create-event-card";
-// import { Input } from "@/components/common/shadcn-ui/input";
-// import Button from "@/components/common/button";
-// import { motion } from "framer-motion";
-// import { useState, useEffect } from "react";
-// import Catagory from "@/components/common/category";
-// import AddCatagoryDropdown from "@/components/common/add-category-dropdown";
-// import LoadingWrapper from "@/components/common/loading-wrapper";
-
-// export default function forwhoForm({
-//   onCategoriesChange,
-//   step,
-//   prevStepHandler,
-//   error,
-// }: Readonly<{
-//   onCategoriesChange: (categories: string[]) => void;
-//   step: number;
-//   prevStepHandler: () => void;
-//   error: { message: string };
-// }>) {
-//   const [selectedCatagories, setSelectedCatagories] = useState([] as string[]);
-//   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
-//   const [isModeratorModalOpen, setIsModeratorModalOpen] = useState(false); // State for moderator modal visibility
-//   const [presenterName, setPresenterName] = useState(""); // State for presenter's name
-//   const [moderatorName, setModeratorName] = useState(""); // State for moderator's name
-//   const [presenters, setPresenters] = useState<string[]>([]); // List of presenters
-//   const [moderators, setModerators] = useState<string[]>([]); // List of moderators
-//   useEffect(() => {
-//     onCategoriesChange(selectedCatagories);
-//   }, [selectedCatagories]);
-
-//   // Function to open the presenter modal
-//   const openPresenterModal = () => {
-//     setIsModalOpen(true);
-//   };
-
-//   // Function to close the presenter modal
-//   const closePresenterModal = () => {
-//     setIsModalOpen(false);
-//   };
-
-//   // Function to open the moderator modal
-//   const openModeratorModal = () => {
-//     setIsModeratorModalOpen(true);
-//   };
-
-//   // Function to close the moderator modal
-//   const closeModeratorModal = () => {
-//     setIsModeratorModalOpen(false);
-//   };
-
-//   // Function to add presenter
-//   const addPresenter = () => {
-//     if (presenterName.trim() !== "") {
-//       setPresenters((prev) => [...prev, presenterName]);
-//       setPresenterName(""); // Reset the input field
-//       closePresenterModal(); // Close modal after adding the presenter
-//     }
-//   };
-
-//   // Function to add moderator
-//   const addModerator = () => {
-//     if (moderatorName.trim() !== "") {
-//       setModerators((prev) => [...prev, moderatorName]);
-//       setModeratorName(""); // Reset the input field
-//       closeModeratorModal(); // Close modal after adding the moderator
-//     }
-//   };
-
-//   return (
-//     <CreateEventCard actual={step} goal={4}>
-//       <h1 className="flex items-center gap-2 font-bold text-xl">
-//         <Image src={tagIcon} alt="puzzle icon" />
-//         لمن توجه اليه الفعالية
-//       </h1>
-//       <motion.div layout className="flex flex-wrap gap-2 mt-2">
-//         {selectedCatagories.map((category) => (
-//           <Catagory
-//             onClick={() => {
-//               if (selectedCatagories.length === 1) {
-//                 return;
-//               }
-//               setSelectedCatagories((prevState) => {
-//                 return prevState.filter((t) => t !== category);
-//               });
-//             }}
-//             selected={selectedCatagories.includes(category)}
-//             checked
-//             active
-//             key={category}
-//           >
-//             {category}
-//           </Catagory>
-//         ))}
-//         <motion.div layout className="grid place-items-center">
-//           {selectedCatagories.length < 3 && (
-//             <AddCatagoryDropdown
-//               onCatagorySelect={(catagory: string) => {
-//                 if (selectedCatagories.includes(catagory)) {
-//                   return;
-//                 }
-//                 setSelectedCatagories((prevState) => [...prevState, catagory]);
-//               }}
-//             />
-//           )}
-//         </motion.div>
-//       </motion.div>
-
-//       {/* Presenter Section */}
-//       <div className="mt-5">
-//         <label className="block text-lg text-custom-gray">
-//           مقدمين الفعالية التعليمية
-//         </label>
-//         <div className="flex items-center gap-2 mt-2">
-//           <button
-//             onClick={openPresenterModal}
-//             className="bg-custom-gray text-white p-2 rounded-full"
-//           >
-//             {/* Replace with your custom image */}
-//             <Image src={tagIcon} alt="Add Presenter" width={20} height={20} />
-//           </button>
-//         </div>
-//         {presenters.length > 0 && (
-//           <ul className="mt-3 list-disc pl-5">
-//             {presenters.map((presenter, index) => (
-//               <li key={index}>{presenter}</li>
-//             ))}
-//           </ul>
-//         )}
-//       </div>
-
-//       {/* Moderator Section */}
-//       <div className="mt-5">
-//         <label className="block text-lg text-custom-gray">
-//           منظمين الفعالية التعليمية
-//         </label>
-//         <div className="flex items-center gap-2 mt-2">
-//           <button
-//             onClick={openModeratorModal}
-//             className="bg-custom-gray text-white p-2 rounded-full"
-//           >
-//             {/* Replace with your custom image */}
-//             <Image src={tagIcon} alt="Add Moderator" width={20} height={20} />
-//           </button>
-//         </div>
-//         {moderators.length > 0 && (
-//           <ul className="mt-3 list-disc pl-5">
-//             {moderators.map((moderator, index) => (
-//               <li key={index}>{moderator}</li>
-//             ))}
-//           </ul>
-//         )}
-//       </div>
-//       <LoadingWrapper>
-//         <div className="flex flex-row-reverse justify-between w-full mt-10">
-//           <Button gradient className="">
-//             الخطوة التالية
-//           </Button>
-//           <Button
-//             onClick={(e) => {
-//               e.preventDefault();
-//               prevStepHandler();
-//             }}
-//             className="!px-10"
-//           >
-//             السابق
-//           </Button>
-//         </div>
-//       </LoadingWrapper>
-
-//       {/* Modal for Adding Moderator */}
-//       {isModeratorModalOpen && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-//           <div className="bg-white p-5 rounded-md w-96">
-//             <h2 className="font-bold text-xl mb-3">إضافة منظم</h2>
-//             <Input
-//               placeholder="اسم المنظم"
-//               value={moderatorName}
-//               onChange={(e) => setModeratorName(e.target.value)}
-//             />
-//             <div className="mt-5 flex justify-between">
-//               <Button onClick={addModerator} gradient>
-//                 إضافة
-//               </Button>
-//               <Button onClick={closeModeratorModal} className="!px-10">
-//                 إغلاق
-//               </Button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </CreateEventCard>
-//   );
-// }
-
 "use client";
 
 import Image from "next/image";
@@ -320,41 +121,6 @@ export default function forwhoForm({
         </motion.div>
       </motion.div>
 
-      {/* Presenters Section */}
-      <div className="mt-5">
-        <label className="block text-lg text-custom-gray">
-          مقدمين الفعالية التعليمية
-        </label>
-        <motion.div layout className="flex gap-2 mt-2">
-          {presenters.map((presenter) => (
-            <motion.div
-              layout
-              key={presenter.username}
-              className="relative w-12 h-12 rounded-full overflow-hidden border border-gray-300"
-            >
-              <Image
-                src={presenter.profilePictureUrl || userIcon}
-                alt={presenter.visibleName || presenter.username}
-                layout="fill"
-                objectFit="cover"
-              />
-            </motion.div>
-          ))}
-          {presenters.length < 3 && (
-            <motion.div
-              layout
-              className="grid place-items-center w-12 h-12 rounded-full border border-dashed border-gray-400 cursor-pointer"
-              onClick={() => {
-                setModalType("presenters");
-                setIsModalOpen(true);
-              }}
-            >
-              <Image src={plusIcon} alt="Add presenters" />
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
-
       {/* Moderators Section */}
       <div className="mt-5">
         <label className="block text-lg text-custom-gray">
@@ -385,6 +151,41 @@ export default function forwhoForm({
               }}
             >
               <Image src={plusIcon} alt="Add moderators" />
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Presenters Section */}
+      <div className="mt-5">
+        <label className="block text-lg text-custom-gray">
+          مقدمين الفعالية التعليمية
+        </label>
+        <motion.div layout className="flex gap-2 mt-2">
+          {presenters.map((presenter) => (
+            <motion.div
+              layout
+              key={presenter.username}
+              className="relative w-12 h-12 rounded-full overflow-hidden border border-gray-300"
+            >
+              <Image
+                src={presenter.profilePictureUrl || userIcon}
+                alt={presenter.visibleName || presenter.username}
+                layout="fill"
+                objectFit="cover"
+              />
+            </motion.div>
+          ))}
+          {presenters.length < 3 && (
+            <motion.div
+              layout
+              className="grid place-items-center w-12 h-12 rounded-full border border-dashed border-gray-400 cursor-pointer"
+              onClick={() => {
+                setModalType("presenters");
+                setIsModalOpen(true);
+              }}
+            >
+              <Image src={plusIcon} alt="Add presenters" />
             </motion.div>
           )}
         </motion.div>
