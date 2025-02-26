@@ -3,7 +3,7 @@ import userCircle from "@/assets/icons/user-circle.svg";
 import Image from "next/image";
 
 import { cookies } from "next/headers";
-import Dropdown from "../common/dropdown-options";
+import Dropdown from "@/components/authenticated-content/dropdown-options";
 import { redirect } from "next/navigation";
 import { UserDataDto } from "@/dtos/user-data.dto";
 

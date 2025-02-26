@@ -15,6 +15,7 @@ export default async function createEventAction(
   if (!token?.value) {
     redirect("signin");
   }
+  let eventData: EventDataDto;
 
   try {
     const createRes = await fetch(`${process.env.BACKEND_URL}/event`, {
@@ -25,7 +26,7 @@ export default async function createEventAction(
       },
     });
 
-    const eventData: EventDataDto = await createRes.json();
+    eventData = await createRes.json();
 
     if (!createRes.ok) {
       const errorResponse = await createRes.text(); // Capture the error message
@@ -94,5 +95,5 @@ export default async function createEventAction(
       message: "ERROR",
     };
   }
-  redirect("coordinated-events/upcoming");
+  redirect("/event/" + eventData.id + "/about");
 }
