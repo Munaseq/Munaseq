@@ -14,6 +14,7 @@ import Catagory from "@/components/common/category";
 import AddCatagoryDropdown from "@/components/common/buttons/add-category-dropdown";
 import getUserAction from "@/proxy/user/get-user-using-username-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
+import SearchUser from "@/components/authenticated-content/search-user";
 
 export default function forwhoForm({
   onCategoriesChange,
@@ -35,7 +36,7 @@ export default function forwhoForm({
   const [modalType, setModalType] = useState<"presenters" | "moderators">(
     "presenters"
   );
-  const [username, setUsername] = useState("");
+  // const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [modalError, setModalError] = useState("");
 
@@ -43,11 +44,17 @@ export default function forwhoForm({
     onCategoriesChange(selectedCatagories);
   }, [selectedCatagories]);
 
-  const handleAddUser = async () => {
+  const handleAddUser = async (username: string) => {
     setLoading(true);
     setModalError("");
-    const user = await getUserAction(username);
+    console.log(username + " username");
+    const user = (await getUserAction(username))[0];
+
+    console.log(user + " user");
     setLoading(false);
+
+    console.log(user);
+    console.log(user.username + " user name");
 
     if (!user) {
       setModalError("المستخدم غير موجود");
@@ -55,6 +62,7 @@ export default function forwhoForm({
     }
     // method call
     onRoleChange({ assignedUserId: user.id, role: modalType });
+    console.log(user.id + " user id " + modalType + " role");
     if (
       modalType === "presenters" &&
       presenters.some((p) => p.username === user.username)
@@ -77,7 +85,7 @@ export default function forwhoForm({
       setModerators((prev) => [...prev, user]);
     }
 
-    setUsername("");
+    // setUsername("");
     setIsModalOpen(false);
   };
 
@@ -194,24 +202,25 @@ export default function forwhoForm({
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg p-5 space-y-5 w-96">
+          <div className="bg-white rounded-lg p-5 space-y-5 w-full h-full overflow-auto relative">
             <h2 className="text-xl font-bold">
               {modalType === "presenters" ? "إضافة مقدم" : "إضافة منظم"}
             </h2>
-            <input
+            {/* <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="أدخل اسم المستخدم"
               className="w-full px-4 py-2 border rounded-md outline-none"
               name={modalType === "presenters" ? "" : ""}
-            />
+            /> */}
+            <SearchUser addUser={handleAddUser} />
             {modalError && <p className="text-red-500 text-sm">{modalError}</p>}
-            <div className="flex justify-end gap-3">
+            <div className="flex gap-3 absolute bottom-5">
               <Button onClick={() => setIsModalOpen(false)}>إلغاء</Button>
-              <Button gradient onClick={handleAddUser} disabled={loading}>
+              {/* <Button gradient onClick={handleAddUser} disabled={loading}>
                 {loading ? "جاري الإضافة..." : "إضافة"}
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

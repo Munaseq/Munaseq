@@ -1,12 +1,13 @@
-import Menu from '@/components/authenticated-content/menu';
-import Image from 'next/image';
-import logo from '@/assets/logo/munaseq-logo.svg';
-import Link from 'next/link';
-import Search from '@/components/authenticated-content/search'
-import deco from '@/assets/auth-content-assets/deco.svg';
-import MenuMobile from '@/components/authenticated-content/menu-mobile';
-import logoSmall from '@/assets/logo/munaseq-icon-dark-lines.svg';
-import { Toaster } from '@/components/common/shadcn-ui/toaster';
+import Menu from "@/components/authenticated-content/menu";
+import Image from "next/image";
+import logo from "@/assets/logo/munaseq-logo.svg";
+import Link from "next/link";
+import Search from "@/components/authenticated-content/search";
+import deco from "@/assets/auth-content-assets/deco.svg";
+import MenuMobile from "@/components/authenticated-content/menu-mobile";
+import logoSmall from "@/assets/logo/munaseq-icon-dark-lines.svg";
+import { Toaster } from "@/components/common/shadcn-ui/toaster";
+import BottomNavigation from "@/components/authenticated-content/mobile-bottom-navigation";
 
 export default function AuthContentLayout({
   children,
@@ -47,6 +48,7 @@ export default function AuthContentLayout({
           </Link>
         </header>
         <div className="xl:px-20 px-5">{children}</div>
+        <BottomNavigation />
       </div>
     </section>
   );
