@@ -18,14 +18,12 @@ export default function Events({ dateFilter }: { dateFilter: string }) {
                 filteredEvents.map((event: any) => (
                     <SmallCard
                         key={event.id}
-                        asEventCreator
                         image={event.imageUrl}
                         title={event.title}
                         date={getDate(event.startDateTime)}
-                        userId={event.eventCreatorId}
+                        eventCreator={event.eventCreator}
                         eventId={event.id}
                         badges={event.categories}
-                        isJoined
                     />
                 ))
             ) : (

@@ -1,3 +1,5 @@
+import { UserDataDto } from "./user-data.dto";
+
 export interface EventDataDto {
     id: string;
     title: string;
@@ -12,5 +14,5 @@ export interface EventDataDto {
     endDateTime: string;
     imageUrl: string;
     price?: number;
-    eventCreatorId: string;
+    eventCreator: UserDataDto;
 }

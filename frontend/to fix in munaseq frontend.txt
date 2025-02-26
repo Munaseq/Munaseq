@@ -1,14 +1,13 @@
 - side menu reloads when going to discover and out of discover (explain 🔵)
 - mobile menu fix by lifting the state up (or just make one request in the whole layout)
-- sub menu for leaving event appears when in past joined events
-- leave event menu button now says cancel instade of leave
-- maybe remove middleware and put it's logic into each layout
+- change menu for leaving and canceling events and make it inside actual event (done ✅)
+- leave event menu button now says cancel instade of leave (done ✅)
 - change redirect of join event and create event to actual event page.
 - make add mod and add presneter like github.
 - add indicator of event create step in create event form.
 - change location of delete/cancel event and add confirmation modal.
 - add event presenters and modreators in the event before joining page and make them linkable
 - in mobile inside event cant go between sections in event itself
-- error when seeing the details of the event -> getUserAction(id: string) return error (error 🔴)
+- error when seeing the details of the event -> getUserAction(id: string) return error (done ✅)
 - change order of add mod and add presenter inputs in create event form. (done but check 🟠)
 - date at create form not being set to current day. (done ✅)

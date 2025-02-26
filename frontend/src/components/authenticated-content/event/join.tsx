@@ -54,7 +54,7 @@ export default function JoinButton({
                                 duration: 5000,
                                 title: "تم الانضمام للفعالية",
                             });
-                            router.push("/joined-events/upcoming");
+                            router.push("/event/" + eventId + "/about");
                         }}
                         gradient
                         className="relative z-10"

@@ -9,7 +9,7 @@ import Subtitle from "@/components/common/text/subtitle";
 import Category from "@/components/common/category";
 import { cookies } from "next/headers";
 import getProfileAction from "@/proxy/user/get-profile-action";
-import cvIcon from "@/assets/icons/CV-Icon.svg";
+import cvIcon from "@/assets/icons/cv-icon.svg";
 import { redirect } from "next/navigation";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import Link from "next/link";

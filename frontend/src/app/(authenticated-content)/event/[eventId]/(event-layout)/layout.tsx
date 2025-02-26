@@ -4,13 +4,15 @@ import Image from "next/image";
 import leftDeco from "@/assets/event/left-deco.png";
 import rightDeco from "@/assets/event/right-deco.png";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import getUserAction from "@/proxy/user/get-user-using-id-action";
 import userIcon from "@/assets/icons/user-gradiant.svg";
 import starIcon from "@/assets/icons/rating-star.svg";
 import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
-import Tag from "@/components/common/category";
 import getUserRating from "@/proxy/user/get-user-rating-action";
+import getProfileAction from "@/proxy/user/get-profile-action";
+import leaveEventAction from "@/proxy/event/leave-event-action";
+import cancelEventAction from "@/proxy/event/cancel-event-action";
+import EventDropdown from "@/components/authenticated-content/event/event-layout/event-dropdown";
 
 export default async function EventLayout({
   children,
@@ -20,9 +22,11 @@ export default async function EventLayout({
   params: { eventId: string };
 }) {
   const event: EventDataDto = await getEventAction(params.eventId);
-  const eventCreator: UserDataDto = await getUserAction(event.eventCreatorId);
-  console.log(`${eventCreator} aa`);
-  // const rating: any = await getUserRating(event.eventCreatorId);
+  const user: UserDataDto = event.eventCreator;
+  const currentUser: UserDataDto = await getProfileAction();
+  const isEventCreator = currentUser.id === user.id;
+  const rating: any = await getUserRating(user.id);
+
 
   return (
     <div className="bg-white shadow-strong min-h-screen rounded-3xl overflow-hidden">
@@ -45,6 +49,8 @@ export default async function EventLayout({
           alt="deco"
         />
 
+
+
         <div className="absolute z-20 flex gap-1 top-3 right-3">
           {event.categories.map((category) => (
             <span
@@ -56,6 +62,8 @@ export default async function EventLayout({
           ))}
         </div>
 
+        <EventDropdown eventId={params.eventId} isEventCreator={isEventCreator} />
+       
         <div className="absolute z-20 text-white bottom-0 right-0 grid p-4 pb-2">
           <div className="mb-10">
             <h1 className="text-4xl font-bold mb-1">{event.title}</h1>
@@ -63,12 +71,12 @@ export default async function EventLayout({
               {" "}
               <Image src={userIcon} alt="user icon" className="w-10" />{" "}
               <span>
-                {eventCreator.firstName + " " + eventCreator.lastName}
+                {user.firstName + " " + user.lastName}
               </span>{" "}
               <Image src={starIcon} alt="star icon" className="w-10" />{" "}
-              {/* {rating?.avgRating ? (<span>
+              {rating?.avgRating ? (<span>
                                 {rating?.avgRating}
-                                </span>) : (<span>0</span>)} */}
+                                </span>) : (<span>0</span>)}
             </div>
           </div>
           <div>

@@ -20,7 +20,7 @@ import editProfileAction from "@/proxy/user/edit-profile-action";
 import TooltipWrapper from "@/components/common/tooltip";
 import deleteIcon from "@/assets/icons/x.svg";
 import editIcon from "@/assets/icons/edit.svg";
-import cvIcon from "@/assets/icons/CV-Icon.svg";
+import cvIcon from "@/assets/icons/cv-icon.svg";
 
 export default function EditForm({
     userData,

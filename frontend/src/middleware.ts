@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import getProfileAction from "./proxy/user/get-profile-action";
 import isInEventAction from "./proxy/user/is-in-event-action";
+import getEventAction from "./proxy/event/get-event-using-id-action";
+import { notFound } from "next/navigation";
 
 export const config = {
     matcher: [
@@ -61,9 +63,10 @@ const checkAuth = async (req: NextRequest) => {
 };
 
 const isInEvent = async (req: NextRequest, eventId: string) => {
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-        return NextResponse.redirect(new URL("/signin", req.url));
+    const event = await getEventAction(eventId);
+    if (!event) {
+        console.error("Event not found:", eventId);
+        return notFound();
     }
 
     try {
@@ -100,11 +103,22 @@ export async function middleware(req: NextRequest) {
     }
 
     if (pathname.startsWith("/event/")) {
+        
+        const token = req.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.redirect(new URL("/signin", req.url));
+        }
+
         const eventId = pathname.split("/")[2];
+        const event = await getEventAction(eventId);
+        if (!event) {
+            console.error("Event not found:", eventId);
+            return NextResponse.redirect(new URL("/event-not-found", req.url));
+        }
 
         if (eventId && pathname.split("/").length >= 4) {
             // Check if user is in event
-            
+
             return await isInEvent(req, eventId);
         }
     }

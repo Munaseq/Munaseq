@@ -7,7 +7,6 @@ import { UserDataDto } from "@/dtos/user-data.dto";
 import calendarIcon from "@/assets/icons/calender.svg";
 import groupIcon from "@/assets/icons/participants.svg";
 import loactionIcon from "@/assets/icons/location.svg";
-import getUserAction from "@/proxy/user/get-user-using-id-action";
 import decoTop from "@/assets/event/top.png";
 import decoBottom from "@/assets/event/bottom.png";
 import Return from "@/components/authenticated-content/event/return";
@@ -36,7 +35,7 @@ export default async function EventPage({
     if (isUserInEvent) {
         redirect("/event/" + event.id + "/about");
     }
-    const user: UserDataDto = await getUserAction(event.eventCreatorId);
+    const user: UserDataDto = event.eventCreator;
 
     return (
         <section className="grid place-items-center mb-10">

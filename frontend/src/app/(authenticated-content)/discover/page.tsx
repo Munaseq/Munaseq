@@ -32,10 +32,11 @@ export default async function Discover() {
             <div className="flex mt-4 gap-8 flex-wrap lg:justify-start justify-center">
                 {eventList?.map((event: any) => (
                     <SmallCard
+                        key={event.id}
                         image={event.imageUrl}
                         title={event.title}
                         date={getDate(event.startDateTime)}
-                        userId={event.eventCreatorId}
+                        eventCreator={event.eventCreator}
                         eventId={event.id}
                         badges={event.categories}
                     />

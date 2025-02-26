@@ -6,7 +6,6 @@ import loactionIcon from "@/assets/icons/location.svg";
 import Category from "@/components/common/category";
 import Image from "next/image";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import getUserAction from "@/proxy/user/get-user-using-id-action";
 import userIcon from "@/assets/icons/user-gradiant.svg";
 
 export default async function AboutPage({
@@ -16,7 +15,7 @@ export default async function AboutPage({
 }) {
     const event: EventDataDto = await getEventAction(params.eventId);
 
-    const user: UserDataDto = await getUserAction(event.eventCreatorId);
+    const user: UserDataDto = event.eventCreator
 
     return (
         <div className="">

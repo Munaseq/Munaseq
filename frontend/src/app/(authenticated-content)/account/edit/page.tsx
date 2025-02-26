@@ -23,12 +23,7 @@ export default async function Account() {
 
     return (
       <section className="relative pb-10">
-        {/* <Link
-            href="/account"
-            className="bg-black text-white p-3 rounded-full font-bold text-sm"
-          >
-            معلومات الحساب
-          </Link> */}
+
         <Title>
           <Image src={penIcon} className="sm:w-14 w-10" alt="" />
           <span>تعديل معلومات الحساب</span>

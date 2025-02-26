@@ -11,6 +11,10 @@ export default async function getEventAction(eventId: string) {
             }
         );
 
+        if (!eventsRes.ok) {
+            throw new Error("Failed to fetch event");
+        }
+
         const data = await eventsRes.json();
 
         return data;
