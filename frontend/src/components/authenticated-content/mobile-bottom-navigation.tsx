@@ -34,7 +34,7 @@ export default function BottomNavigation() {
   }, []);
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-md p-4 flex justify-between items-center md:hidden">
+    <nav className="fixed bottom-4 left-0 w-full bg-white p-4 px-10 flex shadow-[0px_0px_30px_0px_rgba(0,0,0,0.2)] justify-between items-center rounded-full lg:hidden">
       <Link
         href={"/user/" + profileData?.username}
         className="flex flex-col items-center"
