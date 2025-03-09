@@ -7,6 +7,7 @@ import Category from "@/components/common/category";
 import Image from "next/image";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import userIcon from "@/assets/icons/user-gradiant.svg";
+import { notFound } from "next/navigation";
 
 export default async function AboutPage({
     params,
@@ -14,7 +15,9 @@ export default async function AboutPage({
     params: { eventId: string };
 }) {
     const event: EventDataDto = await getEventAction(params.eventId);
-
+    if (!event) {
+        notFound();
+      }
     const user: UserDataDto = event.eventCreator
 
     return (

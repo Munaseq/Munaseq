@@ -10,9 +10,8 @@ import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
 import getUserRating from "@/proxy/user/get-user-rating-action";
 import getProfileAction from "@/proxy/user/get-profile-action";
-import leaveEventAction from "@/proxy/event/leave-event-action";
-import cancelEventAction from "@/proxy/event/cancel-event-action";
 import EventDropdown from "@/components/authenticated-content/event/event-layout/event-dropdown";
+import { notFound } from "next/navigation";
 
 export default async function EventLayout({
   children,
@@ -22,6 +21,9 @@ export default async function EventLayout({
   params: { eventId: string };
 }) {
   const event: EventDataDto = await getEventAction(params.eventId);
+  if (!event) {
+    notFound();
+  }
   const user: UserDataDto = event.eventCreator;
   const currentUser: UserDataDto = await getProfileAction();
   const isEventCreator = currentUser.id === user.id;

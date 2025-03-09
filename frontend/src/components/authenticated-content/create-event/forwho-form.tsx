@@ -48,7 +48,7 @@ export default function forwhoForm({
     setLoading(true);
     setModalError("");
     console.log(username + " username");
-    const user = (await getUserAction(username))[0];
+    const user = (await getUserAction(username));
 
     console.log(user + " user");
     setLoading(false);
