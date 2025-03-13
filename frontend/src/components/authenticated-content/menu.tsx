@@ -1,32 +1,18 @@
-"use client";
-
 import MenuProfile from "./menu-profile";
-import { useEffect, useState } from "react";
-import MenuProfileSkeleton from "./menu-profile-skeleton";
 import Nav from "./Nav";
 import Link from "next/link";
-import Image from "next/image";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import getProfileAction from "@/proxy/user/get-profile-action";
 import { PlusCircleIcon } from "lucide-react";
 
 export default function Menu({
     mobile,
     onLinkClick,
+    profileData
 }: {
     mobile?: boolean;
     onLinkClick?: () => void;
+    profileData: UserDataDto;
 }) {
-    const [profileData, setProfileData] = useState(null as UserDataDto | null);
-    useEffect(() => {
-        const getProfile = async () => {
-            // get cookies
-            const data = await getProfileAction();
-            setProfileData(data);
-        };
-        getProfile();
-    }, []);
-    if (profileData) {
         return (
             <div
                 className={
@@ -60,13 +46,4 @@ export default function Menu({
         );
     }
 
-    return (
-        <div
-            className={
-                !mobile ? "w-[20rem] h-screen rounded-3xl shadow-menu" : ""
-            }
-        >
-            <MenuProfileSkeleton />
-        </div>
-    );
-}
+   

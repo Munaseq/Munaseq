@@ -20,11 +20,7 @@ import editProfileAction from "@/proxy/user/edit-profile-action";
 import TooltipWrapper from "@/components/common/tooltip";
 import { PencilIcon, FileTextIcon, XCircleIcon } from "lucide-react";
 
-export default function EditForm({
-    userData,
-}: {
-    userData: UserDataDto;
-}) {
+export default function EditForm({ userData }: { userData: UserDataDto }) {
     const [formError, setFormError] = useState([] as string[]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedCatagories, setSelectedCatagories] = useState(
@@ -230,6 +226,16 @@ export default function EditForm({
     return (
         <form
             action={async (formData: FormData) => {
+                let deleteProfilePicture: boolean = false;
+                let deleteCV: boolean = false;
+                if (userData.profilePictureUrl && !image) {
+                    deleteProfilePicture = true;
+                }
+
+                if (userData.cvUrl && !cvFile) {
+                    deleteCV = true;
+                }
+
                 setIsLoading(true);
                 if (!(await validateInputs())) {
                     setIsLoading(false);
@@ -248,6 +254,8 @@ export default function EditForm({
 
                 const error: { message: string } = await editProfileAction(
                     formData,
+                    deleteProfilePicture,
+                    deleteCV
                 );
                 if (error.message) {
                     setFormError(prevErrors => [...prevErrors, error.message]);
@@ -332,7 +340,7 @@ export default function EditForm({
                                     <Image src={image} alt="preview" fill />
                                 </motion.div>
                                 <TooltipWrapper text="تعديل الصورة">
-                                    <motion.button
+                                    <motion.div
                                         layout
                                         className="ms-5"
                                         onClick={e => {
@@ -340,12 +348,12 @@ export default function EditForm({
                                             profileImageRef.current.click();
                                         }}
                                     >
-                                        <PencilIcon/>
-                                    </motion.button>
+                                        <PencilIcon />
+                                    </motion.div>
                                 </TooltipWrapper>
 
                                 <TooltipWrapper text="حذف الصورة">
-                                    <motion.button
+                                    <motion.div
                                         layout
                                         className=""
                                         onClick={e => {
@@ -354,8 +362,8 @@ export default function EditForm({
                                             profileImageRef.current.value = "";
                                         }}
                                     >
-                                        <XCircleIcon/>
-                                    </motion.button>
+                                        <XCircleIcon />
+                                    </motion.div>
                                 </TooltipWrapper>
                             </div>
                         ) : null}
@@ -392,7 +400,7 @@ export default function EditForm({
                                     </a>
                                 </TooltipWrapper>
                                 <TooltipWrapper text="تعديل السيرة الذاتية">
-                                    <motion.button
+                                    <motion.div
                                         layout
                                         className="ms-5"
                                         onClick={e => {
@@ -400,12 +408,12 @@ export default function EditForm({
                                             cvRef.current.click();
                                         }}
                                     >
-                                       <PencilIcon/>
-                                    </motion.button>
+                                        <PencilIcon />
+                                    </motion.div>
                                 </TooltipWrapper>
 
                                 <TooltipWrapper text="حذف السيرة الذاتية">
-                                    <motion.button
+                                    <motion.div
                                         layout
                                         className=""
                                         onClick={e => {
@@ -414,8 +422,8 @@ export default function EditForm({
                                             cvRef.current.value = "";
                                         }}
                                     >
-                                        <XCircleIcon/>
-                                    </motion.button>
+                                        <XCircleIcon />
+                                    </motion.div>
                                 </TooltipWrapper>
                             </div>
                         ) : null}

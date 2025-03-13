@@ -10,8 +10,9 @@ import {
 import {MenuIcon} from 'lucide-react'
 import { useState, useEffect } from "react";
 import Menu from "./menu";
+import { UserDataDto } from "@/dtos/user-data.dto";
 
-export default function MenuMobile() {
+export default function MenuMobile({ profileData }: { profileData: UserDataDto }) {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -30,7 +31,7 @@ export default function MenuMobile() {
             <SheetContent className="max-w-[22rem] w-screen h-screen rounded-e-3xl fixed p-0 pt-10 bg-white flex">
                 <SheetTitle className="hidden">القائمة</SheetTitle>
                 <SheetDescription className="hidden">القائمة</SheetDescription>
-                <Menu mobile onLinkClick={() => setIsOpen(false)} />
+                <Menu profileData={profileData} mobile onLinkClick={() => setIsOpen(false)} />
             </SheetContent>
         </Sheet>
     );

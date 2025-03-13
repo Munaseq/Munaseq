@@ -1,4 +1,4 @@
-- mobile menu fix by lifting the state up (or just make one request in the whole layout)
+- mobile menu fix by lifting the state up (or just make one request in the whole layout) (done ✅)
 - make add mod and add presneter like github. (done but there is an weird error 🔴)
 - add indicator of event create step in create event form.
 - add event presenters and modreators in the event before joining page and make them linkable
@@ -9,7 +9,7 @@
 - error when seeing the details of the event -> getUserAction(id: string) return error (done ✅)
 - change menu for leaving and canceling events and make it inside actual event (done ✅)
 - date at create form not being set to current day. (done ✅)
-- cant delete a profile image or cv
+- cant delete a profile image or cv (done ✅)
 - chage catagory because it is ugly
 - update rating using tags
 - same for profile picture
