@@ -1,7 +1,6 @@
 import React from "react";
 import dateIcon from "@/assets/land-assets/date-icon.svg";
 import presenterIcon from "@/assets/land-assets/presenter-icon.svg";
-import rateIcon from "@/assets/land-assets/rate-icon.svg";
 import Image from "next/image";
 import Button from "../buttons/button";
 import Link from "next/link";
@@ -66,7 +65,7 @@ export default function largeCard({
                                 
                                 <div className="flex gap-2 items-center">
                                     <Image src={dateIcon} alt="" />
-                                    <p className="bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent text-base">
+                                    <p className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent text-base">
                                         {date}
                                     </p>
                                 </div>
@@ -75,13 +74,13 @@ export default function largeCard({
                             <div className="flex gap-5 font-medium items-center">
                                 <div className="flex gap-2">
                                     <Image src={presenterIcon} alt="" />
-                                    <p className="bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent text-base">
+                                    <p className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent text-base">
                                         {presenter}
                                     </p>
                                 </div>
                                 <div className="flex gap-2 items-center">
-                                    <Image src={rateIcon} alt="" />
-                                    <p className="bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent text-base">
+                                    {/* <Image src={rateIcon} alt="" /> */}
+                                    <p className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent text-base">
                                         {rate}
                                     </p>
                                 </div>

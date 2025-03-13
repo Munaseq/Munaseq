@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import x from "@/assets/icons/x.svg";
 import { motion } from "framer-motion";
+import { XIcon } from "lucide-react";
 
 export default function Catagory(props: {
     onClick?: (e: any) => void;
@@ -25,7 +24,7 @@ export default function Catagory(props: {
                 }
             }}
             className={
-                "bg-white border-pirmary border-2 rounded-3xl px-3 py-2 text-primary font-bold flex justify-center items-center gap-2 group text-nowrap " +
+                "bg-white border-pirmary border-2 rounded-3xl px-3 py-2 text-custom-light-purple font-bold flex justify-center items-center gap-2 group text-nowrap " +
                 (!props.active ? " cursor-default" : "")
             }
         >
@@ -36,7 +35,7 @@ export default function Catagory(props: {
                     initial={{ y: 10, opacity: 0 }}
                     transition={{ delay: 0.1 }}
                 >
-                    <Image src={x} alt="Tag Image" className="w-4" />
+                    <XIcon className="text-custom-black"/>
                 </motion.div>
             )}
         </motion.button>

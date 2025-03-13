@@ -1,11 +1,11 @@
 import Image from "next/image";
-import puzzleIcon from "@/assets/icons/puzzle-gradient.svg";
 import CreateEventCard from "./create-event-card";
 import TextField from "@/components/common/text/text-field";
 import TextArea from "@/components/common/text/text-area";
 import { Input } from "@/components/common/shadcn-ui/input";
 import { useState, useRef } from "react";
 import Button from "@/components/common/buttons/button";
+import { PuzzleIcon } from "lucide-react";
 export default function MainForm({
     nextStepHandler,
     step
@@ -22,7 +22,7 @@ export default function MainForm({
     return (
         <CreateEventCard actual={step} goal={1}>
             <h1 className="flex items-center gap-2 font-bold text-xl">
-                <Image src={puzzleIcon} alt="puzzle icon" />
+                <PuzzleIcon className="text-custom-light-purple" size={32} />
                 المعلومات الاساسية
             </h1>
             <div className="max-w-96 w-full grid gap-5">

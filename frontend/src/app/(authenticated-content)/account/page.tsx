@@ -1,15 +1,12 @@
 import { Metadata } from "next";
 import Title from "@/components/common/text/title";
-import userIcon from "@/assets/icons/user-gradiant.svg";
-import editIcon from "@/assets/icons/edit.svg";
+import {CircleUserRoundIcon, FileTextIcon, PencilIcon, UserRoundIcon} from "lucide-react";
 import Image from "next/image";
-import userCircle from "@/assets/icons/user-circle.svg";
 import Label from "@/components/common/lable";
 import Subtitle from "@/components/common/text/subtitle";
 import Category from "@/components/common/category";
 import { cookies } from "next/headers";
 import getProfileAction from "@/proxy/user/get-profile-action";
-import cvIcon from "@/assets/icons/cv-icon.svg";
 import { redirect } from "next/navigation";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import Link from "next/link";
@@ -31,9 +28,9 @@ export default async function Account() {
       <section className="relative pb-10">
         <Title>
           <Link className="absolute left-0" href={"account/edit"}>
-            <Image className=" left-0 w-10" src={editIcon} alt="edit icon" />
+            <PencilIcon size={32}/>
           </Link>
-          <Image src={userIcon} className="sm:w-14 w-10" alt="" />
+          <UserRoundIcon size={32} className="text-custom-light-purple"/>
           <span>معلومات الحساب</span>
         </Title>
         <div className="grid grid-cols-1 gap-10">
@@ -64,23 +61,14 @@ export default async function Account() {
                   className="rounded-full aspect-square"
                 />
               ) : (
-                <Image
-                  src={userCircle}
-                  alt="user-circle"
-                  priority
-                  className="w-20"
-                />
+                <CircleUserRoundIcon/>
               )}
             </Label>
             <Label label="السيرة الذاتيه">
               {data.cvUrl ? (
                  <TooltipWrapper text="عرض السيرة الذاتية">
                 <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
-                  <Image
-                    src={cvIcon}
-                    alt="CV icon"
-                    className="w-10 cursor-pointer"
-                  />
+                  <FileTextIcon className='cursor-pointer'/>
                 </a>
                 </TooltipWrapper>
               ) : (

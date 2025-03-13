@@ -31,7 +31,7 @@ export default function FeaturesSection() {
           className="flex flex-col items-center bg-white border border-gray-200 p-10 mb-16 rounded-3xl shadow-xl md:flex-row md:justify-between max-w-full"
         >
           <div className="flex flex-col justify-between p-4 text-center md:text-right md:w-1/2">
-            <h5 className="mb-6 pb-2 text-4xl font-bold bg-gradient-to-l from-primary to-secondary leading-tight bg-clip-text text-transparent">
+            <h5 className="mb-6 pb-2 text-4xl font-bold bg-gradient-to-l from-custom-dark-purple to-custom-light-purple leading-tight bg-clip-text text-transparent">
               جدولة وتنسيق الفعالية بسهولة
             </h5>
             <p className="mb-3 font-light text-custom-gray text-lg sm:text-xl">
@@ -56,7 +56,7 @@ export default function FeaturesSection() {
           className="flex flex-col items-center bg-white border border-gray-200 p-10 mb-16 rounded-3xl shadow-xl md:flex-row-reverse md:justify-between max-w-full"
         >
           <div className="flex flex-col justify-between p-4 text-center md:text-right md:w-1/2">
-            <h5 className="mb-6 pb-2 text-4xl leading-tight font-bold bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent">
+            <h5 className="mb-6 pb-2 text-4xl leading-tight font-bold bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent">
               اختبارات قصيرة أثناء الفعالية
             </h5>
             <p className="mb-3 font-light text-custom-gray text-lg sm:text-xl">
@@ -81,7 +81,7 @@ export default function FeaturesSection() {
           className="flex flex-col items-center bg-white border border-gray-200 p-10 rounded-3xl shadow-xl md:flex-row md:justify-between max-w-full"
         >
           <div className="flex flex-col justify-between p-4 text-center md:text-right md:w-1/2">
-            <h5 className="mb-6 pb-2 text-4xl leading-tight font-bold bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent">
+            <h5 className="mb-6 pb-2 text-4xl leading-tight font-bold bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent">
               شهاده بعد اتمام الفعالية
             </h5>
             <p className="mb-3 font-light text-custom-gray text-lg sm:text-xl">

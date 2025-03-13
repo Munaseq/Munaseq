@@ -248,7 +248,7 @@ export default function mainForm(props: {
                                 لديك حساب؟{" "}
                                 <span
                                     onClick={props.transitionToSignUpHandler}
-                                    className="text-primary text-nowrap cursor-pointer"
+                                    className="text-custom-light-purple text-nowrap cursor-pointer"
                                 >
                                     سجل دخولك الآن!
                                 </span>

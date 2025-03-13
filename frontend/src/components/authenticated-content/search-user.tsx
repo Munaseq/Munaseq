@@ -1,16 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// import { Input } from "@/components/common/shadcn-ui/input";
-import { Card } from "@/components/common/shadcn-ui/card";
-// import Button from "@/components/common/button";
 import LogoLoading from "../common/logo-loading";
 import getUserSearchAction from "@/proxy/user/get-user-search-username-action"; // New proxy function to fetch users
 import { UserDataDto } from "@/dtos/user-data.dto"; // New data DTO for user
-import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/common/buttons/button";
-import userIcon from "@/assets/icons/user-black.svg";
+import { UserRoundIcon } from "lucide-react";
 
 const SearchUserComponent = ({
     addUser,
@@ -94,20 +90,21 @@ const SearchUserComponent = ({
                     //     نتائج البحث
                     //   </h5>
                     // </div>
-                    <div className="flow-root w-full flex-col overflow-y-auto h-52">
+                    <div className="flow-root w-full flex-col overflow-y-auto max-h-48">
                         <ul role="list" className="divide-y px-4">
                             {results.map((result, index) => (
                                 <li className="py-3 sm:py-4" key={index}>
                                     <div className="flex items-center">
-                                        <div className="shrink-0">
+                                        <div className="relative shrink-0 w-10 h-10 ">
+                                            { result.profilePictureUrl ?
                                             <Image
-                                                className="w-8 h-8 rounded-full"
+                                                className="rounded-full"
                                                 src={
-                                                    result.profilePictureUrl ||
-                                                    userIcon
+                                                    result.profilePictureUrl 
                                                 }
+                                                fill
                                                 alt="user image"
-                                            />
+                                            /> : <UserRoundIcon className="w-full h-full"/>}
                                         </div>
                                         <div className="flex-1 min-w-0 ms-4">
                                             <p className="text-sm font-medium text-gray-900 truncate">
@@ -132,7 +129,100 @@ const SearchUserComponent = ({
                                         </div>
                                     </div>
                                 </li>
+                                
                             ))}
+                             <li className="py-3 sm:py-4">
+                                    <div className="flex items-center">
+                                        <div className="relative shrink-0 w-10 h-10 ">
+                                            <UserRoundIcon className="w-full h-full"/>
+                                        </div>
+                                        <div className="flex-1 min-w-0 ms-4">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                               حسام القنام
+                                            </p>
+                                            <p className="text-sm text-gray-500 truncate">
+                                                hussam
+                                            </p>
+                                        </div>
+                                        <div className="inline-flex items-center text-base font-semibold text-gray-900">
+                                            <Button
+                                                className="bg-custom-gradient"
+                                               
+                                            >
+                                                +
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li className="py-3 sm:py-4">
+                                    <div className="flex items-center">
+                                        <div className="relative shrink-0 w-10 h-10 ">
+                                            <UserRoundIcon className="w-full h-full"/>
+                                        </div>
+                                        <div className="flex-1 min-w-0 ms-4">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                               حسام القنام
+                                            </p>
+                                            <p className="text-sm text-gray-500 truncate">
+                                                hussam
+                                            </p>
+                                        </div>
+                                        <div className="inline-flex items-center text-base font-semibold text-gray-900">
+                                            <Button
+                                                className="bg-custom-gradient"
+                                               
+                                            >
+                                                +
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li className="py-3 sm:py-4">
+                                    <div className="flex items-center">
+                                        <div className="relative shrink-0 w-10 h-10 ">
+                                            <UserRoundIcon className="w-full h-full"/>
+                                        </div>
+                                        <div className="flex-1 min-w-0 ms-4">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                               حسام القنام
+                                            </p>
+                                            <p className="text-sm text-gray-500 truncate">
+                                                hussam
+                                            </p>
+                                        </div>
+                                        <div className="inline-flex items-center text-base font-semibold text-gray-900">
+                                            <Button
+                                                className="bg-custom-gradient"
+                                               
+                                            >
+                                                +
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li className="py-3 sm:py-4">
+                                    <div className="flex items-center">
+                                        <div className="relative shrink-0 w-10 h-10 ">
+                                            <UserRoundIcon className="w-full h-full"/>
+                                        </div>
+                                        <div className="flex-1 min-w-0 ms-4">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                               حسام القنام
+                                            </p>
+                                            <p className="text-sm text-gray-500 truncate">
+                                                hussam
+                                            </p>
+                                        </div>
+                                        <div className="inline-flex items-center text-base font-semibold text-gray-900">
+                                            <Button
+                                                className="bg-custom-gradient"
+                                               
+                                            >
+                                                +
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </li>
                         </ul>
                     </div>
                 )}

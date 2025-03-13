@@ -1,12 +1,12 @@
 import Subtitle from "@/components/common/text/subtitle";
 import Title from "@/components/common/text/title";
-import discover from "@/assets/icons/discover-active.svg";
 import Image from "next/image";
 import { Metadata } from "next";
 import SmallCard from "@/components/common/cards/small-card";
 import getDate from "@/util/get-date";
 
 import getEventsAction from "@/proxy/event/get-events-action";
+import { SparklesIcon } from "lucide-react";
 
 export const metadata: Metadata = {
     title: "اكتشف",
@@ -25,7 +25,7 @@ export default async function Discover() {
     return (
         <div>
             <Title>
-                <Image src={discover} className="sm:w-14 w-10" alt="" />
+                <SparklesIcon size={32} color="var(--custom-light-purple)"/>
                 اكتشف فعاليات المنسقين
             </Title>
             <Subtitle>من أعلى المنسقين تقييما </Subtitle>

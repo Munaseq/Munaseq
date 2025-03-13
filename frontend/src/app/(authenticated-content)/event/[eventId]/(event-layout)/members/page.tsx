@@ -1,17 +1,9 @@
-import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-import userIcon from "@/assets/icons/user-gradiant.svg";
 import Subtitle from "@/components/common/text/subtitle";
 import getAllUsers from "@/proxy/user/get-all-user-event-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
-
-type Material = {
-    materialId: string;
-    materialUrl: string;
-    createdAt: string;
-};
+import { UsersRoundIcon } from "lucide-react";
 
 export default async function MembersPage({
     params,
@@ -33,11 +25,7 @@ export default async function MembersPage({
     return (
         <div className="mb-10">
             <h1 className="font-bold flex items-center text-3xl gap-2 mt-4">
-                <Image
-                    className="sm:w-12 w-10"
-                    src={userIcon}
-                    alt="material icon"
-                />
+                <UsersRoundIcon className="text-custom-light-purple" size={32}/>
                 أعضاء الفعالية
             </h1>
             <Subtitle>المنسق</Subtitle>

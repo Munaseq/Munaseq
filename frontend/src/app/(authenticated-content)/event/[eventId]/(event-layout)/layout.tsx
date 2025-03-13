@@ -4,14 +4,13 @@ import Image from "next/image";
 import leftDeco from "@/assets/event/left-deco.png";
 import rightDeco from "@/assets/event/right-deco.png";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import userIcon from "@/assets/icons/user-gradiant.svg";
-import starIcon from "@/assets/icons/rating-star.svg";
 import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
 import getUserRating from "@/proxy/user/get-user-rating-action";
 import getProfileAction from "@/proxy/user/get-profile-action";
 import EventDropdown from "@/components/authenticated-content/event/event-layout/event-dropdown";
 import { notFound } from "next/navigation";
+import { StarIcon, UserRound, UserRoundIcon } from "lucide-react";
 
 export default async function EventLayout({
   children,
@@ -57,7 +56,7 @@ export default async function EventLayout({
           {event.categories.map((category) => (
             <span
               key={category}
-              className="rounded-full bg-white text-primary px-2.5 py-1 ml-2 text-md font-medium "
+              className="rounded-full bg-white text-custom-light-purple px-2.5 py-1 ml-2 text-md font-medium "
             >
               {category}
             </span>
@@ -71,11 +70,11 @@ export default async function EventLayout({
             <h1 className="text-4xl font-bold mb-1">{event.title}</h1>
             <div className="flex items-center gap-2 font-light text-xl">
               {" "}
-              <Image src={userIcon} alt="user icon" className="w-10" />{" "}
+              <UserRoundIcon className="text-custom-light-purple"/>{" "}
               <span>
                 {user.firstName + " " + user.lastName}
               </span>{" "}
-              <Image src={starIcon} alt="star icon" className="w-10" />{" "}
+              <StarIcon className="text-custom-light-purple"/>{" "}
               {rating?.avgRating ? (<span>
                                 {rating?.avgRating}
                                 </span>) : (<span>0</span>)}

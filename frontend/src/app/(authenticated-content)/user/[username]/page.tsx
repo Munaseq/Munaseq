@@ -1,21 +1,17 @@
 import Image from 'next/image';
-import userCircle from '@/assets/icons/user-circle.svg';
 import Link from 'next/link';
-import edit from '@/assets/icons/edit.svg';
 import Subtitle from '@/components/common/text/subtitle';
 import { cookies } from 'next/headers';
 import getProfileAction from '@/proxy/user/get-profile-action';
 import { notFound, redirect } from 'next/navigation';
-import tag from '@/assets/icons/tag.svg';
-import rateIcon from '@/assets/icons/rate-icon.svg';
 import XIcon from '@/assets/icons/x-icon.svg';
 import linkedinIcon from '@/assets/icons/linkedin-icon.svg';
-import cvIcon from '@/assets/icons/cv-icon.svg';
-import emailIcon from '@/assets/icons/email-icon.svg';
+import { FileTextIcon, CircleUserRoundIcon, MailIcon, PencilIcon, StarIcon, TagIcon } from 'lucide-react';
 import Tag from '@/components/common/category';
 import { UserDataDto } from '@/dtos/user-data.dto';
 import getUserAction from '@/proxy/user/get-user-using-username-action';
 import TooltipWrapper from '@/components/common/tooltip';
+import getUserRating from '@/proxy/user/get-user-rating-action';
 
 export function generateMetadata({
   params,
@@ -41,6 +37,7 @@ export default async function UserProfile({
     if (!data) {
       notFound();
     }
+    // const rating = await getUserRating(data.id);
     const profile: UserDataDto = await getProfileAction();
     const hisProfile: boolean = data.username === profile.username;
     data.socialAccounts = JSON.parse(data.socialAccounts as string);
@@ -55,7 +52,7 @@ export default async function UserProfile({
               معلومات الحساب
             </Link>
             <Link href={'/account/edit'} className="grid place-items-center">
-              <Image src={edit} alt="edit icon" className="w-10" />
+              <PencilIcon size={32}/>
             </Link>
           </div>
         )}
@@ -70,13 +67,7 @@ export default async function UserProfile({
                   priority
                 />
               ) : (
-                <Image
-                  src={userCircle}
-                  alt="user-circle"
-                  fill
-                  priority
-                  className="w-auto"
-                />
+                <CircleUserRoundIcon className="w-full h-full" />
               )}
             </div>
             <div className="mt-2">
@@ -96,31 +87,23 @@ export default async function UserProfile({
           {data.cvUrl && (
             <TooltipWrapper text="السيرة الذاتية">
             <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
-              <Image
-                src={cvIcon}
-                alt="CV icon"
-                className="w-10 cursor-pointer"
-              />
+              <FileTextIcon className="cursor-pointer" />
             </a>
             </TooltipWrapper>
           )}
           {data.email && (
             <TooltipWrapper text="البريد الالكتروني">
             <a href={`mailto:${data.email}`}>
-              <Image
-                src={emailIcon}
-                alt="email icon"
-                className="w-10 cursor-pointer"
-              />
+              <MailIcon className="cursor-pointer" />
             </a>
             </TooltipWrapper>
           )}
         </div>
         <div className="mt-5 flex gap-24">
-          {/* <div>
-            <Image src={rateIcon} alt="rating icon" className="w-10" />
-            RATING
-          </div> */}
+          <div>
+            <StarIcon className='text-custom-light-purple'/>
+            {/* {rating} */}
+          </div>
 
           <div className="flex gap-3">
             {data.socialAccounts?.linkedinLink && (
@@ -143,8 +126,8 @@ export default async function UserProfile({
           </div>
         </div>
 
-        <div className="mt-5 flex gap-1">
-          <Image src={tag} alt="catigory icon" className="w-10" />
+        <div className="mt-5 flex items-center gap-1">
+         <TagIcon className="text-custom-light-purple"/>
           <div className="flex flex-wrap gap-1">
             {data.categories.map((category: string) => {
               return <Tag key={category}>{category}</Tag>;

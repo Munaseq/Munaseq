@@ -6,9 +6,8 @@ import { Input } from "../common/shadcn-ui/input";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import useFormVariants from "./hooks/use-form-variants";
-import deleteImageIcon from "@/assets/icons/x.svg";
-import editImageIcon from "@/assets/icons/edit.svg";
 import TooltipWrapper from "../common/tooltip";
+import { PencilIcon, XCircleIcon } from "lucide-react";
 
 export default function ProfileForm(props: {
     step: number;
@@ -126,11 +125,7 @@ export default function ProfileForm(props: {
                                         ref.current.click();
                                     }}
                                 >
-                                    <Image
-                                        className="w-10 aspect-square"
-                                        src={editImageIcon}
-                                        alt="edit image"
-                                    />
+                                    <PencilIcon/>
                                 </motion.button>
                             </TooltipWrapper>
 
@@ -144,11 +139,7 @@ export default function ProfileForm(props: {
                                         ref.current.value = "";
                                     }}
                                 >
-                                    <Image
-                                        className="w-10"
-                                        src={deleteImageIcon}
-                                        alt="delete image"
-                                    />
+                                    <XCircleIcon/>
                                 </motion.button>
                             </TooltipWrapper>
                         </div>

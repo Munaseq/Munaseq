@@ -7,9 +7,9 @@ html {
 }
 
 :root {
-  --primary: #ae00fe;
-  --secondary: #652bb7;
-  --gray: #949494;
+  --custom-light-purple: #ae00fe;
+  --custom-dark-purple: #652bb7;
+  --custom-light-gray: #949494;
 }
 
 

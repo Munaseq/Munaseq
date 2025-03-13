@@ -42,7 +42,7 @@ const Input = forwardRef(function TextField(
                 <label
                     htmlFor={props.name}
                     className={
-                        "absolute rtl:right-3 ltr:left-3 text-gray-400  peer-focus:text-primary transition-all h-full grid place-items-center text-nowrap " +
+                        "absolute rtl:right-3 ltr:left-3 text-gray-400  peer-focus:text-custom-light-purple transition-all h-full grid place-items-center text-nowrap " +
                         (inputHasText
                             ? "-translate-y-[90%] text-sm"
                             : "peer-focus:-translate-y-[90%] peer-focus:text-sm")

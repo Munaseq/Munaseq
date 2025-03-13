@@ -1,13 +1,13 @@
 'use client';
 
-import plusIcon from '@/assets/icons/plus-circle.svg';
 import { catagories } from '@/util/categories';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '../shadcn-ui/dropdown-menu';
-import Image from 'next/image';
+import { PlusCircleIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function addCatagoryDropdown({
   onCatagorySelect,
@@ -17,12 +17,12 @@ export default function addCatagoryDropdown({
   return (
     <DropdownMenu dir="rtl">
       <DropdownMenuTrigger className="absoulte left-2">
-        <div className="flex gap-1 px-3">
+        <motion.div layout  className="flex gap-1 px-3 items-center">
           <span>اضافة</span>{' '}
-          <Image className="w-5 h-5" src={plusIcon} alt="add icon" />
-        </div>
+          <PlusCircleIcon/>
+        </motion.div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-white relative p-0 h-56 overflow-auto ">
+      <DropdownMenuContent className="bg-white relative p-0 h-50">
         {catagories.map((catagory) => (
           <div
           key={catagory}

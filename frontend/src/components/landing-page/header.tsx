@@ -51,7 +51,7 @@ export default function Header() {
               onClick={(e) => {
                 handleLinkClick(e, "#features");
               }}
-              className="md:hover:bg-gradient-to-l md:hover:from-primary md:hover:to-secondary md:hover:bg-clip-text md:hover:text-transparent"
+              className="md:hover:bg-gradient-to-l md:hover:from-custom-dark-purple md:hover:to-custom-light-purple md:hover:bg-clip-text md:hover:text-transparent"
             >
               المميزات
             </a>
@@ -62,7 +62,7 @@ export default function Header() {
               onClick={(e) => {
                 handleLinkClick(e, "#events");
               }}
-              className="md:hover:bg-gradient-to-l md:hover:from-primary md:hover:to-secondary md:hover:bg-clip-text md:hover:text-transparent"
+              className="md:hover:bg-gradient-to-l md:hover:from-custom-dark-purple md:hover:to-custom-light-purple md:hover:bg-clip-text md:hover:text-transparent"
             >
               الفعاليات
             </a>
@@ -73,7 +73,7 @@ export default function Header() {
               onClick={(e) => {
                 handleLinkClick(e, "#footer");
               }}
-              className="md:hover:bg-gradient-to-l md:hover:from-primary md:hover:to-secondary md:hover:bg-clip-text md:hover:text-transparent"
+              className="md:hover:bg-gradient-to-l md:hover:from-custom-dark-purple md:hover:to-custom-light-purple md:hover:bg-clip-text md:hover:text-transparent"
             >
               حول منسق
             </a>

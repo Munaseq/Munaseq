@@ -1,7 +1,8 @@
-import userCircle from "@/assets/icons/user-circle.svg";
+
 import Image from "next/image";
 import Dropdown from "./dropdown-options";
 import { UserDataDto } from "@/dtos/user-data.dto";
+import { CircleUserRoundIcon } from "lucide-react";
 
 export default function MenuProfile({ profileData, onLinkClick }: { profileData: UserDataDto, onLinkClick?: () => void }) {
  
@@ -16,7 +17,7 @@ export default function MenuProfile({ profileData, onLinkClick }: { profileData:
               priority
             />
           ) : (
-            <Image src={userCircle} alt="user-circle" fill priority />
+            <CircleUserRoundIcon className="w-full h-full"/>
           )}
         </div>
         <div className="mt-2">

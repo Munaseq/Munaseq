@@ -1,10 +1,10 @@
 import Image from "next/image";
-import puzzleIcon from "@/assets/icons/participants-gradient.svg";
 import CreateEventCard from "./create-event-card";
 import TextField from "@/components/common/text/text-field";
 import { Input } from "@/components/common/shadcn-ui/input";
 import Button from "@/components/common/buttons/button";
 import Radio from "@/components/common/radio-group";
+import {UsersRoundIcon } from "lucide-react";
 export default function ParticipantsForm({
     nextStepHandler,
     step,
@@ -17,7 +17,7 @@ export default function ParticipantsForm({
     return (
         <CreateEventCard actual={step} goal={2}>
             <h1 className="flex items-center gap-2 font-bold text-xl">
-                <Image src={puzzleIcon} alt="puzzle icon" />
+                <UsersRoundIcon size={32} className="text-custom-light-purple" />
                 معلومات الحضور
             </h1>
             <div className="max-w-96 w-full grid gap-5 mt-2">

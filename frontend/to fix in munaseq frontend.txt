@@ -9,9 +9,14 @@
 - error when seeing the details of the event -> getUserAction(id: string) return error (done ✅)
 - change menu for leaving and canceling events and make it inside actual event (done ✅)
 - date at create form not being set to current day. (done ✅)
+- cant delete a profile image or cv
+- chage catagory because it is ugly
+- update rating using tags
+- same for profile picture
 - add new toast (FOR HUSSAM)
 - add modal before cancel or leaving event (FOR HUSSAM)
 
 # Changes 🟣
 -- I have changed getUserAction to make it able to search
 -- I have added a bottom navigation for mobile(not complete yet) check this out 
+-- changed every icon to use lucid 

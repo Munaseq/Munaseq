@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import ratingIcon from "@/assets/icons/rating-star.svg";
-import ratingFilledIcon from "@/assets/icons/rating-star.svg"; // Replace with filled star icon
-import ratingEmptyIcon from "@/assets/icons/rating-empty-star.svg"; // Replace with empty star icon
 import Button from "@/components/common/buttons/button";
 import rateEventAction from "@/proxy/event/add-rate-event-action";
+import { StarIcon } from "lucide-react";
 
 export default function RatePage({ params }: { params: { eventId: string } }) {
     const [rating, setRating] = useState(0);
@@ -60,11 +58,7 @@ export default function RatePage({ params }: { params: { eventId: string } }) {
     return (
         <div className="">
             <h1 className="font-bold flex items-center text-3xl gap-2 mt-4">
-                <Image
-                    className="sm:w-12 w-10"
-                    src={ratingIcon}
-                    alt="rating icon"
-                />
+                <StarIcon className="text-custom-light-purple" size={32} />
                 شاركنا رأيك بالفعالية
             </h1>
             <div className="py-10 flex items-center gap-4">
@@ -76,7 +70,7 @@ export default function RatePage({ params }: { params: { eventId: string } }) {
                             onClick={() => handleRating(index + 1)}
                             className="focus:outline-none"
                         >
-                            <Image
+                            {/* <Image
                                 src={
                                     index < rating
                                         ? ratingFilledIcon
@@ -85,6 +79,11 @@ export default function RatePage({ params }: { params: { eventId: string } }) {
                                 alt={`Star ${index + 1}`}
                                 width={24}
                                 height={24}
+                            /> */}
+                            <StarIcon
+                            fill={index < rating ? "currentColor" : "none"}
+                                className="text-custom-light-purple"
+                                size={24}
                             />
                         </button>
                     ))}

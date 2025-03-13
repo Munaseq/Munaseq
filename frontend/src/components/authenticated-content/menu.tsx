@@ -6,10 +6,9 @@ import MenuProfileSkeleton from "./menu-profile-skeleton";
 import Nav from "./Nav";
 import Link from "next/link";
 import Image from "next/image";
-import plus from "@/assets/icons/plus-circle-white.svg";
-import Cookies from "js-cookie";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import getProfileAction from "@/proxy/user/get-profile-action";
+import { PlusCircleIcon } from "lucide-react";
 
 export default function Menu({
     mobile,
@@ -22,7 +21,6 @@ export default function Menu({
     useEffect(() => {
         const getProfile = async () => {
             // get cookies
-            const token = Cookies.get("token");
             const data = await getProfileAction();
             setProfileData(data);
         };
@@ -52,14 +50,10 @@ export default function Menu({
                     <Link
                         onClick={onLinkClick}
                         href="/create-event"
-                        className="bg-custom-gradient  px-6 py-4 text-white  text-xl flex justify-center gap-3 bg-[length:120%] hover:bg-right transition-all rounded-full font-semibold text-nowrap "
+                        className="bg-custom-gradient  px-6 py-4 text-white  text-xl flex justify-center items-center gap-3 bg-[length:120%] hover:bg-right transition-all rounded-full font-semibold text-nowrap "
                     >
                         نسق فعاليتك{" "}
-                        <Image
-                            src={plus}
-                            className="w-7 aspect-square"
-                            alt="add icon"
-                        />
+                        <PlusCircleIcon/>
                     </Link>
                 </div>
             </div>

@@ -1,12 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import user from "@/assets/icons/user.svg";
-import userActive from "@/assets/icons/user-active.svg";
-import discover from "@/assets/icons/discover.svg";
-import discoverActive from "@/assets/icons/discover-active.svg";
-import calender from "@/assets/icons/calender.svg";
-import calenderActive from "@/assets/icons/calender-active.svg";
+
 import {
     Collapsible,
     CollapsibleContent,
@@ -16,14 +11,13 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import { useState } from "react";
+import { CalendarDaysIcon, SparklesIcon, UserRoundIcon } from "lucide-react";
 
 type NavLink = {
     name: string;
     path: string;
-    icon: StaticImport;
-    iconActive: StaticImport;
+    icon: React.ReactElement;
 };
 
 type EventLink = {
@@ -40,14 +34,12 @@ export default function Nav(props: {
         {
             name: "اكتشف",
             path: "/discover",
-            icon: discover,
-            iconActive: discoverActive,
+            icon: <SparklesIcon />,
         },
         {
             name: "الملف الشخصي",
             path: "/user/" + props.username,
-            icon: user,
-            iconActive: userActive,
+            icon: <UserRoundIcon />,
         },
     ];
     const eventLinks = [
@@ -91,29 +83,19 @@ export default function Nav(props: {
                             whileHover={"active"}
                             className="flex gap-2 items-center py-1 relative w-full group"
                         >
-                            <div>
+                            <div className="ms-5">
                                 <span
                                     className={
-                                        "absolute transition-opacity z-10 " +
+                                        "absolute transition-opacity z-10 text-custom-dark-purple " +
                                         (isActive
                                             ? "opacity-1"
                                             : "group-hover:opacity-100 opacity-0")
                                     }
                                 >
-                                    <Image
-                                        priority
-                                        className="w-8 ms-5"
-                                        src={link.iconActive}
-                                        alt="link image"
-                                    />
+                                    {link.icon}
                                 </span>
                                 <span className={" transition-opacity "}>
-                                    <Image
-                                        priority
-                                        className="w-8 ms-5"
-                                        src={link.icon}
-                                        alt="link image"
-                                    />
+                                    {link.icon}
                                 </span>
                             </div>
                             <p
@@ -143,7 +125,7 @@ export default function Nav(props: {
                             whileHover={"active"}
                             className="flex gap-2 items-center py-1 relative w-full group"
                         >
-                            <div className="grid place-items-center">
+                            <div className="grid place-items-center ms-5">
                                 <span
                                     className={
                                         "absolute transition-opacity z-10 " +
@@ -152,20 +134,10 @@ export default function Nav(props: {
                                             : "group-hover:opacity-100 opacity-0")
                                     }
                                 >
-                                    <Image
-                                        priority
-                                        className="w-8 ms-5"
-                                        src={calenderActive}
-                                        alt="link image"
-                                    />
+                                    <CalendarDaysIcon color={"#652bb7"} />
                                 </span>
                                 <span className={" transition-opacity "}>
-                                    <Image
-                                        priority
-                                        className="w-8 ms-5"
-                                        src={calender}
-                                        alt="link image"
-                                    />
+                                    <CalendarDaysIcon color={"#525252"} />
                                 </span>
                             </div>
                             <p
@@ -178,7 +150,7 @@ export default function Nav(props: {
                             >
                                 الفعاليات
                             </p>
-                            
+
                             <div
                                 className={
                                     " transition-transform " +

@@ -153,7 +153,7 @@ export default function SignUp() {
                             >
                                 <motion.div
                                     animate={{ height: observedLinkHeight }}
-                                    className="w-full h-full rounded-[50px] bg-gradient-to-br from-primary to-secondary overflow-hidden items-center flex flex-col justify-center gap-14  "
+                                    className="w-full h-full rounded-[50px] bg-gradient-to-br to-custom-dark-purple from-custom-light-purple overflow-hidden items-center flex flex-col justify-center gap-14  "
                                 >
                                     <Image
                                         src={logoIcon}

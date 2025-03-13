@@ -1,10 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import tagIcon from "@/assets/icons/tag-gradient.svg";
-import plusIcon from "@/assets/icons/plus-circle.svg";
-import userIcon from "@/assets/icons/user-black.svg";
-
 import CreateEventCard from "./create-event-card";
 import Button from "@/components/common/buttons/button";
 import { motion } from "framer-motion";
@@ -15,6 +11,7 @@ import AddCatagoryDropdown from "@/components/common/buttons/add-category-dropdo
 import getUserAction from "@/proxy/user/get-user-using-username-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import SearchUser from "@/components/authenticated-content/search-user";
+import {PlusIcon, TagIcon, UserRoundIcon } from "lucide-react";
 
 export default function forwhoForm({
   onCategoriesChange,
@@ -92,17 +89,14 @@ export default function forwhoForm({
   return (
     <CreateEventCard actual={step} goal={4}>
       <h1 className="flex items-center gap-2 font-bold text-xl">
-        <Image src={tagIcon} alt="puzzle icon" />
+        <TagIcon className="text-custom-light-purple" size={32} />
         لمن توجه اليه الفعالية
       </h1>
       {/* Category Selection Section */}
-      <motion.div layout className="flex flex-wrap gap-2 mt-2">
+      <motion.div layout className="flex flex-wrap gap-2 mt-5">
         {selectedCatagories.map((category) => (
           <Catagory
             onClick={() => {
-              if (selectedCatagories.length === 1) {
-                return;
-              }
               setSelectedCatagories((prevState) => {
                 return prevState.filter((t) => t !== category);
               });
@@ -130,7 +124,7 @@ export default function forwhoForm({
       </motion.div>
 
       {/* Moderators Section */}
-      <div className="mt-5">
+      <div className="mt-10">
         <label className="block text-lg text-custom-gray">
           منظمين الفعالية التعليمية
         </label>
@@ -141,12 +135,13 @@ export default function forwhoForm({
               key={moderator.username}
               className="relative w-12 h-12 rounded-full overflow-hidden border border-gray-300"
             >
+              { moderator.profilePictureUrl ? 
               <Image
-                src={moderator.profilePictureUrl || userIcon}
-                alt={moderator.visibleName || moderator.username}
+                src={moderator.profilePictureUrl}
+                alt={moderator.username}
                 layout="fill"
                 objectFit="cover"
-              />
+              /> : <UserRoundIcon className="w-full h-full"/>}
             </motion.div>
           ))}
           {moderators.length < 3 && (
@@ -158,7 +153,7 @@ export default function forwhoForm({
                 setIsModalOpen(true);
               }}
             >
-              <Image src={plusIcon} alt="Add moderators" />
+              <PlusIcon/>
             </motion.div>
           )}
         </motion.div>
@@ -176,12 +171,13 @@ export default function forwhoForm({
               key={presenter.username}
               className="relative w-12 h-12 rounded-full overflow-hidden border border-gray-300"
             >
+              { presenter.profilePictureUrl ? 
               <Image
-                src={presenter.profilePictureUrl || userIcon}
-                alt={presenter.visibleName || presenter.username}
+                src={presenter.profilePictureUrl}
+                alt={presenter.username}
                 layout="fill"
                 objectFit="cover"
-              />
+              /> : <UserRoundIcon className="w-full h-full"/>}
             </motion.div>
           ))}
           {presenters.length < 3 && (
@@ -193,7 +189,7 @@ export default function forwhoForm({
                 setIsModalOpen(true);
               }}
             >
-              <Image src={plusIcon} alt="Add presenters" />
+              <PlusIcon/>
             </motion.div>
           )}
         </motion.div>

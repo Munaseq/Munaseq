@@ -2,15 +2,14 @@
 
 // import CreateEventProgress from "@/components/authenticated-content/create-event/create-event-progress";
 import Image from "next/image";
-import plusCricle from "@/assets/icons/plus-circle-gradient.svg";
 import Title from "@/components/common/text/title";
-import { Metadata } from "next";
 import MainForm from "@/components/authenticated-content/create-event/main-form";
 import { useRef, useState } from "react";
 import ParticipantsForm from "@/components/authenticated-content/create-event/participants-form";
 import TimeForm from "@/components/authenticated-content/create-event/time-form";
 import ForwhoForm from "@/components/authenticated-content/create-event/forwho-form";
 import createEventAction from "@/proxy/event/create-event-action";
+import { PlusCircle } from "lucide-react";
 
 // export const metadata: Metadata = {
 //     title: "انشاء فعالية",
@@ -40,7 +39,7 @@ export default function CreateEvent() {
   return (
     <div className="overflow-hidden">
       <Title>
-        <Image src={plusCricle} alt="plus icon" />
+        <PlusCircle size={32} className="text-custom-light-purple" />
         نسق فعاليتك
       </Title>
       <div className="grid place-items-center">

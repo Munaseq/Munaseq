@@ -18,9 +18,7 @@ import isEmailUniqueAction from "@/proxy/user/is-email-unique-action";
 import Link from "next/link";
 import editProfileAction from "@/proxy/user/edit-profile-action";
 import TooltipWrapper from "@/components/common/tooltip";
-import deleteIcon from "@/assets/icons/x.svg";
-import editIcon from "@/assets/icons/edit.svg";
-import cvIcon from "@/assets/icons/cv-icon.svg";
+import { PencilIcon, FileTextIcon, XCircleIcon } from "lucide-react";
 
 export default function EditForm({
     userData,
@@ -342,11 +340,7 @@ export default function EditForm({
                                             profileImageRef.current.click();
                                         }}
                                     >
-                                        <Image
-                                            className="w-10 aspect-square"
-                                            src={editIcon}
-                                            alt="edit image"
-                                        />
+                                        <PencilIcon/>
                                     </motion.button>
                                 </TooltipWrapper>
 
@@ -360,11 +354,7 @@ export default function EditForm({
                                             profileImageRef.current.value = "";
                                         }}
                                     >
-                                        <Image
-                                            className="w-10"
-                                            src={deleteIcon}
-                                            alt="delete image"
-                                        />
+                                        <XCircleIcon/>
                                     </motion.button>
                                 </TooltipWrapper>
                             </div>
@@ -398,11 +388,7 @@ export default function EditForm({
                                         rel="noopener noreferrer"
                                         className="text-custom-gray"
                                     >
-                                        <Image
-                                            src={cvIcon}
-                                            alt="CV icon"
-                                            className="w-10 cursor-pointer"
-                                        />
+                                        <FileTextIcon className="cursor-pointer" />
                                     </a>
                                 </TooltipWrapper>
                                 <TooltipWrapper text="تعديل السيرة الذاتية">
@@ -414,11 +400,7 @@ export default function EditForm({
                                             cvRef.current.click();
                                         }}
                                     >
-                                        <Image
-                                            className="w-10 aspect-square"
-                                            src={editIcon}
-                                            alt="edit cv"
-                                        />
+                                       <PencilIcon/>
                                     </motion.button>
                                 </TooltipWrapper>
 
@@ -432,11 +414,7 @@ export default function EditForm({
                                             cvRef.current.value = "";
                                         }}
                                     >
-                                        <Image
-                                            className="w-10"
-                                            src={deleteIcon}
-                                            alt="delete cv"
-                                        />
+                                        <XCircleIcon/>
                                     </motion.button>
                                 </TooltipWrapper>
                             </div>
