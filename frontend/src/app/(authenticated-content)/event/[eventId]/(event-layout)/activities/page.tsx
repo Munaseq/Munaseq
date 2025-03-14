@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import getProfileAction from "@/proxy/user/get-profile-action";
+import { FileQuestion } from "lucide-react";
 
 type Assignments = {
   id: string;
@@ -92,7 +93,7 @@ export default async function ActivitiesPage({
   return (
     <>
       <h1 className="font-bold flex items-center text-3xl gap-2 mt-4">
-        <Image className="sm:w-12 w-10" src={fileIcon} alt="material icon" />
+        <FileQuestion className="text-custom-light-purple" size={40} />
         أنشطة الفعالية
       </h1>
       <div className="flex flex-wrap gap-4 mt-10">
