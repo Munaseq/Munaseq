@@ -28,7 +28,6 @@ export default async function EventLayout({
   const isEventCreator = currentUser.id === user.id;
   const rating: any = await getUserRating(user.id);
 
-
   return (
     <div className="bg-white shadow-strong min-h-screen rounded-3xl overflow-hidden">
       <div className="h-96 rounded-t-3xl relative">
@@ -50,8 +49,6 @@ export default async function EventLayout({
           alt="deco"
         />
 
-
-
         <div className="absolute z-20 flex gap-1 top-3 right-3">
           {event.categories.map((category) => (
             <span
@@ -63,21 +60,24 @@ export default async function EventLayout({
           ))}
         </div>
 
-        <EventDropdown eventId={params.eventId} isEventCreator={isEventCreator} />
-       
+        <EventDropdown
+          eventId={params.eventId}
+          isEventCreator={isEventCreator}
+        />
+
         <div className="absolute z-20 text-white bottom-0 right-0 grid p-4 pb-2">
           <div className="mb-10">
             <h1 className="text-4xl font-bold mb-1">{event.title}</h1>
             <div className="flex items-center gap-2 font-light text-xl">
               {" "}
-              <UserRoundIcon className="text-custom-light-purple"/>{" "}
-              <span>
-                {user.firstName + " " + user.lastName}
-              </span>{" "}
-              <StarIcon className="text-custom-light-purple"/>{" "}
-              {rating?.avgRating ? (<span>
-                                {rating?.avgRating}
-                                </span>) : (<span>0</span>)}
+              <UserRoundIcon className="text-custom-light-purple" />{" "}
+              <span>{user.firstName + " " + user.lastName}</span>{" "}
+              <StarIcon className="text-custom-light-purple" />{" "}
+              {rating?.avgRating ? (
+                <span>{rating?.avgRating}</span>
+              ) : (
+                <span>0</span>
+              )}
             </div>
           </div>
           <div>
@@ -90,16 +90,10 @@ export default async function EventLayout({
                 المحتوى{" "}
                 <TabIndicator layoutId="active-event-tab" tab="/content" />
               </Link>
-              {/* <Link
-                                href="./activities"
-                                className="relative text-nowrap"
-                            >
-                                الأنشطة{" "}
-                                <TabIndicator
-                                    layoutId="active-event-tab"
-                                    tab="/activities"
-                                />
-                            </Link> */}
+              <Link href="./activities" className="relative text-nowrap">
+                الأنشطة{" "}
+                <TabIndicator layoutId="active-event-tab" tab="/activities" />
+              </Link>
               <Link href="./members" className="relative text-nowrap">
                 الأعضاء{" "}
                 <TabIndicator layoutId="active-event-tab" tab="/members" />
