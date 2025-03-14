@@ -29,7 +29,7 @@ export default function CreateActivityPage() {
     activityTimeLimit: 0,
     startDate: today,
     endDate: today,
-    questions: [{ text: "", questionType: "", options: [], correctAnswer: "" }],
+    questions: [],
   });
 
   const [endDateMin, setEndDateMin] = useState(today);
@@ -50,13 +50,18 @@ export default function CreateActivityPage() {
   const handleAddQuestion = (index: number) => {
     setShowQuestion((prev) => !prev);
     setQuestionNum(index);
-    if (index <= formData.questions.length) {
+    if (index === formData.questions.length) {
       setFormData((prev) => {
         return {
           ...prev,
           questions: [
             ...prev.questions,
-            { text: "", questionType: "", options: [], correctAnswer: "" },
+            {
+              text: "",
+              questionType: "multiple-choice",
+              options: [],
+              correctAnswer: "",
+            },
           ],
         };
       });
@@ -178,6 +183,7 @@ export default function CreateActivityPage() {
             formData={formData}
             questionNum={questionNum}
             handleChange={handleQuestionChange}
+            handleAddQuestion={handleAddQuestion}
           />
         )}
       </form>

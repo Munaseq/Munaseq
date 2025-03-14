@@ -9,6 +9,7 @@ type AddQuestionProps = {
   formData: any;
   questionNum: number;
   handleChange: any;
+  handleAddQuestion: any;
 };
 
 const MCS = ["أ", "ب", "ج", "د"];
@@ -17,8 +18,9 @@ export default function AddQuestion({
   formData,
   questionNum,
   handleChange,
+  handleAddQuestion,
 }: AddQuestionProps) {
-  const [numOfMcs, setNumOfMcs] = useState(0);
+  const [numOfMcs, setNumOfMcs] = useState(4);
   return (
     <div>
       <h2 className="font-bold flex items-center text-2xl gap-2 mt-4">
@@ -46,6 +48,7 @@ export default function AddQuestion({
               name="numOfMcs"
               value={numOfMcs}
               onChange={(e) => setNumOfMcs(Number(e.target.value))}
+              defaultValue={"4"}
             >
               <option value="1">1</option>
               <option value="2">2</option>
@@ -73,7 +76,7 @@ export default function AddQuestion({
                 type="text"
                 name="option"
                 onChange={handleChange}
-                value={formData.questions[questionNum].options[1]}
+                value={formData.questions[questionNum].options[index]}
               />
             </div>
           ))}
@@ -105,6 +108,15 @@ export default function AddQuestion({
             />
           </div>
         )}
+
+        <div className="flex justify-center">
+          <button
+            className="bg-custom-light-purple text-white p-2 rounded-lg"
+            onClick={() => handleAddQuestion(questionNum)}
+          >
+            اضافة
+          </button>
+        </div>
       </div>
     </div>
   );
