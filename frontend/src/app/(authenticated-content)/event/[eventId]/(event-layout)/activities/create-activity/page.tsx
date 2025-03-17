@@ -5,6 +5,7 @@ import { Input } from "@/components/common/shadcn-ui/input";
 import AddQuestion from "@/components/authenticated-content/event/event-layout/add-question";
 import Button from "@/components/common/buttons/button";
 import { FileQuestion } from "lucide-react";
+import { FileChartColumnIncreasing } from "lucide-react";
 import { motion } from "framer-motion";
 import { set } from "date-fns";
 
@@ -115,7 +116,6 @@ export default function CreateActivityPage() {
   };
 
   const handleSaveActivity = () => {
-    // Implement your save functionality here
     console.log("Activity saved:", formData);
   };
 
@@ -162,7 +162,10 @@ export default function CreateActivityPage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <FileQuestion className="text-custom-light-purple" size={40} />
+        <FileChartColumnIncreasing
+          className="text-custom-light-purple"
+          size={40}
+        />
         إضافة نشاط
       </motion.h1>
 

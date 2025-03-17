@@ -88,7 +88,7 @@ export default function AddQuestion({
               onChange={handleChange}
               value={formData.questions[questionNum].text}
               placeholder="أدخل السؤال هنا..."
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm placeholder:text-gray-400"
+              className="w-full h-10 px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm placeholder:text-gray-400"
             />
           </div>
         </motion.div>
@@ -111,8 +111,7 @@ export default function AddQuestion({
                   transition={{ delay: 0.1 * index, duration: 0.3 }}
                 >
                   <motion.div
-                    className="flex justify-center items-center w-10 h-10 bg-gradient-to-l from-custom-dark-purple to-custom-light-purple text-white rounded-full"
-                    whileHover={{ scale: 1.1 }}
+                    className="flex justify-center items-center w-10 h-10 bg-gradient-to-l from-custom-dark-purple to-custom-light-purple text-white rounded-lg"
                     transition={{ type: "spring", stiffness: 400 }}
                   >
                     <span className="text-lg font-semibold">{MCS[index]}</span>
@@ -124,7 +123,7 @@ export default function AddQuestion({
                       onChange={(e) => handleOptionChange(index, e)}
                       value={option}
                       placeholder="أدخل الخيار هنا..."
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm placeholder:text-gray-400"
+                      className="w-full h-10 px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm placeholder:text-gray-400"
                     />
                   </div>
                 </motion.div>
