@@ -2,6 +2,7 @@
 
 import cancelEventAction from "@/proxy/event/cancel-event-action";
 import leaveEventAction from "@/proxy/event/leave-event-action";
+import toast from "react-hot-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +16,14 @@ export default function EventDropdown({eventId, isEventCreator}: {eventId: strin
 
       const leaveEvent = async () => {
         const res = await leaveEventAction(eventId);
+        toast.success("تم المغادرة من الفعالية");
         router.push("/event/" + eventId);
       }
     
       const cancelEvent = async () => {
         const res = await cancelEventAction(eventId);
-        console.log(res);
+        toast.success("تم الغاء الفعالية");
+        
       }
 
 
