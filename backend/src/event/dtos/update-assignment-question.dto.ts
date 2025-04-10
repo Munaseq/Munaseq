@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsEnum, IsJSON, IsUUID } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsJSON,
+  IsUUID,
+  IsObject,
+  IsArray,
+} from 'class-validator';
 import { QuestionType } from '@prisma/client';
 
 export class UpdateAssignmentQuestionDTO {
@@ -14,7 +22,7 @@ export class UpdateAssignmentQuestionDTO {
   @IsOptional()
   questionType?: QuestionType;
 
-  @IsJSON()
+  @IsArray()
   @IsOptional()
   options?: object;
 

@@ -386,6 +386,14 @@ export class EventController {
   ) {
     return this.eventService.getAssignments(userId, eventId);
   }
+  @UseGuards(AuthGuard)
+  @Get('assignment/show/:eventId')
+  showAssignments(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.showAssignment(userId, eventId);
+  }
 
   @UseGuards(AuthGuard)
   @Post('assignment/save/:assignmentId')
@@ -417,17 +425,17 @@ export class EventController {
   }
   //CHECK curr
   @UseGuards(AuthGuard)
-  @Post('addAssignment/:eventId')
-  addAssignmentToEvent(
+  @Post('assignment/:eventId')
+  addAssignment(
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
     @Body() body: CreateAssignment,
   ) {
-    return this.eventService.addAssignmentToEvent(eventId, userId, body);
+    return this.eventService.addAssignment(eventId, userId, body);
   }
 
   @UseGuards(AuthGuard)
-  @Patch('updateAssignment/:assignmentId')
+  @Patch('assignment/:assignmentId')
   updateAssignment(
     @Param('assignmentId') assignmentId: string,
     @GetCurrentUserId() userId: string,
@@ -437,7 +445,7 @@ export class EventController {
   }
 
   @UseGuards(AuthGuard)
-  @Delete('deleteAssignment/:assignmentId')
+  @Delete('assignment/:assignmentId')
   deleteAssignment(
     @GetCurrentUserId() userId: string,
     @Param('assignmentId') assignmentId: string,

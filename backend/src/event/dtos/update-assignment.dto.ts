@@ -5,15 +5,20 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { UpdateAssignmentQuestionDTO } from './update-assignment-question.dto';
 
 export class UpdateAssignmentDTO {
   @IsArray()
   @IsOptional()
-  @IsNotEmpty({ each: true })
+  @ValidateNested({ each: true })
   @Type(() => UpdateAssignmentQuestionDTO)
   questions?: UpdateAssignmentQuestionDTO[];
+
+  @IsOptional()
+  @IsString()
+  assignmentTitle?: string;
 
   @IsOptional()
   @IsDate()

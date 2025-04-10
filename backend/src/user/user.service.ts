@@ -247,12 +247,23 @@ export class UserService {
         },
       },
     });
-    if (!result) {
-      throw new NotFoundException('Event not found');
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        createdEvents: {
+          select: {
+            _count: { select: { GivenFeedbacks: true } },
+            GivenFeedbacks: { select: { rating: true } },
+          },
+        },
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
     // Calculate the total number of ratings
-    const numberOfRatings = result.reduce(
-      (sum, curr) => sum + curr.GivenFeedbacks.length,
+    const numberOfRatings = user.createdEvents.reduce(
+      (sum, curr) => sum + curr._count.GivenFeedbacks,
       0,
     );
 

@@ -7,7 +7,7 @@ import {
   IsOptional,
 } from 'class-validator';
 
-export class CreateAssignmentQuestionDTO {
+export class AssignmentQuestionDTO {
   @IsString()
   @IsNotEmpty()
   text: string;

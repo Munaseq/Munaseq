@@ -88,7 +88,7 @@ model AssignmentQuestion {
   id            String       @id @default(uuid())
   text          String // The question text
   questionType  QuestionType // e.g., multiple-choice, true/false
-  options       Json? // Array of options
+  options       Json? // Array of options 
   correctAnswer String? // The correct answer(s) (could be a string, or an array if multiple answers)|| null if the question is essay
   assignment_id String
   Assignment    Assignment   @relation("AssignmentQuestion", fields: [assignment_id], references: [id], onDelete: Cascade)
@@ -98,15 +98,16 @@ model AssignmentQuestion {
 }
 
 model Assignment {
-  id             String               @id @default(uuid())
-  startDate      DateTime?
-  endDate        DateTime?
-  questions      AssignmentQuestion[] @relation("AssignmentQuestion")
-  Event          Event                @relation(fields: [eventId], references: [id], onDelete: Cascade) // Event has MANY Assignment, while Assignment belongs to ONLY ONE Event (One-To-Many)
-  eventId        String
-  TakeAssignment TakeAssignment[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id              String               @id @default(uuid())
+  assignmentTitle String
+  startDate       DateTime?
+  endDate         DateTime?
+  questions       AssignmentQuestion[] @relation("AssignmentQuestion")
+  Event           Event                @relation(fields: [eventId], references: [id], onDelete: Cascade) // Event has MANY Assignment, while Assignment belongs to ONLY ONE Event (One-To-Many)
+  eventId         String
+  TakeAssignment  TakeAssignment[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 }
 
 model Material {
@@ -217,7 +218,9 @@ enum ChatCategory {
 
 enum QuestionType {
   MULTIPLE_CHOICE
+  ESSAY
   TRUE_FALSE
+  REMOVE
 }
 
 enum TakeStatus {

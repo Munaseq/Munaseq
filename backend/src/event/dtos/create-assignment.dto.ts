@@ -6,12 +6,15 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { CreateAssignmentQuestionDTO } from './create-assignment-question.dto';
+import { AssignmentQuestionDTO } from './create-assignment-question.dto';
 export class CreateAssignment {
+  @IsNotEmpty()
+  @IsString()
+  assignmentTitle: string;
   @IsArray()
   @IsNotEmpty({ each: true })
-  @Type(() => CreateAssignmentQuestionDTO)
-  questions: CreateAssignmentQuestionDTO[];
+  @Type(() => AssignmentQuestionDTO)
+  questions: AssignmentQuestionDTO[];
   @IsDate()
   @Transform(({ value }) => new Date(value))
   startDate: Date;
