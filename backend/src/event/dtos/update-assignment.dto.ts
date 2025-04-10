@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { UpdateAssignmentQuestionDTO } from './update-assignment-question.dto';
 
-export class UpdateAssignment {
+export class UpdateAssignmentDTO {
   @IsArray()
   @IsOptional()
   @IsNotEmpty({ each: true })

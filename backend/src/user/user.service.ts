@@ -267,16 +267,12 @@ export class UserService {
       0,
     );
 
-    const avgRating =
-      numberOfRatings > 0 ? sumOfRating / numberOfRatings : null;
-    if (avgRating) {
-      return {
-        avgRating,
-        numberOfRatings,
-      };
-    } else {
-      return { message: "The user hasn't being rated yet" };
-    }
+    const avgRating = numberOfRatings > 0 ? sumOfRating / numberOfRatings : 0;
+
+    return {
+      avgRating,
+      numberOfRatings,
+    };
   }
   async changeUserPassword(
     passwordChangeDto: userChangePasswordDto,

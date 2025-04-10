@@ -387,7 +387,6 @@ export class EventController {
     return this.eventService.getAssignments(userId, eventId);
   }
 
-  //CHECK
   @UseGuards(AuthGuard)
   @Post('assignment/save/:assignmentId')
   saveAssignemt(
