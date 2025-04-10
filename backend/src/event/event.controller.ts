@@ -26,11 +26,11 @@ import {
   LeaveEventDto,
   SeacrhUser,
   SearchEvent,
-  UpdateAssignment,
+  UpdateAssignmentDTO,
   UpdateEventDto,
   CreateUpdateRating,
   AssignRoles,
-  TakeAssigment,
+  TakeAssigmentDTO,
 } from './dtos';
 
 import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
@@ -214,7 +214,7 @@ export class EventController {
     @GetCurrentUserId() userId: string,
     @Param('eventId') eventId: string,
     @Body() updateEventDto: UpdateEventDto,
-    @Query('removeImage') removeImage:boolean, 
+    @Query('removeImage') removeImage: boolean,
     @UploadedFiles()
     files: {
       image?: any;
@@ -375,73 +375,66 @@ export class EventController {
   }
 
   //-----------------------------------------
-  //Assignment's endpoints
+  //Assignment endpoints
   //-----------------------------------------
 
   @UseGuards(AuthGuard)
-  @Get('assignments/:eventId')
+  @Get('assignment/:eventId')
   getAssignments(
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
   ) {
     return this.eventService.getAssignments(userId, eventId);
   }
+
+  //CHECK
   @UseGuards(AuthGuard)
-  @Post('submitAssignment/:assignmentId')
-  @UseInterceptors(multerMaterialtLogic())
+  @Post('assignment/save/:assignmentId')
+  saveAssignemt(
+    @Param('assignmentId') assignmentId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() takeAssignmentDto: TakeAssigmentDTO,
+  ) {
+    return this.eventService.saveAssignment(
+      userId,
+      assignmentId,
+      takeAssignmentDto.answers,
+      'SAVED_ANSWERS',
+    );
+  }
+  @UseGuards(AuthGuard)
+  @Post('assignment/submit/:assignmentId')
   submitAssignemt(
     @Param('assignmentId') assignmentId: string,
     @GetCurrentUserId() userId: string,
-    @UploadedFiles() files: { materials: any },
-    @Body() questionsDto: TakeAssigment,
+    @Body() takeAssignmentDto: TakeAssigmentDTO,
   ) {
-    const { questions } = questionsDto;
-    const materialUrl = files?.materials[0].location;
-    return this.eventService.submitAssignemnt(
+    return this.eventService.saveAssignment(
       userId,
       assignmentId,
-      materialUrl,
-      questions,
+      takeAssignmentDto.answers,
+      'SUBMITTED',
     );
   }
+  //CHECK curr
   @UseGuards(AuthGuard)
-  @UseInterceptors(multerMaterialtLogic())
   @Post('addAssignment/:eventId')
   addAssignmentToEvent(
     @Param('eventId') eventId: string,
-    @UploadedFiles() files: { materials: any },
     @GetCurrentUserId() userId: string,
-    @Body() createAssignmentDto: CreateAssignment,
+    @Body() body: CreateAssignment,
   ) {
-    const materialUrl = files?.materials[0].location;
-    return this.eventService.addAssignmentToEvent(
-      eventId,
-      userId,
-      createAssignmentDto.startDate,
-      createAssignmentDto.endDate,
-      createAssignmentDto.questions,
-      materialUrl,
-    );
+    return this.eventService.addAssignmentToEvent(eventId, userId, body);
   }
 
   @UseGuards(AuthGuard)
-  @UseInterceptors(multerMaterialtLogic())
   @Patch('updateAssignment/:assignmentId')
   updateAssignment(
     @Param('assignmentId') assignmentId: string,
-    @UploadedFiles() files: { materials: any },
     @GetCurrentUserId() userId: string,
-    @Body() createAssignmentDto: UpdateAssignment,
+    @Body() body: UpdateAssignmentDTO,
   ) {
-    const materialUrl = files?.materials[0].location;
-    return this.eventService.updateAssignment(
-      assignmentId,
-      userId,
-      createAssignmentDto.startDate,
-      createAssignmentDto.endDate,
-      createAssignmentDto.questions,
-      materialUrl,
-    );
+    return this.eventService.updateAssignment(assignmentId, userId, body);
   }
 
   @UseGuards(AuthGuard)

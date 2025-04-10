@@ -7,8 +7,19 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateEventDto, JoinEventDto, UpdateEventDto } from './dtos';
+import {
+  CreateAssignment,
+  CreateEventDto,
+  JoinEventDto,
+  UpdateAssignmentDTO,
+  UpdateEventDto,
+} from './dtos';
 import { UpdateQuizDto } from './dtos/update-quiz.dto';
+import { CreateAssignmentQuestionDTO } from './dtos/create-assignment-question.dto';
+import { UpdateAssignmentQuestionDTO } from './dtos/update-assignment-question.dto';
+import { TakeAssigmentDTO } from './dtos/take-assignment.dto';
+import { AssignRoles } from './dtos/assign-role.dto';
+type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
 @Injectable()
 export class EventService {
@@ -1162,7 +1173,7 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to delete materials to this event',
+        'User is not authorized to view the assignments of this event',
       );
     }
     const result = await this.prisma.event.findUnique({
@@ -1172,29 +1183,23 @@ export class EventService {
       select: {
         Assignments: {
           select: {
-            id: true,
-            materialUrl: true,
-            endDate: true,
-            startDate: true,
+            _count: true,
             createdAt: true,
-            updatedAt: true,
-            questions: true,
+            id: true,
+            startDate: true,
+            endDate: true,
+            TakeAssignment: { where: { userId }, select: { status: true } }, //if does it exist then it's
           },
         },
       },
     });
-    return result ?? { message: "The event hasn't any assignments" };
+    return result?.Assignments ?? [];
   }
   async addAssignmentToEvent(
     eventId: string,
     userId: string,
-    startDate: Date,
-    endDate: Date,
-    questions?: string,
-    materialUrl?: string,
+    body: CreateAssignment,
   ) {
-    //the following logic is to ensure that the assignment will not be added to the event unless the user is authorized to do that
-
     //retreive eventCreator, moderators, and presenters ids
     const eventIds = await this.prisma.event.findUniqueOrThrow({
       where: { id: eventId },
@@ -1212,7 +1217,7 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to add materials to this event',
+        'User is not authorized to add assignment to this event',
       );
     }
     const result = await this.prisma.event.update({
@@ -1222,45 +1227,49 @@ export class EventService {
       data: {
         Assignments: {
           create: {
-            startDate,
-            endDate,
-            materialUrl,
-            questions,
+            startDate: body.startDate,
+            endDate: body.endDate,
+            questions: {
+              createMany: {
+                data: body.questions.map((question) => ({
+                  questionType: question.questionType,
+                  text: question.text,
+                  correctAnswer: question.correctAnswer,
+                  options: question.options,
+                })),
+              },
+            },
           },
         },
       },
       select: {
         Assignments: {
-          where: {
-            materialUrl: {
-              equals: materialUrl,
-            },
-          },
           select: {
             id: true,
             startDate: true,
             endDate: true,
-            materialUrl: true,
+
             questions: true,
           },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
         },
       },
     });
     return result?.Assignments[0] ?? []; //to remove the unnecessary structure from the response
   }
-  async submitAssignemnt(
+
+  //Show the assignment and the saved answers if any
+  async showAssignment(
     userId: string,
     assignmentId: string,
-    answerMaterialUrl?: string,
-    questions?: string,
+    takeAssigmentId?: string, //CHECK if needed
   ) {
-    //retreive joinedUsers
-    const eventIds = await this.prisma.event.findFirst({
-      //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
+    const event = await this.prisma.event.findFirst({
       where: {
         Assignments: {
           some: {
-            id: assignmentId, // will check for an event that has an assignment id matches assignmentId
+            id: assignmentId,
           },
         },
       },
@@ -1270,68 +1279,192 @@ export class EventService {
             id: true,
           },
         },
+        Assignments: {
+          where: { id: assignmentId },
+          select: {
+            questions: true,
+            createdAt: true,
+            startDate: true,
+            endDate: true,
+          },
+        },
       },
     });
-    if (!eventIds) {
+    if (!event) {
       throw new NotFoundException('assignment not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized = eventIds.joinedUsers.some(
+    const isAuthorized = event.joinedUsers.some(
       (presenter) => presenter.id === userId,
     );
-
     if (!isAuthorized) {
-      throw new BadRequestException(
-        'User is not authorized to submit the assignemnt',
-      );
+      throw new BadRequestException("You're not allowed to do this assignment");
     }
-    const result = await this.prisma.user.update({
+    //check if assignment is within the valid period (means available to take)
+    const currDate = new Date();
+    if (
+      event?.Assignments[0]?.endDate < currDate &&
+      event?.Assignments[0]?.startDate > currDate
+    ) {
+      //extract the assignment from the event's data
+      const result = { assignment: event.Assignments, takeAssignment: null };
+      //check if there's a taken assignment by the user and bring it if exist, otherwise only retreive the questions
+      const takenAssignment = await this.prisma.takeAssignment.findFirst({
+        where: { assignmentId, userId },
+      });
+      if (takenAssignment) {
+        return { ...result, takeAssignment: takenAssignment };
+      }
+      return { ...result };
+    } else {
+      throw new BadRequestException('The Assignment time expired');
+    }
+  }
+  //must be deleted
+  // async submitAssignemnt(
+  //   userId: string,
+  //   assignmentId: string,
+  //   answers: object,
+  // ) {
+  //   //retreive joinedUsers
+  //   const eventIds = await this.prisma.event.findFirst({
+  //     //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
+  //     where: {
+  //       Assignments: {
+  //         some: {
+  //           id: assignmentId, // will check for an event that has an assignment id matches assignmentId
+  //         },
+  //       },
+  //     },
+  //     select: {
+  //       joinedUsers: {
+  //         select: {
+  //           id: true,
+  //         },
+  //       },
+  //       Assignments: {
+  //         where: { id: assignmentId },
+  //         select: {
+  //           startDate: true,
+  //           endDate: true,
+  //           TakeAssignment: {
+  //             where: { assignmentId, userId },
+  //             select: { id: true, status: true },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  //   if (!eventIds) {
+  //     throw new NotFoundException('assignment not found');
+  //   }
+  //   // Check if the userId matches any of the roles
+  //   const isAuthorized = eventIds.joinedUsers.some(
+  //     (joinedUser) => joinedUser.id === userId,
+  //   );
+
+  //   if (!isAuthorized) {
+  //     throw new BadRequestException(
+  //       'User is not authorized to submit the assignemnt',
+  //     );
+  //   }
+  //   const result = await this.prisma.takeAssignment.update({
+  //     where: {
+  //       id: assignmentTake.id,
+  //     },
+  //     data: {
+  //       answers,
+  //     },
+  //   });
+  //   if (result) {
+  //     return result;
+  //   } else {
+  //     throw new BadRequestException('Something went wrong');
+  //   }
+  // }
+
+  async saveAssignment(
+    userId: string,
+    assignmentId: string,
+    answers: object,
+    typeOfSubmission: TypeOfSubmisson,
+  ) {
+    //retreive joinedUsers and the assignment allowed period as well as the taken assignment by the user
+    const event = await this.prisma.event.findFirst({
       where: {
-        id: userId,
-      },
-      data: {
-        TakeAssignment: {
-          create: {
-            answerMaterialUrl,
-            textAnswers: questions,
-            assignmentId,
+        Assignments: {
+          some: {
+            id: assignmentId,
           },
         },
       },
       select: {
-        TakeAssignment: {
+        joinedUsers: {
           select: {
             id: true,
-            assignmentId: true,
-            answerMaterialUrl: true,
-            textAnswers: true,
-            createdAt: true,
           },
-          orderBy: {
-            createdAt: 'desc',
+        },
+        Assignments: {
+          where: { id: assignmentId },
+          select: {
+            startDate: true,
+            endDate: true,
+            TakeAssignment: {
+              where: { assignmentId, userId },
+              select: { id: true, status: true },
+            },
           },
-          take: 1,
         },
       },
     });
-    if (result) {
-      return result;
-    } else {
-      throw new BadRequestException('Something went wrong');
+    if (!event) {
+      throw new NotFoundException('assignment not found');
     }
+
+    // Check if the userId matches any of the roles ---> refactor the authorization logic into single one function
+    const isAuthorized = event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
+    if (!isAuthorized) {
+      throw new BadRequestException("You're not allowed to do this assignment");
+    }
+    //check if the assignment is submitted, if so, throw an error
+    let assignmentTake = event.Assignments[0].TakeAssignment[0];
+    if (assignmentTake?.status === 'SUBMITTED') {
+      throw new BadRequestException("You've already submitted this assignment");
+    }
+    //check if assignment is within the valid period (means available to take)
+    const currDate = new Date();
+    if (
+      event?.Assignments[0]?.endDate <= currDate &&
+      event?.Assignments[0]?.startDate >= currDate
+    ) {
+      throw new BadRequestException('The Assignment time expired');
+    }
+    //check if the  user has an existing taken assignment, if not,create a new one
+    if (!assignmentTake) {
+      assignmentTake = await this.prisma.takeAssignment.create({
+        data: { answers, assignmentId, userId, status: typeOfSubmission },
+      });
+    } else {
+      assignmentTake = await this.prisma.takeAssignment.update({
+        where: {
+          id: assignmentTake.id,
+        },
+        data: {
+          answers,
+        },
+      });
+    }
+    return assignmentTake;
   }
   async updateAssignment(
     assignementId: string,
     userId: string,
-    startDate?: Date,
-    endDate?: Date,
-    questions?: string,
-    materialUrl?: string,
+    body: UpdateAssignmentDTO,
   ) {
-    //the following logic is to ensure that the assignment will not be edited unless the user is authorized to do that
-
-    //retreive eventCreator, moderators, ,presenters, and event ids
-    const eventIds = await this.prisma.event.findFirstOrThrow({
+    //retreive eventCreator, moderators, ,presenters, and event ids, also retrieve the ids of the assignment's questions
+    const event = await this.prisma.event.findFirst({
       //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
       where: {
         Assignments: {
@@ -1345,44 +1478,49 @@ export class EventService {
         eventCreatorId: true,
         presenters: { select: { id: true } },
         moderators: { select: { id: true } },
+        Assignments: {
+          where: {
+            id: assignementId,
+          },
+
+          select: { questions: { select: { id: true } } },
+        },
       },
     });
-    if (!eventIds) {
+    if (!event) {
       throw new NotFoundException('assignment not found');
     }
     // Check if the userId matches any of the roles
     const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+      event.eventCreatorId === userId ||
+      event.presenters.some((presenter) => presenter.id === userId) ||
+      event.moderators.some((moderator) => moderator.id === userId);
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to add materials to this event',
       );
     }
-    // The following is to append the new data to newData object in order to use it in prisma logic
-    let newData: {
-      startDate?: Date;
-      endDate?: Date;
-      questions?: string;
-      materialUrl?: string;
-    } = {};
-    if (startDate) {
-      newData = { ...newData, startDate };
-    }
-    if (endDate) {
-      newData = { ...newData, endDate };
-    }
-    if (questions) {
-      newData = { ...newData, questions };
-    }
-    if (materialUrl) {
-      newData = { ...newData, materialUrl };
-    }
+    const assignment = event.Assignments[0];
+
+    //Extract the existing questions and the new questions
+    let existingQuestions: UpdateAssignmentQuestionDTO[];
+    let newQuestions: UpdateAssignmentQuestionDTO[];
+    body.questions.forEach((question) => {
+      if (
+        assignment.questions.some(
+          (existQuestion) => existQuestion.id === question.id,
+        )
+      ) {
+        existingQuestions.push(question);
+      } else {
+        newQuestions.push(question);
+      }
+    });
+
     const result = await this.prisma.event.update({
       where: {
-        id: eventIds.id,
+        id: event.id,
       },
       data: {
         Assignments: {
@@ -1390,26 +1528,38 @@ export class EventService {
             where: {
               id: assignementId,
             },
-            data: { ...newData },
+            data: {
+              startDate: body.startDate,
+              endDate: body.endDate,
+              questions: {
+                updateMany: existingQuestions.map((existQuestion) => ({
+                  where: { id: existQuestion.id },
+                  data: {
+                    ...existQuestion,
+                  },
+                })),
+                createMany: {
+                  data: newQuestions.map((newQuestion) => ({
+                    questionType: newQuestion.questionType,
+                    text: newQuestion.text,
+                    options: newQuestion.options,
+                    correctAnswer: newQuestion.correctAnswer,
+                  })),
+                },
+              },
+            },
           },
         },
       },
       select: {
         Assignments: {
-          where: {
-            id: assignementId,
-          },
-          select: {
-            id: true,
-            startDate: true,
-            endDate: true,
-            materialUrl: true,
-            questions: true,
-          },
+          take: 1,
+          orderBy: { updatedAt: 'desc' },
         },
       },
     });
-    return result?.Assignments[0] ?? []; //to remove the unnecessary structure from the response
+    const updatedAssignment = result?.Assignments[0];
+    return updatedAssignment ?? []; //to remove the unnecessary structure from the response
   }
   async deleteAssignment(assignementId: string, userId: string) {
     //the following logic is to ensure that the assignment will not be deleted unless the user is authorized to do that
