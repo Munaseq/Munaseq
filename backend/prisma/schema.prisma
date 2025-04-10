@@ -68,8 +68,8 @@ model Event {
   Assignments    Assignment[]
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
-  chat_id        String?        @unique
-  EventChat      Chat?          @relation("EventChat", fields: [chat_id], references: [id], onDelete: Cascade) // one to one relationship
+
+  EventChat Chat? @relation("EventChat") // one to one relationship
 }
 
 model Question {
@@ -194,16 +194,20 @@ model Message {
 }
 
 model Chat {
-  id       String    @id @default(uuid())
-  Users    User[]    @relation("AssociatedWith") //Chat contains many users
-  Messages Message[] @relation("BelongsTo") //Chat contains many messages
-
-  Event              Event?       @relation("EventChat") //Chat 
+  id                 String       @id @default(uuid())
+  Users              User[]       @relation("AssociatedWith") //Chat contains many users
+  Messages           Message[]    @relation("BelongsTo") //Chat contains many messages
+  event_id           String?      @unique
+  Event              Event?       @relation("EventChat", fields: [event_id], references: [id], onDelete: Cascade) //Chat 
   category           ChatCategory
   isAttendeesAllowed Boolean      @default(true)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
+
+// -------------------------------------------------------------------------------------
+// ENUMs
+// -------------------------------------------------------------------------------------
 
 enum Gender {
   MALE
