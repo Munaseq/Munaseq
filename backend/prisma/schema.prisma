@@ -15,31 +15,33 @@ generator client {
 }
 
 model User {
-  id                String           @id @default(uuid())
-  firstName         String
-  lastName          String
-  username          String           @unique
-  email             String           @unique
-  password          String
+  id                 String           @id @default(uuid())
+  firstName          String
+  lastName           String
+  username           String           @unique
+  email              String           @unique
+  password           String
   // organizationName String? // Optional for organizations -> not needed
-  profilePictureUrl String? // Optional profile picture
-  cvUrl             String? //Optional cv 
-  visibleName       String? // Can default to name or organization
-  gender            Gender // Optional gender field -->Are You sure mohammed?
-  socialAccounts    Json? // Optional social accounts linked
-  categories        String[] // Array of strings for interests in event categories
-  description       String? // New: Optional description field for the user
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  createdEvents     Event[]          @relation("UserCreatedEvents") // Relation to created events
-  joinedEvents      Event[]          @relation("UserEventsJoined") // New: Events joined by the user (many-to-many)
-  presentedEvents   Event[]          @relation("EventPresenters") // Relation to events where user is a presenter (many-to-many)
-  moderatedEvents   Event[]          @relation("EventModerators") // Relation to events where user is a moderator (many-to-many)
-  TakeQuiz          TakeQuiz[]
-  TakeAssignment    TakeAssignment[]
-  GiveFeedback      GiveFeedback[]
-  SentMessages      Message[]        @relation("Sender")
-  Chats             Chat[]           @relation("AssociatedWith")
+  profilePictureUrl  String? // Optional profile picture
+  cvUrl              String? //Optional cv 
+  visibleName        String? // Can default to name or organization
+  gender             Gender // Optional gender field -->Are You sure mohammed?
+  socialAccounts     Json? // Optional social accounts linked
+  categories         String[] // Array of strings for interests in event categories
+  description        String? // New: Optional description field for the user
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  createdEvents      Event[]          @relation("UserCreatedEvents") // Relation to created events
+  joinedEvents       Event[]          @relation("UserEventsJoined") // New: Events joined by the user (many-to-many)
+  presentedEvents    Event[]          @relation("EventPresenters") // Relation to events where user is a presenter (many-to-many)
+  moderatedEvents    Event[]          @relation("EventModerators") // Relation to events where user is a moderator (many-to-many)
+  TakeQuiz           TakeQuiz[]
+  TakeAssignment     TakeAssignment[]
+  GiveFeedback       GiveFeedback[]
+  SentMessages       Message[]        @relation("Sender")
+  Chats              Chat[]           @relation("AssociatedWith")
+  SentInvitation     Invitation[]     @relation("InvitationSender")
+  ReceivedInvitation Invitation[]     @relation("InvitationReceiver")
 }
 
 model Event {
@@ -69,7 +71,8 @@ model Event {
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
 
-  EventChat Chat? @relation("EventChat") // one to one relationship
+  EventChat  Chat?        @relation("EventChat") // one to one relationship
+  Invitation Invitation[] @relation("InvitationEvent")
 }
 
 model Question {
@@ -180,7 +183,7 @@ model GiveFeedback {
 }
 
 // -------------------------------------------------------------------------------------
-// The Following Model Is Chatting Related Models
+// The Following Models Is Chatting Related Models
 // -------------------------------------------------------------------------------------
 model Message {
   id        String   @id @default(uuid())
@@ -203,6 +206,21 @@ model Chat {
   isAttendeesAllowed Boolean      @default(true)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+}
+
+// -------------------------------------------------------------------------------------
+// The Following Models Is Invitation Related Models
+// -------------------------------------------------------------------------------------
+model Invitation {
+  id             String         @id @default(uuid())
+  invitationType InvitationType
+  roleType       String?
+  sender_id      String
+  Sender         User           @relation("InvitationSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver_id    String
+  Receiver       User           @relation("InvitationReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+  event_id       String
+  Event          Event          @relation("InvitationEvent", fields: [event_id], references: [id], onDelete: Cascade)
 }
 
 // -------------------------------------------------------------------------------------
@@ -231,4 +249,14 @@ enum TakeStatus {
   NOT_ANSWERED
   SAVED_ANSWERS
   SUBMITTED
+}
+
+enum RoleType {
+  MODERATOR
+  PRESENTER
+}
+
+enum InvitationType {
+  ROLE_INVITATION
+  EVENT_INVITATION
 }
