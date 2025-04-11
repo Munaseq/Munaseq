@@ -1695,22 +1695,31 @@ export class EventService {
   async leaveEvent(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      include: { joinedUsers: true },
+      include: { joinedUsers: true, moderators: true, presenters: true },
     });
 
     if (!event) {
       throw new NotFoundException('Event not found');
     }
-
+    let role;
     const isUserJoined = event.joinedUsers.some((user) => user.id === userId);
-    if (!isUserJoined) {
+    const isUserPresenter = event.presenters.some((user) => user.id === userId);
+    const isUserModerator = event.moderators.some((user) => user.id === userId);
+    if (!isUserJoined && !isUserModerator && !isUserPresenter) {
       throw new BadRequestException('User is not joined to this event');
+    }
+    if (isUserJoined) {
+      role = 'joinedUsers';
+    } else if (isUserModerator) {
+      role = 'moderators';
+    } else {
+      role = 'presenters';
     }
     //disconnect the user from the joinedUsers and the EventChat
     await this.prisma.event.update({
       where: { id: eventId },
       data: {
-        joinedUsers: {
+        [role]: {
           disconnect: { id: userId },
         },
         EventChat: {
