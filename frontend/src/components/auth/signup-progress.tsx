@@ -12,7 +12,7 @@ import tagGradient from "@/assets/auth-assets/signup-step-indicator-icons/tag-gr
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function Progress(props: { step: number }) {
+export default function SignUpProgress(props: { step: number }) {
     return (
         <motion.div className="grid grid-cols-4 place-items-center w-full text-red-500">
             <div>

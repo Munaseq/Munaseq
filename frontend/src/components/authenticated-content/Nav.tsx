@@ -48,16 +48,16 @@ export default function Nav(props: {
             path: "/coordinated-events/active",
         },
         {
+            name: "الفعاليات التي انضممت إليها",
+            path: "/joined-events/active",
+        },
+        {
             name: "الفعاليات التي نظمتها",
             path: "/moderated-events/active",
         },
         {
             name: "الفعاليات التي قدمتها",
             path: "/presented-events/active",
-        },
-        {
-            name: "الفعاليات التي انضممت إليها",
-            path: "/joined-events/active",
         },
     ];
     const isOnEventLink: boolean = eventLinks.some(link =>

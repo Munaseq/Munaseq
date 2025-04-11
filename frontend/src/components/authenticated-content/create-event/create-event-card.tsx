@@ -1,7 +1,6 @@
 "use client";
 
 import decoLeft from "@/assets/create-event/deco-left-top.png";
-// import decoRight from "@/assets/create-event/deco-right-bottom.svg";
 import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 
@@ -14,45 +13,40 @@ export default function CreateEventCard({
         next: {
             x: "-50%",
             opacity: 0,
-            visibility: "hidden",
-            zIndex: -1,
+            display: "none",
+            position: 'absolute'
         },
         past: {
             x: "50%",
             opacity: 0,
-            visibility: "hidden",
-            zIndex: -1,
+            display: "none",
+            position: 'absolute'
         },
         active: {
             x: 0,
             opacity: 1,
+            display: 'block',
             visibility: "visible",
-            zIndex: 1
+            position: 'relative'
         },
     };
     return (
         <motion.div
-            transition={{ type: "spring", duration: 0.5, bounce: 0 }}
-            initial={2 <= goal ? "next" : "active"}
-            animate={
-                actual === goal ? "active" : actual > goal ? "past" : "next"
-            }
-            variants={variants}
-            className={
-                "max-w-[45rem] w-[98%] bg-white shadow-md rounded-3xl overflow-hidden p-5 " + 
-                (goal !== 2 ? "absolute" : "relative")
-            }
+        transition={{ type: "spring", duration: 0.5, bounce: 0 }}
+        initial={goal === 1 ? 'active' : "next"}
+        animate={
+            actual === goal ? "active" : actual > goal ? "past" : "next"
+        }
+        variants={variants}
+        className={
+            "max-w-[45rem] w-[98%] bg-white shadow-md rounded-3xl overflow-hidden p-5 "
+        }
         >
             <Image
                 alt="deco"
                 src={decoLeft}
                 className="absolute left-0 top-0"
             />
-            {/* <Image
-                alt="deco"
-                src={decoRight}
-                className="absolute right-0 bottom-0"
-            /> */}
             <div className="z-10 relative">{children}</div>
         </motion.div>
     );

@@ -26,7 +26,7 @@ export default async function AuthContentLayout({
             <div className="h-screen w-[22rem] lg:block hidden">
                 <Menu profileData={data} />
             </div>
-            <div className="relative flex-1">
+            <div className="relative flex-1 pb-10">
                 <header className="flex items-center lg:justify-end justify-center lg:px-10 px-2 my-10 gap-2 w-full">
                     <div className="lg:hidden block">
                         <MenuMobile profileData={data} />

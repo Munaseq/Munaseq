@@ -3,7 +3,7 @@
 import Image from "next/image";
 import logoIcon from "@/assets/logo/logo-small-white.svg";
 import munaseq from "@/assets/logo/munaseq-text.svg";
-import Progress from "@/components/auth/signup-progress";
+import SignUpProgress from "@/components/auth/signup-progress";
 import { motion, useAnimate } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
@@ -145,7 +145,7 @@ export default function SignUp() {
                         className="grid md:grid-cols-2 md:gap-0 gap-3 md:h-full place-items-center relative md:p-14 p-10"
                     >
                         <div className="h-full w-full flex flex-col md:gap-5 ">
-                            <Progress step={step} />
+                            <SignUpProgress step={step} />
                             <Link
                                 ref={linkHeightTrackRef}
                                 className="w-full h-full md:block hidden"

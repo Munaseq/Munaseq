@@ -21,6 +21,7 @@ export default async function MembersPage({
         presenters: UserDataDto[];
         moderators: UserDataDto[];
     } = await getAllUsers(params.eventId);
+    console.log(Users)
 
     return (
         <div className="mb-10">

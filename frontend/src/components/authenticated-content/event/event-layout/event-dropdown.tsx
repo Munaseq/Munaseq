@@ -16,12 +16,20 @@ export default function EventDropdown({eventId, isEventCreator}: {eventId: strin
 
       const leaveEvent = async () => {
         const res = await leaveEventAction(eventId);
+        if (res) {
+          toast.error("حدث خطأ ما");
+          return;
+        }
         toast.success("تم المغادرة من الفعالية");
         router.push("/event/" + eventId);
       }
     
       const cancelEvent = async () => {
         const res = await cancelEventAction(eventId);
+        if (res) {
+          toast.error("حدث خطأ ما");
+          return;
+        }
         toast.success("تم الغاء الفعالية");
         
       }
