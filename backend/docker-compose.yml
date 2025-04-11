@@ -5,30 +5,20 @@ services:
       - 5432:5432
     environment:
       POSTGRES_USER: munaseq
-      POSTGRES_PASSWORD: 123
+      POSTGRES_PASSWORD: 1234
       POSTGRES_DB: munaseq_db
-    networks:
-      - munaseq-network
-  munaseq_test:
-    image: postgres
-    ports:
-      - 5439:5432
-    environment:
-      POSTGRES_USER: tester
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: munaseq_test
-    networks:
-      - munaseq-network
   munaseq_backend:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8000:3002
+      - 3002:3002
     depends_on:
       - munaseq_db
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgres://munaseq:123@munaseq_db:5432/munaseq_db
+      DATABASE_URL: "postgres://munaseq:1234@munaseq_db:5432/munaseq_db"
 
 networks:
   munaseq-network:

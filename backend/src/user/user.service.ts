@@ -8,7 +8,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import * as argon2 from 'argon2';
 import {
-  NotFoundError,
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library';
 import { EditUserInfoDto, userChangePasswordDto } from './dtos';
@@ -75,7 +74,7 @@ export class UserService {
       });
     } catch (error) {
       // Catch specific errors when a record is not found
-      if (error instanceof NotFoundError) {
+      if (error instanceof NotFoundException) {
         throw new HttpException(
           'No account with the provided email has been found',
           HttpStatus.NOT_FOUND,
@@ -102,7 +101,7 @@ export class UserService {
       });
     } catch (error) {
       // Catch specific error when a record is not found
-      if (error instanceof NotFoundError) {
+      if (error instanceof NotFoundException) {
         throw new HttpException(
           'No account with the provided username has been found',
           HttpStatus.NOT_FOUND,
@@ -166,15 +165,11 @@ export class UserService {
     username?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
-    execludedUsers?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
     if (username) {
       return this.prisma.user.findMany({
         where: {
-          id: {
-            notIn: execludedUsers,
-          },
           username: {
             contains: username,
           },
@@ -187,11 +182,6 @@ export class UserService {
       });
     } else {
       return this.prisma.user.findMany({
-        where: {
-          id: {
-            notIn: execludedUsers,
-          },
-        },
         omit: {
           password: true,
         },
