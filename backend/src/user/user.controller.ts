@@ -15,7 +15,12 @@ import { UserService } from './user.service';
 
 import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorator';
 import { AuthGuard } from '../auth/auth.guard';
-import { EditUserInfoDto, SeacrhUser, userChangePasswordDto } from './dtos';
+import {
+  EditUserInfoDto,
+  RespondInvitationDto,
+  SeacrhUser,
+  userChangePasswordDto,
+} from './dtos';
 import { multerUserLogic } from 'src/utils/multer.logic';
 import { ExecludeUsers } from 'src/event/dtos';
 
@@ -88,8 +93,21 @@ export class UserController {
     return this.userService.getUserRating(userId);
   }
   @UseGuards(AuthGuard)
-  @Get('invitation')getInvitation(@GetCurrentUserId() userId,){
+  @Get('invitation')
+  getInvitation(@GetCurrentUserId() userId) {
     return this.userService.getInvitation(userId);
+  }
+  @UseGuards(AuthGuard)
+  @Post('invitation')
+  respondInvitation(
+    @Body() body: RespondInvitationDto,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.userService.resopndInvitation(
+      userId,
+      body.invitationId,
+      body.decision,
+    );
   }
   @UseGuards(AuthGuard)
   @Post('changePassword')
