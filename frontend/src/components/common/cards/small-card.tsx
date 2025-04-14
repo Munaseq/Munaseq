@@ -39,7 +39,8 @@ export default function SmallCard({
               src={image}
               fill
               sizes="100%"
-              alt=""
+              alt={title}
+              priority
             />
             <div className="m-2 absolute top-0 flex flex-wrap gap-1">
               {badges.map((badge, index) => (

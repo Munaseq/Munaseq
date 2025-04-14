@@ -8,12 +8,13 @@ export default function MenuProfile({ profileData, onLinkClick }: { profileData:
  
     return (
       <div className="flex gap-3 p-5 items-center">
-        <div className="w-20 aspect-square relative rounded-full overflow-hidden">
+        <div className="w-20 h-20 relative rounded-full overflow-hidden">
           {profileData.profilePictureUrl ? (
             <Image
               src={profileData.profilePictureUrl}
               alt="preview"
               fill
+              sizes="100%"
               priority
             />
           ) : (
