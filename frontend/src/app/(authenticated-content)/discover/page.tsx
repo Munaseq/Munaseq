@@ -7,13 +7,14 @@ import getDate from "@/util/get-date";
 
 import getEventsAction from "@/proxy/event/get-events-action";
 import { SparklesIcon } from "lucide-react";
+import { EventDataDto } from "@/dtos/event-data.dto";
 
 export const metadata: Metadata = {
     title: "اكتشف",
 };
 
 export default async function Discover() {
-    const eventList = await getEventsAction();
+    const eventList:EventDataDto[] = await getEventsAction();
     
     if (eventList?.length === 0) {
         return (
@@ -30,7 +31,7 @@ export default async function Discover() {
             </Title>
             <Subtitle>من أعلى المنسقين تقييما </Subtitle>
             <div className="flex mt-4 gap-8 flex-wrap lg:justify-start justify-center">
-                {eventList?.map((event: any) => (
+                {eventList?.map((event: EventDataDto) => (
                     <SmallCard
                         key={event.id}
                         image={event.imageUrl}

@@ -7,7 +7,7 @@ import deco from "@/assets/auth-content-assets/deco.svg";
 import MenuMobile from "@/components/authenticated-content/menu-mobile";
 import logoSmall from "@/assets/logo/munaseq-icon-dark-lines.svg";
 import { Toaster } from 'react-hot-toast';
-import BottomNavigation from "@/components/authenticated-content/mobile-bottom-navigation";
+// import BottomNavigation from "@/components/authenticated-content/mobile-bottom-navigation";
 import getProfileAction from "@/proxy/user/get-profile-action";
 
 export default async function AuthContentLayout({
@@ -54,7 +54,7 @@ export default async function AuthContentLayout({
                     </Link>
                 </header>
                 <div className="xl:px-20 px-5">{children}</div>
-                <BottomNavigation />
+                {/* <BottomNavigation /> */}
             </div>
         </section>
     );

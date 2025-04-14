@@ -17,7 +17,7 @@ export default function SmallCard({
   badges = [],
   isJoined = false,
 }: {
-  image: StaticImport;
+  image: StaticImport | string;
   title: string;
   time?: string;
   date: string;
@@ -56,7 +56,7 @@ export default function SmallCard({
       <div className="p-5 pt-0 relative">
 
         <h5 className="my-2 text-2xl font-bold tracking-tight text-custom-black">
-          title 
+          {title} 
         </h5>
 
      
