@@ -31,12 +31,13 @@ import {
   CreateUpdateRating,
   AssignRoles,
   TakeAssigmentDTO,
+  SendInvitationDTO,
+  CreateQuizDto,
+  UpdateQuizDto,
+  SubmitQuizDto,
 } from './dtos';
 
 import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
-import { CreateQuizDto } from './dtos/create-quiz.dto';
-import { UpdateQuizDto } from './dtos/update-quiz.dto';
-import { SubmitQuizDto } from './dtos/submit-quiz.dto';
 
 @Controller('event')
 export class EventController {
@@ -470,6 +471,24 @@ export class EventController {
   @Get('ratings/:eventId')
   eventRating(@Param('eventId') eventId: string) {
     return this.eventService.eventRating(eventId);
+  }
+  //-----------------------------------------
+  //Invitation endpoints
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @Post('invitation/:eventId')
+  sendInvitation(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    body: SendInvitationDTO,
+  ) {
+    return this.eventService.sendInvitation(
+      userId,
+      eventId,
+      body.receiverId,
+      body.invitationType,
+      body.roleType,
+    );
   }
 
   //-----------------------------------------

@@ -19,6 +19,7 @@ import { AssignmentQuestionDTO } from './dtos/create-assignment-question.dto';
 import { UpdateAssignmentQuestionDTO } from './dtos/update-assignment-question.dto';
 import { TakeAssigmentDTO } from './dtos/take-assignment.dto';
 import { AssignRoles } from './dtos/assign-role.dto';
+import { InvitationType, RoleType } from '@prisma/client';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
 @Injectable()
@@ -1998,7 +1999,128 @@ export class EventService {
     });
   }
 
-  // -------------------------------------------------------------------------------------
-  // Invitation
-  // -------------------------------------------------------------------------------------
+  //-----------------------------------------
+  //Invitation endpoints
+  //-----------------------------------------
+  async sendInvitation(
+    userId: string,
+    eventId: string,
+    receiverId: string,
+    invitationType: InvitationType,
+    roleType?: RoleType,
+  ) {
+    // Check if the user is authorized to send invitations
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        eventCreator: true,
+        presenters: true,
+        moderators: true,
+        joinedUsers: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const isEventCreator = event.eventCreatorId === userId;
+    const isPresenter = event.presenters.some(
+      (presenter) => presenter.id === userId,
+    );
+    const isModerator = event.moderators.some(
+      (moderator) => moderator.id === userId,
+    );
+    const isJoinedUser = event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
+    if (receiverId === userId || event.eventCreatorId === receiverId) {
+      throw new BadRequestException(
+        'You cannot send an invitation to yourself or the event creator',
+      );
+    }
+
+    if (!isEventCreator && !isPresenter && !isModerator && !isJoinedUser) {
+      throw new ForbiddenException(
+        'You do not have permission to send invitations for this event because you are not related to it',
+      );
+    }
+    //ensures that the there's no existing invitation with the same details in pending status
+    const previousInvitation = await this.prisma.invitation.findFirst({
+      where: {
+        sender_id: userId,
+        receiver_id: receiverId,
+        event_id: eventId,
+        invitationType,
+        status: 'PENDING',
+        roleType,
+      },
+    });
+    if (previousInvitation) {
+      throw new BadRequestException('Invitation already sent');
+    }
+    //Check if the invitation is for assigning a role
+    if (invitationType === 'ROLE_INVITATION') {
+      if (!roleType) {
+        throw new BadRequestException('Role type is required');
+      }
+      const isAuthoiorized =
+        event.eventCreatorId === userId ||
+        event.moderators.some((moderator) => moderator.id === userId);
+      if (!isAuthoiorized) {
+        throw new ForbiddenException(
+          'You do not have permission to assign this role',
+        );
+      }
+      //check if the receiver is already in the deisred role
+      const isAlreadyAssigned =
+        roleType === 'MODERATOR' ? isModerator : isPresenter;
+      if (isAlreadyAssigned) {
+        throw new BadRequestException('User is already assigned to this role');
+      }
+      // Create the invitation
+      return await this.prisma.invitation.create({
+        data: {
+          sender_id: userId,
+          receiver_id: receiverId,
+          event_id: eventId,
+          invitationType,
+          roleType,
+        },
+      });
+    } else {
+      //Innvitation for event
+      //check if the event is private, if so, then only the assinged users can send invites
+      if (!event.isPublic) {
+        const isAuthorized =
+          event.eventCreatorId === userId ||
+          event.presenters.some((presenter) => presenter.id === userId) ||
+          event.moderators.some((moderator) => moderator.id === userId);
+        if (!isAuthorized) {
+          throw new ForbiddenException(
+            'You do not have permission to send invitations for this event',
+          );
+        }
+      }
+      // Check if the receiver is already a participant
+      const isAlreadyParticipant =
+        event.eventCreatorId === receiverId ||
+        event.presenters.some((presenter) => presenter.id === receiverId) ||
+        event.moderators.some((moderator) => moderator.id === receiverId) ||
+        event.joinedUsers.some((joinedUser) => joinedUser.id === receiverId);
+      if (isAlreadyParticipant) {
+        throw new BadRequestException('User is already a participant');
+      }
+
+      // Create the invitation
+      return await this.prisma.invitation.create({
+        data: {
+          sender_id: userId,
+          receiver_id: receiverId,
+          event_id: eventId,
+          invitationType,
+        },
+      });
+    }
+  }
 }

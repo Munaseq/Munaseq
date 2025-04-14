@@ -212,15 +212,18 @@ model Chat {
 // The Following Models Is Invitation Related Models
 // -------------------------------------------------------------------------------------
 model Invitation {
-  id             String         @id @default(uuid())
+  id             String           @id @default(uuid())
   invitationType InvitationType
-  roleType       String?
+  status         InvitationStatus @default(PENDING)
+  roleType       RoleType?
   sender_id      String
-  Sender         User           @relation("InvitationSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  Sender         User             @relation("InvitationSender", fields: [sender_id], references: [id], onDelete: Cascade)
   receiver_id    String
-  Receiver       User           @relation("InvitationReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+  Receiver       User             @relation("InvitationReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
   event_id       String
-  Event          Event          @relation("InvitationEvent", fields: [event_id], references: [id], onDelete: Cascade)
+  Event          Event            @relation("InvitationEvent", fields: [event_id], references: [id], onDelete: Cascade)
+  updatedAt      DateTime         @updatedAt
+  createdAt      DateTime         @default(now())
 }
 
 // -------------------------------------------------------------------------------------
@@ -259,4 +262,11 @@ enum RoleType {
 enum InvitationType {
   ROLE_INVITATION
   EVENT_INVITATION
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED_BY_SYSTEM
 }

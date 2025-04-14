@@ -88,6 +88,10 @@ export class UserController {
     return this.userService.getUserRating(userId);
   }
   @UseGuards(AuthGuard)
+  @Get('invitation')getInvitation(@GetCurrentUserId() userId,){
+    return this.userService.getInvitation(userId);
+  }
+  @UseGuards(AuthGuard)
   @Post('changePassword')
   changePassword(
     @Body() passwordChangeDto: userChangePasswordDto,

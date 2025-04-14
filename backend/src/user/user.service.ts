@@ -1,4 +1,6 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -12,6 +14,8 @@ import {
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library';
 import { EditUserInfoDto, userChangePasswordDto } from './dtos';
+import { exec } from 'child_process';
+import { join } from 'path';
 
 @Injectable()
 export class UserService {
@@ -320,5 +324,277 @@ export class UserService {
         password: true,
       },
     });
+  }
+
+  async getInvitation(userId: string) {
+    //It can be more simpler if we send to queries to the database, though it will be less efficient in terms of performance and cost (Cloud provider may charge)
+    const Invitations = await this.prisma.invitation.findMany({
+      where: {
+        OR: [{ sender_id: userId }, { receiver_id: userId }],
+      },
+      include: {
+        Sender: {
+          select: {
+            id: true,
+            username: true,
+            profilePictureUrl: true,
+          },
+        },
+        Receiver: {
+          select: {
+            id: true,
+            username: true,
+            profilePictureUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    let sentInvitations = [];
+    let receivedInvitations = [];
+    Invitations.forEach((invitation) => {
+      if (invitation.sender_id === userId) {
+        sentInvitations.push(invitation);
+      } else {
+        receivedInvitations.push(invitation);
+      }
+    });
+    return { sentInvitations, receivedInvitations };
+  }
+  async resopndInvitation(
+    userId: string,
+    invitationId: string,
+    decision: boolean,
+  ) {
+    const invitation = await this.prisma.invitation.findUnique({
+      where: {
+        id: invitationId,
+      },
+      include: {
+        Event: {
+          select: {
+            id: true,
+            isPublic: true,
+            joinedUsers: true,
+            moderators: true,
+            presenters: true,
+            eventCreatorId: true,
+          },
+        },
+      },
+    });
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found');
+    }
+    if (invitation.receiver_id !== userId) {
+      throw new ForbiddenException(
+        'You are not authorized to respond to this invitation',
+      );
+    }
+    if (invitation.status !== 'PENDING') {
+      throw new BadRequestException(
+        "you've already responded to this invitation ",
+      );
+    }
+
+    const isSenderIsEventCreator =
+      invitation.Event.eventCreatorId === invitation.sender_id;
+    const isSenderIsPresenter = invitation.Event.presenters.some(
+      (presenter) => presenter.id === invitation.sender_id,
+    );
+    const isSenderIsModerator = invitation.Event.moderators.some(
+      (moderator) => moderator.id === invitation.sender_id,
+    );
+    const isSenderIsJoinedUser = invitation.Event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === invitation.sender_id,
+    );
+    if (
+      !isSenderIsEventCreator &&
+      !isSenderIsModerator &&
+      !isSenderIsPresenter &&
+      !isSenderIsJoinedUser
+    ) {
+      await this.prisma.invitation.update({
+        where: {
+          id: invitationId,
+        },
+        data: {
+          status: 'CANCELED_BY_SYSTEM',
+        },
+      });
+      throw new BadRequestException(
+        "The invitation's sender is no longer authorized to send this invitation",
+      );
+    }
+    if (decision) {
+      if (invitation.invitationType === 'ROLE_INVITATION') {
+        //check if the sender is still authorized to send the invitation
+        if (!isSenderIsEventCreator && !isSenderIsModerator) {
+          await this.prisma.invitation.update({
+            where: {
+              id: invitationId,
+            },
+            data: {
+              status: 'CANCELED_BY_SYSTEM',
+            },
+          });
+          throw new BadRequestException(
+            "The invitation's sender is no longer authorized to send this invitation",
+          );
+        }
+        const role =
+          invitation.roleType === 'MODERATOR' ? 'moderators' : 'presenters';
+        //check if the user is already in the desired role
+        const isAlreadyInRole = invitation.Event[role].some(
+          (user) => user.id === userId,
+        );
+        if (isAlreadyInRole) {
+          //might be better to delete the invitation
+          await this.prisma.invitation.update({
+            where: {
+              id: invitationId,
+            },
+            data: {
+              status: 'CANCELED_BY_SYSTEM',
+            },
+          });
+          throw new BadRequestException(
+            `You are already in the ${invitation.roleType} role, and the invitation has been canceled`,
+          );
+        }
+        // check if the user has other roles already, if so, override the role
+        const isAlreadyJoinedUser = invitation.Event.joinedUsers.some(
+          (user) => user.id === userId,
+        );
+        const isAlreadyPresenterUser = invitation.Event.presenters.some(
+          (user) => user.id === userId,
+        );
+        const isAlreadyModeratorUser = invitation.Event.moderators.some(
+          (user) => user.id === userId,
+        );
+        if (
+          isAlreadyJoinedUser ||
+          isAlreadyPresenterUser ||
+          isAlreadyModeratorUser
+        ) {
+          let roleToRemove;
+          if (isAlreadyJoinedUser) {
+            roleToRemove = 'joinedUsers';
+          } else if (isAlreadyPresenterUser) {
+            roleToRemove = 'presenters';
+          } else {
+            roleToRemove = 'moderators';
+          }
+          // remove the user from the previous role
+          await this.prisma.event.update({
+            where: {
+              id: invitation.event_id,
+            },
+            data: {
+              [roleToRemove]: {
+                disconnect: {
+                  id: userId,
+                },
+              },
+            },
+          });
+        }
+        // connect the user to the new role
+        await this.prisma.event.update({
+          where: {
+            id: invitation.event_id,
+          },
+          data: {
+            [role]: {
+              connect: {
+                id: userId,
+              },
+            },
+            EventChat: {
+              update: { Users: { connect: { id: userId } } },
+            },
+          },
+        });
+        await this.prisma.invitation.update({
+          where: {
+            id: invitationId,
+          },
+          data: {
+            status: 'ACCEPTED',
+          },
+        });
+      } else {
+        if (
+          isSenderIsJoinedUser ||
+          isSenderIsPresenter ||
+          isSenderIsModerator ||
+          isSenderIsEventCreator
+        ) {
+          //if the event is private, then, the sender must be the event creator or a moderator
+          if (!invitation.Event.isPublic) {
+            if (!isSenderIsEventCreator && !isSenderIsModerator) {
+              throw new BadRequestException(
+                "The invitation's sender is no longer authorized to send this invitation",
+              );
+            }
+          }
+        }
+        const isAlreadyJoinedUser = invitation.Event.joinedUsers.some(
+          (user) => user.id === userId,
+        );
+        if (isAlreadyJoinedUser) {
+          await this.prisma.invitation.update({
+            where: {
+              id: invitationId,
+            },
+            data: {
+              status: 'CANCELED_BY_SYSTEM',
+            },
+          });
+          throw new BadRequestException(
+            `You are already in the event, and the invitation has been canceled`,
+          );
+        }
+
+        await this.prisma.event.update({
+          where: {
+            id: invitation.event_id,
+          },
+          data: {
+            joinedUsers: {
+              connect: {
+                id: userId,
+              },
+            },
+            EventChat: {
+              update: { Users: { connect: { id: userId } } },
+            },
+          },
+        });
+        await this.prisma.invitation.update({
+          where: {
+            id: invitationId,
+          },
+          data: {
+            status: 'ACCEPTED',
+          },
+        });
+      }
+    } else {
+      //if the invitation is not accepted, then, it will be canceled
+      await this.prisma.invitation.update({
+        where: {
+          id: invitationId,
+        },
+        data: {
+          status: 'REJECTED',
+        },
+      });
+    }
+    return {
+      message: 'Invitation has been responded successfully',
+      status: decision ? 'ACCEPTED' : 'REJECTED',
+      invitationId,
+    };
   }
 }
