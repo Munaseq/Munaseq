@@ -18,7 +18,6 @@ export default function JoinButton({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
   const getErrorMessage: () => string = () => {
     switch (error) {
       case 'GENDER':

@@ -10,7 +10,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function SelectEvents({}: {}) {
+export default function SelectEventTap() {
     const path = usePathname();
     const router = useRouter();
     const [selectedValue, setSelectedValue] = useState<string>("");
@@ -18,33 +18,37 @@ export default function SelectEvents({}: {}) {
     // Update selected value when path changes
     useEffect(() => {
         const pathSegments = path.split("/");
-        if (pathSegments.length >= 3) {
-            setSelectedValue(pathSegments[2]);
+        if (pathSegments.length >= 4) {
+            setSelectedValue(pathSegments[3]);
         }
     }, [path]);
-
-    const firstSubpath = path.split("/")[1];
 
     return (
         <Select 
             value={selectedValue} 
             dir="rtl" 
             onValueChange={(e) => {
-                router.push(`/${firstSubpath}/${e}`);
+                router.push(`${e}`);
             }}
         >
-            <SelectTrigger className="m-2 !text-xl border-0">
+            <SelectTrigger className="m-2 !text-xl border-0 rounded-none border-b-2 border-custom-black">
                 <SelectValue placeholder="Theme" />
             </SelectTrigger>
             <SelectContent className="bg-white ">
-                <SelectItem value="active" className="!text-lg">
-                    الفعاليات الحالية
+                <SelectItem value="about" className="!text-lg">
+                حول
                 </SelectItem>
-                <SelectItem value="upcoming" className="!text-lg">
-                    الفعاليات القادمة
+                <SelectItem value="content" className="!text-lg">
+                المحتوى
                 </SelectItem>
-                <SelectItem value="past" className="!text-lg">
-                    الفعاليات الماضية
+                <SelectItem value="activities" className="!text-lg">
+                الأنشطة
+                </SelectItem>
+                <SelectItem value="members" className="!text-lg">
+                الأعضاء
+                </SelectItem>
+                <SelectItem value="rate" className="!text-lg">
+                التقييم 
                 </SelectItem>
             </SelectContent>
         </Select>

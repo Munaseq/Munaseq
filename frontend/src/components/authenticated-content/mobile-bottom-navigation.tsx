@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import getProfileAction from "@/proxy/user/get-profile-action";
 import { signOut } from "@/proxy/signout-action";
-import Dropdown from "./dropdown-coordinated-events";
+import Dropdown from "./dropdown-events";
 import { usePathname } from "next/navigation";
 import { CirclePlusIcon, LogOutIcon, SparklesIcon, UserRoundIcon } from "lucide-react";
 

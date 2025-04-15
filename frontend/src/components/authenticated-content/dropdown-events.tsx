@@ -17,7 +17,7 @@ const coordinatedEvents = [
     { name: "الفعاليات التي انضممت إليها", path: "/joined-events/active" },
 ];
 
-export default function CoordinatedEventsDropdown({
+export default function EventsDropdown({
     pathname,
     onLinkClick,
 }: {

@@ -55,5 +55,5 @@ export default async function joinEventAction(eventId: string) {
                 };
         }
     }
-    redirect('/discover')
+    redirect('/event/' + eventId + '/about');
 }

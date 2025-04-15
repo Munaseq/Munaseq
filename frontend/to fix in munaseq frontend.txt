@@ -1,12 +1,10 @@
 - add event presenters and modreators in the event before joining page and make them linkable
-- in mobile inside event cant go between sections in event itself
 - chage catagory because it is ugly (maybe modal)
 - update rating using (next js fecth tags)
 - same for profile picture  (next js fecth tags)
 - add modal before cancel or leaving event
 - change location to make it url for عن بعد and location for حضوري and make it required
 - make add presenter and mod an actual modal (use shadcn)
-- make search 
 
 # Changes 🟣
 -- I have changed getUserAction to make it able to search
