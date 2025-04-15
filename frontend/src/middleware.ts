@@ -4,25 +4,7 @@ import isInEventAction from "./proxy/user/is-in-event-action";
 import getEventAction from "./proxy/event/get-event-using-id-action";
 import { notFound } from "next/navigation";
 
-export const config = {
-    matcher: [
-        "/discover",
-        "/user/:username?",
-        "/coordinated-events/active",
-        "/coordinated-events/past",
-        "/coordinated-events/upcoming",
-        "/joined-events/active",
-        "/joined-events/past",
-        "/joined-events/upcoming",
-        "/account",
-        "/signin",
-        "/account/edit",
-        "/create-event",
-        "/event/:eventId*",
-    ],
-};
-
-const authRequiredStaticPaths = new Set([
+const authRequiredStaticPaths = [
     "/discover",
     "/coordinated-events/active",
     "/coordinated-events/past",
@@ -33,7 +15,21 @@ const authRequiredStaticPaths = new Set([
     "/account",
     "/account/edit",
     "/create-event",
-]);
+];
+
+// Add additional routes that need special handling
+const additionalRoutes = [
+    "/user/:username?",
+    "/signin",
+    "/event/:eventId*"
+];
+
+export const config = {
+    matcher: [
+        ...authRequiredStaticPaths,
+        ...additionalRoutes
+    ],
+};
 
 // const authRequiredDynamicPaths = ["/user/", "/event/"];
 
@@ -96,7 +92,7 @@ export async function middleware(req: NextRequest) {
     const pathname: string = req.nextUrl.pathname;
 
     if (
-        authRequiredStaticPaths.has(pathname) ||
+        authRequiredStaticPaths.includes(pathname) ||
         pathname.startsWith("/user/")
     ) {
         return await checkAuth(req);
