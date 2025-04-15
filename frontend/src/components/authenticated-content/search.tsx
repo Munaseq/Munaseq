@@ -105,7 +105,7 @@ const SearchComponent = () => {
         </form>
         <div className="absolute grid place-items-center w-full bg-white z-30 shadow-md  rounded-2xl overflow-hidden ">
           {isLoading && (
-            <div className="grid place-items-center">
+            <div className="grid place-items-center p-5">
               <LogoLoading className={'w-14 aspect-square'} />
             </div>
           )}
