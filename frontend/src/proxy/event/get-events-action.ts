@@ -32,6 +32,7 @@ export default async function getEventsAction({
       next: {
         tags: ["event"],
       },
+      // cache: 'no-store'
     });
 
     if (!eventsRes.ok) {

@@ -2,23 +2,37 @@
 
 import getEventsAction from '@/proxy/event/get-events-action';
 import { useSearchParams } from 'next/navigation';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import SmallCard from '@/components/common/cards/small-card';
 import { EventDataDto } from '@/dtos/event-data.dto';
 import getDate from '@/util/get-date';
 import LogoLoading from '@/components/common/logo-loading';
 
-export default function SearchObserver({itemsPerPage, firstPageResults}: {itemsPerPage: number, firstPageResults: EventDataDto[]}) {
+export default function SearchObserver({
+  itemsPerPage,
+  firstPageResults,
+}: {
+  itemsPerPage: number;
+  firstPageResults: EventDataDto[];
+}) {
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get('searchTerm') || '';
   const [results, setResults] = useState<EventDataDto[]>(firstPageResults);
-  const pageNumber = useRef(1)
+  const pageNumber = useRef(1);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const hasMore = useRef(itemsPerPage === firstPageResults.length);
   const observer = useRef<IntersectionObserver | null>(null);
 
+  // Reset states when searchTerm changes
+  useEffect(() => {
+    setResults(firstPageResults);
+    pageNumber.current = 1;
+    setLoading(false);
+    hasMore.current = itemsPerPage === firstPageResults.length;
+  }, [searchTerm]);
+
   const fetchResults = async () => {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore.current) return;
 
     setLoading(true);
     console.log('Fetching page ' + pageNumber.current);
@@ -28,10 +42,11 @@ export default function SearchObserver({itemsPerPage, firstPageResults}: {itemsP
         pageSize: itemsPerPage,
         title: searchTerm,
       });
-      console.log(response)
 
       setResults((prevResults) => [...prevResults, ...response]);
-      setHasMore(response.length === itemsPerPage); // Check if there are more results based on the response length
+
+      // Check if there are more results based on the response length
+      hasMore.current = itemsPerPage === response.length;
     } catch (error) {
       console.error('Error fetching search results:', error);
     } finally {
@@ -39,16 +54,16 @@ export default function SearchObserver({itemsPerPage, firstPageResults}: {itemsP
     }
   };
 
-//   console.log("pageNumber", pageNumber);
+  //   console.log("pageNumber", pageNumber);
   const bottomElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (loading) return;
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-            pageNumber.current += 1; // Increment page number
-            fetchResults();
+        if (entries[0].isIntersecting && hasMore.current) {
+          pageNumber.current += 1; // Increment page number
+          fetchResults();
         }
       });
 
@@ -56,8 +71,6 @@ export default function SearchObserver({itemsPerPage, firstPageResults}: {itemsP
     },
     [loading, hasMore]
   );
-
-  
 
   return (
     <>
@@ -80,6 +93,7 @@ export default function SearchObserver({itemsPerPage, firstPageResults}: {itemsP
       </div>
 
       {/* Observer target element below the list */}
+      {}
       <div ref={bottomElementRef} className="h-10"></div>
 
       {loading && (
@@ -88,7 +102,7 @@ export default function SearchObserver({itemsPerPage, firstPageResults}: {itemsP
         </div>
       )}
 
-      {!hasMore && results.length > 0 && (
+      {!hasMore.current && results.length > 0 && (
         <div className="text-center mt-4 text-gray-500">
           لا توجد المزيد من النتائج
         </div>

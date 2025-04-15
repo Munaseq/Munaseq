@@ -6,18 +6,21 @@ import getProfileAction from '@/proxy/user/get-profile-action';
 import { notFound, redirect } from 'next/navigation';
 import XIcon from '@/assets/icons/x-icon.svg';
 import linkedinIcon from '@/assets/icons/linkedin-icon.svg';
-import { FileTextIcon, CircleUserRoundIcon, MailIcon, PencilIcon, StarIcon, TagIcon } from 'lucide-react';
+import {
+  FileTextIcon,
+  CircleUserRoundIcon,
+  MailIcon,
+  PencilIcon,
+  StarIcon,
+  TagIcon,
+} from 'lucide-react';
 import Tag from '@/components/common/category';
 import { UserDataDto } from '@/dtos/user-data.dto';
 import getUserAction from '@/proxy/user/get-user-using-username-action';
 import TooltipWrapper from '@/components/common/tooltip';
 import getUserRating from '@/proxy/user/get-user-rating-action';
 
-export function generateMetadata({
-  params,
-}: {
-  params: { username: string };
-}) {
+export function generateMetadata({ params }: { params: { username: string } }) {
   return {
     title: params.username,
   };
@@ -52,7 +55,7 @@ export default async function UserProfile({
               معلومات الحساب
             </Link>
             <Link href={'/account/edit'} className="grid place-items-center">
-              <PencilIcon size={32}/>
+              <PencilIcon size={32} />
             </Link>
           </div>
         )}
@@ -86,27 +89,20 @@ export default async function UserProfile({
         <div className="flex gap-3 mt-3">
           {data.cvUrl && (
             <TooltipWrapper text="السيرة الذاتية">
-            <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
-              <FileTextIcon className="cursor-pointer" />
-            </a>
+              <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
+                <FileTextIcon className="cursor-pointer" />
+              </a>
             </TooltipWrapper>
           )}
           {data.email && (
             <TooltipWrapper text="البريد الالكتروني">
-            <a href={`mailto:${data.email}`}>
-              <MailIcon className="cursor-pointer" />
-            </a>
+              <a href={`mailto:${data.email}`}>
+                <MailIcon className="cursor-pointer" />
+              </a>
             </TooltipWrapper>
           )}
-        </div>
-        <div className="mt-5 flex gap-24">
-          <div>
-            <StarIcon className='text-custom-light-purple'/>
-            {/* {rating} */}
-          </div>
-
-          <div className="flex gap-3">
-            {data.socialAccounts?.linkedinLink && (
+          {data.socialAccounts?.linkedinLink && (
+            <TooltipWrapper text="حساب Linkedin">
               <a
                 href={data.socialAccounts.linkedinLink}
                 className="cursor-pointer"
@@ -114,20 +110,30 @@ export default async function UserProfile({
                 <Image
                   src={linkedinIcon}
                   alt="linkedin icon"
-                  className="w-10"
+                  className="w-6"
                 />
               </a>
-            )}
-            {data.socialAccounts?.xLink && (
+            </TooltipWrapper>
+          )}
+          {data.socialAccounts?.xLink && (
+            <TooltipWrapper text="حساب X">
               <a href={data.socialAccounts.xLink} className="cursor-pointer">
-                <Image src={XIcon} alt="X icon" className="w-10" />
+                <Image src={XIcon} alt="X icon" className="w-6" />
               </a>
-            )}
+            </TooltipWrapper>
+          )}
+        </div>
+        <div className="mt-5 flex gap-24">
+          <div>
+            <StarIcon className="text-custom-light-purple" />
+            {/* {rating} */}
           </div>
+
+          <div className="flex gap-3"></div>
         </div>
 
         <div className="mt-5 flex items-center gap-1">
-         <TagIcon className="text-custom-light-purple"/>
+          <TagIcon className="text-custom-light-purple" />
           <div className="flex flex-wrap gap-1">
             {data.categories.map((category: string) => {
               return <Tag key={category}>{category}</Tag>;

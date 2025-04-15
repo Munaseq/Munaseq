@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/common/shadcn-ui/card';
 import Button from '@/components/common/buttons/button';
 import LogoLoading from '../common/logo-loading';
@@ -8,32 +8,54 @@ import getEventsAction from '@/proxy/event/get-events-action';
 import { EventDataDto } from '@/dtos/event-data.dto';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ArrowRightIcon } from 'lucide-react';
+import { ArrowRightIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const SearchComponent = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  // const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState([] as EventDataDto[]);
   const [isLoading, setIsLoading] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
-  // Debounce search term
+  // Clear timer function
+  const clearSearchTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  // Debounce search term with ref to track timer
   useEffect(() => {
+    clearSearchTimer(); // Clear any existing timer
+
     if (searchTerm === '') {
       setDebouncedSearchTerm(searchTerm);
       return;
     }
-    const timer = setTimeout(() => {
+    
+    timerRef.current = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
     }, 500); // 500ms delay
 
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    return () => clearSearchTimer();
+  }, [searchTerm, clearSearchTimer]);
+
+  // Handle form submission
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    clearSearchTimer(); // Explicitly clear the timer
+    router.push(`/search?searchTerm=${searchTerm}`);
+    setSearchTerm('');
+    setResults([]);
+    setIsLoading(false);
+    setIsFocused(false);
+  }, [searchTerm, router, clearSearchTimer]);
 
   // Perform search when debounced term changes
   useEffect(() => {
@@ -60,16 +82,9 @@ const SearchComponent = () => {
   return (
     <>
       <div className="mx-auto space-y-2 relative lg:w-3/4 max-w-[500px] lg:min-w-[300px] w-full">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            router.push(`/search?searchTerm=${searchTerm}`);
-            setSearchTerm('');
-            setResults([]);
-            setIsLoading(false);
-            setDebouncedSearchTerm('');
-          }}
-          className="w-full lg:mx-auto bg-white rounded-full shadow-md  flex items-center p-3 "
+      <form
+          onSubmit={handleSubmit}
+          className="w-full lg:mx-auto bg-white rounded-full shadow-md flex items-center p-3"
         >
           <input
             onFocus={(e) => {
@@ -134,33 +149,22 @@ const SearchComponent = () => {
         {/* mobile search ---------------------------------------------------- */}
       </div>
       {isFocused && innerWidth < 1024 && (
-        <div
-          className={
-            'w-screen h-screen bg-white top-0 z-30 p-4 fixed lg:hidden'
-          }
-        >
+        <div className="w-screen h-screen bg-white top-0 z-30 p-4 fixed lg:hidden">
           <div className="flex items-center gap-2">
             <ArrowRightIcon
               className="cursor-pointer"
               size={32}
               onClick={() => {
                 if (innerWidth < 1024) {
+                  clearSearchTimer();
                   setSearchTerm('');
                   setIsFocused(false);
                 }
               }}
             />
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                router.push(`/search?searchTerm=${searchTerm}`);
-                setIsFocused(false);
-                setSearchTerm('');
-                setResults([]);
-                setIsLoading(false);
-                setDebouncedSearchTerm('');
-              }}
-              className="w-full lg:mx-auto rounded-full shadow-md  flex items-center p-3 "
+              onSubmit={handleSubmit}
+              className="w-full lg:mx-auto rounded-full shadow-md flex items-center p-3"
             >
               <input
                 autoFocus
