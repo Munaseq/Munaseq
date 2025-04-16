@@ -172,6 +172,7 @@ export class EventService {
     title?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
+    category?: string,
     execludedEvents?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
@@ -1773,6 +1774,7 @@ export class EventService {
     const hasRated = eventIds.GivenFeedbacks.some(
       (feedback) => feedback.userId === userId,
     );
+    let finalResult;
     if (!hasRated) {
       const result = await this.prisma.event.update({
         where: {
@@ -1800,11 +1802,19 @@ export class EventService {
         0,
       );
       const avgRating = sumOfRating / numberOfRatings;
-      return {
-        message: 'The rating has been added successfully',
-        avgRating,
-        numberOfRatings,
-      };
+      finalResult = await this.prisma.event.update({
+        where: {
+          id: eventId,
+        },
+        data: {
+          rating: avgRating, //num of rating is the count
+        },
+        select: {
+          eventCreatorId: true,
+          rating: true,
+          _count: { select: { GivenFeedbacks: true } },
+        },
+      });
     } else {
       const feedbackId = eventIds.GivenFeedbacks.find(
         (feedback) => feedback.userId === userId,
@@ -1837,12 +1847,59 @@ export class EventService {
         0,
       );
       const avgRating = sumOfRating / numberOfRatings;
-      return {
-        message: 'The rating has been updated successfully',
-        avgRating,
-        numberOfRatings,
-      };
+      finalResult = await this.prisma.event.update({
+        where: {
+          id: eventId,
+        },
+        data: {
+          rating: avgRating, //num of rating is the count
+        },
+        select: {
+          rating: true,
+          _count: { select: { GivenFeedbacks: true } },
+        },
+      });
     }
+    if (!finalResult) {
+      throw new InternalServerErrorException(
+        "The event's rating couldn't be updated successfully",
+      );
+    }
+    //update the eventCreator rating
+    //step 1: retreive all event's created by the eventCreator with their ratings and number of ratings as well
+    const eventCreatorEvents = await this.prisma.event.findMany({
+      where: {
+        eventCreatorId: finalResult.eventCreatorId,
+      },
+      select: {
+        rating: true,
+        _count: { select: { GivenFeedbacks: true } },
+      },
+    });
+    //step 2: calculate the average rating of the eventCreator
+    const totalRatings = eventCreatorEvents.reduce(
+      (sum, event) => (sum += event._count.GivenFeedbacks),
+      0,
+    );
+    const sumOfRatings = eventCreatorEvents.reduce(
+      (sum, event) => (sum += event.rating * event._count.GivenFeedbacks),
+      0,
+    );
+    const avgRating = sumOfRatings / totalRatings;
+    //step 3: update the eventCreator rating
+    await this.prisma.user.update({
+      where: {
+        id: finalResult.eventCreatorId,
+      },
+      data: {
+        rating: avgRating,
+      },
+    });
+    return {
+      message: 'The rating has been added successfully',
+      avgRating: finalResult.rating,
+      numberOfRatings: finalResult._count.GivenFeedbacks,
+    };
   }
   async eventRating(eventId: string) {
     const result = await this.prisma.event.findUnique({
@@ -1850,26 +1907,18 @@ export class EventService {
         id: eventId,
       },
       select: {
-        GivenFeedbacks: {
-          select: {
-            rating: true,
-          },
-        },
+        rating: true,
+        _count: { select: { GivenFeedbacks: true } },
       },
     });
     //Check wether the event exist or not
     if (!result) {
       throw new NotFoundException('Event not found');
     }
-    const numberOfRatings = result.GivenFeedbacks.length;
-    const sumOfRating = result.GivenFeedbacks.reduce(
-      (preRatings, currRating) => preRatings + currRating.rating,
-      0,
-    );
-    const avgRating = sumOfRating / numberOfRatings;
+
     return {
-      avgRating: avgRating || 0,
-      numberOfRatings,
+      avgRating: result.rating,
+      numberOfRatings: result._count.GivenFeedbacks,
     };
   }
   //todo deassign role

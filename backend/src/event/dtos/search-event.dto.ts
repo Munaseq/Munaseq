@@ -15,4 +15,8 @@ export class SearchEvent {
   @IsOptional()
   @IsString()
   title?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
 }

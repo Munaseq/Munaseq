@@ -15,20 +15,22 @@ generator client {
 }
 
 model User {
-  id                 String           @id @default(uuid())
-  firstName          String
-  lastName           String
-  username           String           @unique
-  email              String           @unique
-  password           String
+  id                String   @id @default(uuid())
+  firstName         String
+  lastName          String
+  username          String   @unique
+  email             String   @unique
+  password          String
   // organizationName String? // Optional for organizations -> not needed
-  profilePictureUrl  String? // Optional profile picture
-  cvUrl              String? //Optional cv 
-  visibleName        String? // Can default to name or organization
-  gender             Gender // Optional gender field -->Are You sure mohammed?
-  socialAccounts     Json? // Optional social accounts linked
-  categories         String[] // Array of strings for interests in event categories
-  description        String? // New: Optional description field for the user
+  profilePictureUrl String? // Optional profile picture
+  cvUrl             String? //Optional cv 
+  visibleName       String? // Can default to name or organization
+  gender            Gender // Optional gender field -->Are You sure mohammed?
+  socialAccounts    Json? // Optional social accounts linked
+  categories        String[] // Array of strings for interests in event categories
+  description       String? // New: Optional description field for the user
+  rating            Float?   @default(0)
+
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   createdEvents      Event[]          @relation("UserCreatedEvents") // Relation to created events
@@ -59,6 +61,7 @@ model Event {
   endDateTime    DateTime // Date without time
   imageUrl       String? // New: Optional image string
   price          Int?           @default(0) // New: Price for the event
+  rating         Float?         @default(0)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   presenters     User[]         @relation("EventPresenters") // New: List of event presenters (many-to-many)

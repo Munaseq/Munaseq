@@ -20,7 +20,7 @@ import { join } from 'path';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
-
+//test it, ecpecially update ALL events' ratings that have been rated by the user, also, update the creators' ratings as well
   async deleteUser(id: string) {
     await this.prisma.event.deleteMany({
       where: {
