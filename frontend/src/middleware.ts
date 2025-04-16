@@ -28,10 +28,10 @@ export const config = {
     matcher: [
         ...authRequiredStaticPaths,
         ...additionalRoutes
-    ],
+    ],  
 };
 
-// const authRequiredDynamicPaths = ["/user/", "/event/"];
+const authRequiredDynamicPaths = ["/user/", "/event/"];
 
 const checkAuth = async (req: NextRequest) => {
     const token = req.cookies.get("token")?.value;
@@ -93,17 +93,14 @@ export async function middleware(req: NextRequest) {
 
     if (
         authRequiredStaticPaths.includes(pathname) ||
-        pathname.startsWith("/user/")
+        authRequiredDynamicPaths.some((path) => pathname.startsWith(path))
     ) {
+        
         return await checkAuth(req);
     }
 
     if (pathname.startsWith("/event/")) {
         
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.redirect(new URL("/signin", req.url));
-        }
 
         const eventId = pathname.split("/")[2];
         const event = await getEventAction(eventId);

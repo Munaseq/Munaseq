@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { XIcon } from "lucide-react";
 
-export default function Catagory(props: {
+export default function Category(props: {
     onClick?: (e: any) => void;
     checked?: boolean;
     active?: boolean;
@@ -24,7 +24,7 @@ export default function Catagory(props: {
                 }
             }}
             className={
-                "bg-white border-pirmary border-2 rounded-3xl px-3 py-2 text-custom-light-purple font-bold flex justify-center items-center gap-2 group text-nowrap " +
+                "bg-white border-pirmary border-2 rounded-3xl px-3 py-2 relative z-10 text-custom-light-purple font-bold flex justify-center items-center gap-2 group text-nowrap " +
                 (!props.active ? " cursor-default" : "")
             }
         >

@@ -6,12 +6,13 @@ import Button from "@/components/common/buttons/button";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import LoadingWrapper from "@/components/common/loading-wrapper";
-import Catagory from "@/components/common/category";
-import AddCatagoryDropdown from "@/components/common/buttons/add-category-dropdown";
+import CategoryComponent from "@/components/common/category";
+import AddCategoryModal from "@/components/common/buttons/add-category-modal";
 import getUserAction from "@/proxy/user/get-user-using-username-action";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import SearchUser from "@/components/authenticated-content/search-user";
 import {PlusIcon, TagIcon, UserRoundIcon } from "lucide-react";
+import { Category } from "@/util/categories";
 
 export default function forwhoForm({
   onCategoriesChange,
@@ -26,15 +27,14 @@ export default function forwhoForm({
   error: { message: string };
   onRoleChange: (role: { assignedUserId: string; role: string }) => void;
 }>) {
-  const [selectedCatagories, setSelectedCatagories] = useState([] as string[]);
+  const [selectedCatagories, setSelectedCatagories] = useState<Category[]>([]);
   const [presenters, setPresenters] = useState([] as UserDataDto[]);
   const [moderators, setModerators] = useState([] as UserDataDto[]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"presenters" | "moderators">(
     "presenters"
   );
-  // const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
+
   const [modalError, setModalError] = useState("");
 
   useEffect(() => {
@@ -42,16 +42,10 @@ export default function forwhoForm({
   }, [selectedCatagories]);
 
   const handleAddUser = async (username: string) => {
-    setLoading(true);
+  
     setModalError("");
-    console.log(username + " username");
     const user = (await getUserAction(username));
-
-    console.log(user + " user");
-    setLoading(false);
-
-    console.log(user);
-    console.log(user.username + " user name");
+    
 
     if (!user) {
       setModalError("المستخدم غير موجود");
@@ -95,7 +89,8 @@ export default function forwhoForm({
       {/* Category Selection Section */}
       <motion.div layout className="flex flex-wrap gap-2 mt-5">
         {selectedCatagories.map((category) => (
-          <Catagory
+          <CategoryComponent
+          
             onClick={() => {
               setSelectedCatagories((prevState) => {
                 return prevState.filter((t) => t !== category);
@@ -107,16 +102,19 @@ export default function forwhoForm({
             key={category}
           >
             {category}
-          </Catagory>
+          </CategoryComponent>
         ))}
         <motion.div layout className="grid place-items-center">
           {selectedCatagories.length < 3 && (
-            <AddCatagoryDropdown
-              onCatagorySelect={(catagory: string) => {
-                if (selectedCatagories.includes(catagory)) {
-                  return;
-                }
-                setSelectedCatagories((prevState) => [...prevState, catagory]);
+            <AddCategoryModal
+            limit={3}
+            descriptionText="اختر الاهتمامات التي تدور حولها الفعالية"
+              excludedCategories={selectedCatagories}
+              onCategorySelect={(category: Category[]) => {
+                setSelectedCatagories((prevState) => [
+                  ...prevState,
+                  ...category,
+                ]);
               }}
             />
           )}

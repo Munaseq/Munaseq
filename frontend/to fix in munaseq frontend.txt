@@ -1,5 +1,4 @@
 - add event presenters and modreators in the event before joining page and make them linkable
-- chage catagory because it is ugly (maybe modal)
 - update rating using (next js fecth tags)
 - same for profile picture  (next js fecth tags)
 - add modal before cancel or leaving event

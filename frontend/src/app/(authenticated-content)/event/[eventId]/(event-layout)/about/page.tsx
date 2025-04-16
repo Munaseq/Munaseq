@@ -26,7 +26,7 @@ export default async function AboutPage({
         <div className="">
             <div className="flex relative md:flex-row flex-col"></div>
             <div className="">
-                <div className="md:mt-5 my-5 flex flex-wrap gap-2">
+                <div className="mb-5 flex flex-wrap gap-2">
                     {event.categories.map((category: string) => {
                         return <Category key={category}>{category}</Category>;
                     })}

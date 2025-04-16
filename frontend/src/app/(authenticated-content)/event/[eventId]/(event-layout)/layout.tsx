@@ -143,7 +143,7 @@ export default async function EventLayout({
                     </div>
                 </div>
             </div>
-            <div className="pt-4 px-7">{children}</div>
+            <div className="p-5">{children}</div>
         </div>
     );
 }

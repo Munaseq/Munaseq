@@ -1,11 +1,11 @@
-import Catagory from "@/components/common/category";
+import CategoryComponent from "@/components/common/category";
 import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
-import { catagories } from "@/util/categories";
-import { MutableRefObject, useRef, useState } from "react";
+import { Category } from "@/util/categories";
+import {useState } from "react";
 import useFormVariants from "./hooks/use-form-variants";
 
-export default function CatagoryForm(props: {
+export default function CategoryForm(props: {
     step: number;
     nextStepHandler: (e: MouseEvent) => void;
     prevStepHandler: (e: MouseEvent) => void;
@@ -41,26 +41,26 @@ export default function CatagoryForm(props: {
             </motion.h1>
 
             <motion.div className="flex flex-wrap gap-2 mt-10 sm:text-[0.75rem] text-xs ">
-                {catagories.map((catagory, index) => (
-                    <Catagory
+                {Object.values(Category).map((category, index) => (
+                    <CategoryComponent
                         active
-                        selected={selectedCatagories.includes(catagory)}
+                        selected={selectedCatagories.includes(category)}
                         onClick={() => {
-                            if (selectedCatagories.includes(catagory)) {
+                            if (selectedCatagories.includes(category)) {
                                 setSelectedCatagories(prevState => {
-                                    return prevState.filter(t => t !== catagory);
+                                    return prevState.filter(t => t !== category);
                                 });
                                 return;
                             }
                             setSelectedCatagories(prevState => [
                                 ...prevState,
-                                catagory,
+                                category,
                             ]);
                         }}
                         key={index}
                     >
-                        {catagory}
-                    </Catagory>
+                        {category}
+                    </CategoryComponent>
                 ))}
             </motion.div>
 
