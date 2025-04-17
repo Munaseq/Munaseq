@@ -2,10 +2,6 @@
 - update rating using (next js fecth tags)
 - same for profile picture  (next js fecth tags)
 - add modal before cancel or leaving event
-- change location to make it url for عن بعد and location for حضوري and make it required
-- make add presenter and mod an actual modal (use shadcn)
-
-# Changes 🟣
--- I have changed getUserAction to make it able to search
--- I have added a bottom navigation for mobile(not complete yet) check this out 
--- changed every icon to use lucid 
+- change how members look.
+- fix how add content works
+- fix rating (you cant rate if you are a member)
