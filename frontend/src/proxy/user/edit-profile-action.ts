@@ -39,7 +39,7 @@ export default async function editProfileAction(
     params.append("removeImage", `${deleteProfilePicture}`);
     params.append("removeCV", `${deleteCV}`);
     url.search = params.toString();
-    console.log(url.toString());
+
     try {
         const editResponse = await fetch(url.toString(), {
             method: "PATCH",

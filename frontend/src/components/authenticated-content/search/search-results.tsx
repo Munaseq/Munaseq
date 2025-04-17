@@ -35,7 +35,7 @@ export default function SearchObserver({
     if (loading || !hasMore.current) return;
 
     setLoading(true);
-    console.log('Fetching page ' + pageNumber.current);
+
     try {
       const response = await getEventsAction({
         pageNumber: pageNumber.current,
@@ -54,7 +54,6 @@ export default function SearchObserver({
     }
   };
 
-  //   console.log("pageNumber", pageNumber);
   const bottomElementRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (loading) return;

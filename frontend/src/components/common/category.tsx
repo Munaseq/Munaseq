@@ -9,10 +9,11 @@ export default function Category(props: {
     active?: boolean;
     children: string;
     selected?: boolean;
+    notAnimate?: boolean;
 }) {
     return (
         <motion.button
-            layout
+            layout={!props.notAnimate}
             animate={{ backgroundColor: props.selected ? "#F5F5F5" : "#FFFFFF" }}
             onClick={e => {
                 e.preventDefault();
@@ -28,7 +29,7 @@ export default function Category(props: {
                 (!props.active ? " cursor-default" : "")
             }
         >
-            <motion.div layout>{props.children}</motion.div>
+            <motion.div layout={!props.notAnimate}>{props.children}</motion.div>
             {props.selected && (
                 <motion.div
                     animate={{ opacity: 1, y: 0 }}

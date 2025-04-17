@@ -7,7 +7,6 @@ import deco from "@/assets/auth-content-assets/deco.svg";
 import MenuMobile from "@/components/authenticated-content/menu-mobile";
 import logoSmall from "@/assets/logo/munaseq-icon-dark-lines.svg";
 import { Toaster } from 'react-hot-toast';
-// import BottomNavigation from "@/components/authenticated-content/mobile-bottom-navigation";
 import getProfileAction from "@/proxy/user/get-profile-action";
 
 export default async function AuthContentLayout({
@@ -34,7 +33,7 @@ export default async function AuthContentLayout({
                     <Image
                         src={deco}
                         alt="deco"
-                        className="absolute -right-32 top-0 -z-10 min-w-96 sm:block hidden"
+                        className="absolute -right-32 top-0 -z-10 min-w-96 lg:block hidden"
                         priority
                     />
                     <Search />

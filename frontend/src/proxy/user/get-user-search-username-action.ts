@@ -22,7 +22,7 @@ export default async function getUserSearchAction(username?: string) {
         throw new Error("User not found");
       }
       const responseJson = await response.json();
-      console.log(responseJson);
+
       return responseJson;
     } catch (error) {
       console.error("Error fetching user:", error);

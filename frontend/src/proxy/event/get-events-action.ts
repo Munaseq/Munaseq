@@ -26,8 +26,6 @@ export default async function getEventsAction({
 
     url.search = params.toString();
 
-    console.log(url.toString());
-
     const eventsRes = await fetch(url.toString(), {
       next: {
         tags: ["event"],

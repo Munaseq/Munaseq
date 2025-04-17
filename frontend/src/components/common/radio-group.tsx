@@ -6,9 +6,11 @@ export default function Radio(props: {
     values?: string[];
     name: string;
     defaultValue?: string;
+    onChange?: () => void;
 }) {
     return (
         <RadioGroup
+            onValueChange={props.onChange}
             name={props.name}
             id={props.name}
             defaultValue={
