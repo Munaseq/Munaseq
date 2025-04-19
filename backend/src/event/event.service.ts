@@ -134,26 +134,60 @@ export class EventService {
   }
 
   async delete(userId: string, eventId: string) {
-    const eventIds = await this.prisma.event.findUnique({
+    const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
-        eventCreatorId: true,
+        eventCreator: {
+          select: {
+            id: true,
+            createdEvents: {
+              //select all events' ratings that've been created by the eventCreator expect the event that we want to delete
+              where: {
+                id: { not: eventId },
+              },
+              select: {
+                rating: true,
+                _count: { select: { GivenFeedbacks: true } },
+              },
+            },
+          },
+        },
       },
     });
     //Check wether the event exist or not
-    if (!eventIds) {
+    if (!event) {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized = eventIds.eventCreatorId === userId;
+    const isAuthorized = event.eventCreator.id === userId;
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to delete this event',
       );
     }
-    await this.prisma.event.delete({
-      where: { id: eventId },
+    const sumOfRatings = event.eventCreator.createdEvents.reduce(
+      (sum, curr) => sum + curr._count.GivenFeedbacks * curr.rating,
+      0,
+    );
+    const numberOfRatings = event.eventCreator.createdEvents.reduce(
+      (sum, curr) => sum + curr._count.GivenFeedbacks,
+      0,
+    );
+    const avgRating =
+      numberOfRatings === 0 ? 0 : sumOfRatings / numberOfRatings;
+
+    //delte update the eventCreator rating
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        rating: avgRating,
+        createdEvents: {
+          delete: {
+            id: eventId,
+          },
+        },
+      },
     });
     return {
       message: 'The event has been deleted successfully',
@@ -1201,11 +1235,12 @@ export class EventService {
       const currDate = new Date();
       let status;
       if (currDate < assignment.startDate) {
-        status = 'AVAILABLE_SOON';
+        status = 'AVAILABLE_SOON'; //Alows the authorized to update
       } else if (currDate > assignment.endDate) {
         status = 'EXPIRED';
       } else {
         status = 'AVAILABLE';
+        //TODO SUbmitted / Saved  status
       }
 
       return { status, ...assignment };
@@ -1467,6 +1502,7 @@ export class EventService {
 
     //Extract the existing questions and the new questions
     if (body.questions) {
+      //Remove all records, and add the new ones(even if they are the same)
       let existingQuestions: UpdateAssignmentQuestionDTO[] = [];
       let newQuestions: UpdateAssignmentQuestionDTO[] = [];
       let removedQuestions: UpdateAssignmentQuestionDTO[] = [];
@@ -1856,6 +1892,7 @@ export class EventService {
         },
         select: {
           rating: true,
+          eventCreatorId: true,
           _count: { select: { GivenFeedbacks: true } },
         },
       });
@@ -1878,11 +1915,11 @@ export class EventService {
     });
     //step 2: calculate the average rating of the eventCreator
     const totalRatings = eventCreatorEvents.reduce(
-      (sum, event) => (sum += event._count.GivenFeedbacks),
+      (sum, event) => sum + event._count.GivenFeedbacks,
       0,
     );
     const sumOfRatings = eventCreatorEvents.reduce(
-      (sum, event) => (sum += event.rating * event._count.GivenFeedbacks),
+      (sum, event) => sum + event.rating * event._count.GivenFeedbacks,
       0,
     );
     const avgRating = sumOfRatings / totalRatings;
@@ -1921,7 +1958,7 @@ export class EventService {
       numberOfRatings: result._count.GivenFeedbacks,
     };
   }
-  //todo deassign role
+  //not useful anymore, it should be removed
   async assignRole(
     userId: string,
     eventId: string,

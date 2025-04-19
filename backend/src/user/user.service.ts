@@ -20,13 +20,119 @@ import { join } from 'path';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
-//test it, ecpecially update ALL events' ratings that have been rated by the user, also, update the creators' ratings as well
+  //test it, ecpecially update ALL events' ratings that have been rated by the user, also, update the creators' ratings as well
+
   async deleteUser(id: string) {
-    await this.prisma.event.deleteMany({
-      where: {
-        eventCreatorId: id,
+    // it's not necessary,since the event model has Cascade option with the delete option
+    // await this.prisma.event.deleteMany({
+    //   where: {
+    //     eventCreatorId: id,
+    //   },
+    // });
+    //Step 1: find the user and the needed data
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        GiveFeedback: {
+          select: {
+            Event: {
+              select: {
+                eventCreator: {
+                  select: {
+                    id: true,
+                    createdEvents: {
+                      select: {
+                        id: true,
+                        GivenFeedbacks: {
+                          select: { rating: true },
+                          where: { userId: { not: id } },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
+    //Step 2: check if the user exist
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    //Step 3:extract the info and put it into the related array
+    let usersToBeUpdated: {
+      userId: string;
+      avgRating: number;
+      Events: { eventId: string; avgRating: number }[];
+    }[] = [];
+    let updatedUserIds: string[] = [];
+    user.GiveFeedback.forEach((item) => {
+      const createdEvents = item.Event.eventCreator.createdEvents;
+      const userId = item.Event.eventCreator.id;
+      //check if the user is already updated
+      if (updatedUserIds.length > 0) {
+        const isExist = updatedUserIds?.find((id) => userId === id);
+        if (!isExist) {
+          return;
+        }
+      }
+      //EC stnds for EventCreator
+      let ECNumebrOfratings: number = 0;
+      let ECSumOfratings: number = 0;
+
+      const eventsToBeUpdated = createdEvents.map((event) => {
+        const numberOfRatings = event.GivenFeedbacks.length;
+        const sumOfRatings = event.GivenFeedbacks.reduce(
+          (sum, curr) => sum + curr.rating,
+          0,
+        );
+        console.log(
+          'numberOfRatings',
+          numberOfRatings,
+          'sumOfRatings',
+          sumOfRatings,
+        );
+        ECNumebrOfratings += numberOfRatings;
+        ECSumOfratings += sumOfRatings;
+        return {
+          eventId: event.id,
+          avgRating: numberOfRatings === 0 ? 0 : sumOfRatings / numberOfRatings,
+        };
+      });
+      const avgRating =
+        ECNumebrOfratings === 0 ? 0 : ECSumOfratings / ECNumebrOfratings;
+      console.log('avgRating', avgRating);
+      usersToBeUpdated.push({
+        userId,
+        avgRating,
+        Events: eventsToBeUpdated,
+      });
+      updatedUserIds.push(userId);
+    });
+    console.log('usersToBeUpdated', usersToBeUpdated);
+    //Step 4: update the users and events ratings
+    await Promise.all(
+      usersToBeUpdated.map(async (user) => {
+        // Update the user's average rating
+        await this.prisma.user.update({
+          where: { id: user.userId },
+          data: { rating: user.avgRating },
+        });
+
+        // Update the events associated with the user
+        await Promise.all(
+          user.Events.map(async (event) => {
+            await this.prisma.event.update({
+              where: { id: event.eventId },
+              data: { rating: event.avgRating },
+            });
+          }),
+        );
+      }),
+    );
+    // Step 5: delete the user
     return this.prisma.user.delete({
       where: {
         id: id,
@@ -36,7 +142,7 @@ export class UserService {
       },
     });
   }
-
+  // this should be used only in the test environment
   async deleteAll() {
     try {
       const deletedUsers = await this.prisma.user.deleteMany();
@@ -239,53 +345,33 @@ export class UserService {
     }
   }
   async getUserRating(userId: string) {
-    const result = await this.prisma.event.findMany({
-      where: {
-        eventCreatorId: userId,
-      },
-      select: {
-        GivenFeedbacks: {
-          select: {
-            rating: true,
-          },
-        },
-      },
-    });
+    //step 1: retreive all event's created by the eventCreator with their ratings and number of ratings as well
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: {
+        id: userId,
+      },
       select: {
         createdEvents: {
           select: {
-            _count: { select: { GivenFeedbacks: true } },
-            GivenFeedbacks: { select: { rating: true } },
+            _count: {
+              select: {
+                GivenFeedbacks: true,
+              },
+            },
           },
         },
+        rating: true,
       },
     });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    // Calculate the total number of ratings
     const numberOfRatings = user.createdEvents.reduce(
-      (sum, curr) => sum + curr._count.GivenFeedbacks,
+      (sum, event) => sum + event._count.GivenFeedbacks,
       0,
     );
-
-    // Calculate the sum of all ratings
-    const sumOfRating = result.reduce(
-      (sum, curr) =>
-        sum +
-        curr.GivenFeedbacks.reduce(
-          (ratingSum, feedback) => ratingSum + feedback.rating,
-          0,
-        ),
-      0,
-    );
-
-    const avgRating = numberOfRatings > 0 ? sumOfRating / numberOfRatings : 0;
-
     return {
-      avgRating,
+      avgRating: user.rating,
       numberOfRatings,
     };
   }

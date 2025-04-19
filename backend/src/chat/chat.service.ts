@@ -20,7 +20,7 @@ import { JwtService } from '@nestjs/jwt';
 //This an enum of the listened events by the user
 enum ClientEvents {
   Chat = 'Chat',
-  NewChat = 'JoinChat', // to join certain chat
+  NewChat = 'NewChat', // to join certain chat
   JoinedChats = 'JoinedChats', // to view the joined rooms, means the current sockets' rooms
   Chats = 'Chats', // retrieve all chats in db
   Message = 'Message', // to retrieve a message
@@ -67,13 +67,17 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       if (!token) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Please provide a token');
       }
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get('JWT_SECRET'),
       });
       userId = payload.sub;
-
+      //check if the userId is valid
+      await this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { id: true },
+      });
       // Terminate a connection that has the same userId, because the new connection will overwrite the clientId in the onlineClientsUTC therefore the old client will not receive any messages
       const existClientId = this.onlineClientsUTC.get(userId);
       //if there's an existing client, then terminate its connection
