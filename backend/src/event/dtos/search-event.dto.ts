@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class SearchEvent {
   @IsOptional()
@@ -19,4 +19,8 @@ export class SearchEvent {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  highestRated?: boolean;
 }

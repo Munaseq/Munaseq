@@ -44,6 +44,7 @@ export class UserController {
       query.username,
       query.pageNumber,
       query.pageSize,
+      query.highestRated,
       execludedUsers,
     );
   }

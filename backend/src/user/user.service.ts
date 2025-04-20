@@ -14,8 +14,6 @@ import {
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library';
 import { EditUserInfoDto, userChangePasswordDto } from './dtos';
-import { exec } from 'child_process';
-import { join } from 'path';
 
 @Injectable()
 export class UserService {
@@ -88,12 +86,7 @@ export class UserService {
           (sum, curr) => sum + curr.rating,
           0,
         );
-        console.log(
-          'numberOfRatings',
-          numberOfRatings,
-          'sumOfRatings',
-          sumOfRatings,
-        );
+
         ECNumebrOfratings += numberOfRatings;
         ECSumOfratings += sumOfRatings;
         return {
@@ -103,7 +96,7 @@ export class UserService {
       });
       const avgRating =
         ECNumebrOfratings === 0 ? 0 : ECSumOfratings / ECNumebrOfratings;
-      console.log('avgRating', avgRating);
+
       usersToBeUpdated.push({
         userId,
         avgRating,
@@ -111,7 +104,7 @@ export class UserService {
       });
       updatedUserIds.push(userId);
     });
-    console.log('usersToBeUpdated', usersToBeUpdated);
+
     //Step 4: update the users and events ratings
     await Promise.all(
       usersToBeUpdated.map(async (user) => {
@@ -276,39 +269,27 @@ export class UserService {
     username?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
+    highestRated?: boolean,
     execludedUsers?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
-    if (username) {
-      return this.prisma.user.findMany({
-        where: {
-          id: {
-            notIn: execludedUsers,
-          },
-          username: {
-            contains: username,
-          },
+
+    return this.prisma.user.findMany({
+      where: {
+        id: {
+          notIn: execludedUsers,
         },
-        omit: {
-          password: true,
+        username: {
+          contains: username,
         },
-        take: pageSize,
-        skip: skipedRecords,
-      });
-    } else {
-      return this.prisma.user.findMany({
-        where: {
-          id: {
-            notIn: execludedUsers,
-          },
-        },
-        omit: {
-          password: true,
-        },
-        take: pageSize,
-        skip: skipedRecords,
-      });
-    }
+      },
+      omit: {
+        password: true,
+      },
+      take: pageSize,
+      skip: skipedRecords,
+      ...(highestRated && { orderBy: { rating: 'desc' } }),
+    });
   }
   async findUserRoles(userId: string) {
     const result = await this.prisma.user.findUnique({

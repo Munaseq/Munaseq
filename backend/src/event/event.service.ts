@@ -20,6 +20,7 @@ import { UpdateAssignmentQuestionDTO } from './dtos/update-assignment-question.d
 import { TakeAssigmentDTO } from './dtos/take-assignment.dto';
 import { AssignRoles } from './dtos/assign-role.dto';
 import { InvitationType, RoleType } from '@prisma/client';
+import { create } from 'domain';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
 @Injectable()
@@ -35,6 +36,9 @@ export class EventService {
     eventCreatorId: string,
     imageUrl: any,
   ) {
+    if (!eventCreatorId) {
+      throw new BadRequestException('Event creator ID is required');
+    }
     const event = await this.prisma.event.create({
       data: {
         ...createEventDto,
@@ -207,65 +211,42 @@ export class EventService {
     pageNumber: number = 1,
     pageSize: number = 5,
     category?: string,
+    highestRated?: boolean,
     execludedEvents?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
-    if (title) {
-      return this.prisma.event.findMany({
-        where: {
-          id: {
-            notIn: execludedEvents,
-          },
-          isPublic: true,
-          title: {
-            contains: title,
-          },
+
+    return this.prisma.event.findMany({
+      where: {
+        id: {
+          notIn: execludedEvents,
         },
-        include: {
-          eventCreator: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              profilePictureUrl: true,
-              username: true,
-              visibleName: true,
-            },
-          },
+        isPublic: true,
+        title: {
+          contains: title,
+          mode: 'insensitive',
         },
-        omit: {
-          eventCreatorId: true,
-        },
-        take: pageSize,
-        skip: skipedRecords,
-      });
-    } else {
-      return this.prisma.event.findMany({
-        where: {
-          id: {
-            notIn: execludedEvents,
-          },
-          isPublic: true,
-        },
-        include: {
-          eventCreator: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              profilePictureUrl: true,
-              username: true,
-              visibleName: true,
-            },
+        ...(category && { categories: { has: category } }), // Apply category filter only if it's provided
+      },
+      include: {
+        eventCreator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePictureUrl: true,
+            username: true,
+            visibleName: true,
           },
         },
-        omit: {
-          eventCreatorId: true,
-        },
-        take: pageSize,
-        skip: skipedRecords,
-      });
-    }
+      },
+      omit: {
+        eventCreatorId: true,
+      },
+      take: pageSize,
+      skip: skipedRecords,
+      ...(highestRated && { orderBy: { rating: 'desc' } }),
+    });
   }
   findAllCurrentUserEvents(
     eventCreatorId: string,
@@ -973,8 +954,6 @@ export class EventService {
     quizId: string,
     answers: { questionId: string; answer: string }[],
   ) {
-    console.log('Received answers:', answers); // Log answers to debug
-
     // Check if answers is an array
     if (!Array.isArray(answers)) {
       throw new BadRequestException('Answers must be an array');
@@ -1232,6 +1211,7 @@ export class EventService {
             TakeAssignment: { where: { userId }, select: { status: true } }, //for the attendee
             createdAt: true,
           },
+          orderBy: { updatedAt: 'desc' },
         },
       },
     });
@@ -1242,7 +1222,7 @@ export class EventService {
 
     const assignmentsWithStatus = result.Assignments.map((assignment) => {
       const currDate = new Date();
-      const { _count, ...assignmentWithoutCount } = assignment; // Exclude _count
+      const { _count, TakeAssignment, ...assignmentWithoutCount } = assignment; // Exclude _count
       let status;
       if (currDate < assignment.startDate) {
         status = 'AVAILABLE_SOON'; //Alows the authorized to update
@@ -1255,8 +1235,8 @@ export class EventService {
 
       if (isAttendee) {
         let takeAssignmentStatus: string;
-        if (assignment.TakeAssignment.length > 0) {
-          const takeAssignment = assignment.TakeAssignment[0];
+        if (TakeAssignment.length > 0) {
+          const takeAssignment = TakeAssignment[0];
           takeAssignmentStatus = takeAssignment.status;
         } else {
           takeAssignmentStatus = 'NOT_ANSWERED';
@@ -1373,11 +1353,25 @@ export class EventService {
         Assignments: {
           where: { id: assignmentId },
           select: {
+            id: true,
             assignmentTitle: true,
             questions: true,
-            createdAt: true,
             startDate: true,
             endDate: true,
+            createdAt: true,
+            _count: {
+              select: { TakeAssignment: true },
+            },
+            TakeAssignment: {
+              where: { userId },
+              select: {
+                id: true,
+                answers: true,
+                status: true,
+                updatedAt: true,
+                createdAt: true,
+              },
+            },
           },
         },
       },
@@ -1386,26 +1380,60 @@ export class EventService {
       throw new NotFoundException('assignment not found');
     }
     // Check if the userId matches any of the roles
+    const isAttendee = event.joinedUsers.some(
+      (joinedUsers) => joinedUsers.id === userId,
+    );
     const isAuthorized =
       event.eventCreatorId === userId ||
       event.presenters.some((presenter) => presenter.id === userId) ||
       event.moderators.some((moderator) => moderator.id === userId) ||
-      event.joinedUsers.some((joinedUsers) => joinedUsers.id === userId);
+      isAttendee;
 
     if (!isAuthorized) {
-      throw new BadRequestException("You're not allowed to do this assignment");
+      throw new BadRequestException(
+        "You're not allowed to show this assignment",
+      );
     }
+    const assignment = event.Assignments[0];
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+    //show the status of the assignment
+    const currDate = new Date();
+    const { _count, TakeAssignment, ...assignmentWithoutCount } =
+      event.Assignments[0]; // Exclude _count
+    let status: string;
+    if (currDate < assignment.startDate) {
+      status = 'AVAILABLE_SOON'; //Alows the authorized to update
+    } else if (currDate > assignment.endDate) {
+      status = 'EXPIRED';
+    } else {
+      status = 'AVAILABLE';
+    }
+    if (isAttendee) {
+      {
+        let takeAssignmentStatus: string;
+        if (TakeAssignment?.length > 0) {
+          const takeAssignment = TakeAssignment[0];
+          takeAssignmentStatus = takeAssignment.status;
+        } else {
+          takeAssignmentStatus = 'NOT_ANSWERED';
+        }
 
-    //extract the assignment from the event's data
-    const result = { assignment: event.Assignments[0], takeAssignment: null };
-    //check if there's a taken assignment by the user and bring it if exist, otherwise only retreive the questions
-    const takenAssignment = await this.prisma.takeAssignment.findFirst({
-      where: { assignmentId, userId },
-    });
-    if (takenAssignment) {
-      return { ...result, takeAssignment: takenAssignment };
+        return {
+          assignmentStatus: status,
+          takeAssignmentStatus,
+          ...assignmentWithoutCount,
+          TakeAssignment: TakeAssignment[0] ?? {},
+        };
+      }
+    } else {
+      return {
+        assignmentStatus: status,
+        numberParticipatedUsers: _count.TakeAssignment,
+        ...assignmentWithoutCount,
+      };
     }
-    return { ...result };
   }
 
   //TODO endpoint for creating a
@@ -1462,10 +1490,12 @@ export class EventService {
     //check if assignment is within the valid period (means available to take)
     const currDate = new Date();
     if (
-      event?.Assignments[0]?.endDate <= currDate &&
-      event?.Assignments[0]?.startDate >= currDate
+      event?.Assignments[0]?.endDate < currDate ||
+      event?.Assignments[0]?.startDate > currDate
     ) {
-      throw new BadRequestException('The Assignment time expired');
+      throw new BadRequestException(
+        'The Assignment time expired Or not started yet',
+      );
     }
     //check if the  user has an existing taken assignment, if not,create a new one
     if (!assignmentTake) {
@@ -1479,6 +1509,7 @@ export class EventService {
         },
         data: {
           answers,
+          status: typeOfSubmission,
         },
       });
     }
@@ -1509,7 +1540,7 @@ export class EventService {
             id: assignmentId,
           },
 
-          select: { questions: { select: { id: true } } },
+          select: { startDate: true, endDate: true },
         },
       },
     });
@@ -1525,6 +1556,17 @@ export class EventService {
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to update this assignment',
+      );
+    } //Check if the start date is smaller than the end date
+    if (body.startDate > body.endDate) {
+      throw new BadRequestException(
+        'The start date should be smaller than the end date',
+      );
+    }
+    const currDate = new Date();
+    if (event.Assignments[0]?.startDate < currDate) {
+      throw new BadRequestException(
+        'The Assignment has already started, you cannot update it',
       );
     }
 

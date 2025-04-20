@@ -75,6 +75,7 @@ export class EventController {
       query.pageNumber,
       query.pageSize,
       query.category,
+      query.highestRated,
       execludedEvents,
     );
   }
