@@ -1201,17 +1201,21 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
+    const isAttendee = eventIds.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
     const isAuthorized =
       eventIds.eventCreatorId === userId ||
       eventIds.presenters.some((presenter) => presenter.id === userId) ||
       eventIds.moderators.some((moderator) => moderator.id === userId) ||
-      eventIds.joinedUsers.some((joinedUsers) => joinedUsers.id === userId);
+      isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to view the assignments of this event',
       );
     }
+    //Check if the user is anttendee, then show the assignments and thier status, if not, then show how many users have partcipated in the assignment
     let result = await this.prisma.event.findUnique({
       where: {
         id: eventId,
@@ -1220,19 +1224,25 @@ export class EventService {
         _count: { select: { Assignments: true } },
         Assignments: {
           select: {
-            _count: true,
-            createdAt: true,
-            assignmentTitle: true,
+            _count: { select: { TakeAssignment: true } }, //for the number of users who have taken the assignment, ONLY for the authorized users
             id: true,
+            assignmentTitle: true,
             startDate: true,
             endDate: true,
-            TakeAssignment: { where: { userId }, select: { status: true } }, //if does it exist then it's
+            TakeAssignment: { where: { userId }, select: { status: true } }, //for the attendee
+            createdAt: true,
           },
         },
       },
     });
+    if (!result) {
+      throw new NotFoundException('Event not found');
+    }
+    // If the user is an attendee, show the status of the assignment
+
     const assignmentsWithStatus = result.Assignments.map((assignment) => {
       const currDate = new Date();
+      const { _count, ...assignmentWithoutCount } = assignment; // Exclude _count
       let status;
       if (currDate < assignment.startDate) {
         status = 'AVAILABLE_SOON'; //Alows the authorized to update
@@ -1243,10 +1253,31 @@ export class EventService {
         //TODO SUbmitted / Saved  status
       }
 
-      return { status, ...assignment };
+      if (isAttendee) {
+        let takeAssignmentStatus: string;
+        if (assignment.TakeAssignment.length > 0) {
+          const takeAssignment = assignment.TakeAssignment[0];
+          takeAssignmentStatus = takeAssignment.status;
+        } else {
+          takeAssignmentStatus = 'NOT_ANSWERED';
+        }
+        return {
+          assignmentStatus: status,
+          takeAssignmentStatus,
+          ...assignmentWithoutCount,
+        };
+      } else {
+        return {
+          assignmentStatus: status,
+          numberParticipatedUsers: _count.TakeAssignment,
+          ...assignmentWithoutCount,
+        };
+      }
     });
-    result = { ...result, Assignments: assignmentsWithStatus };
-    return result ?? [];
+    return {
+      numberOfAssignments: result._count.Assignments,
+      assignments: assignmentsWithStatus,
+    };
   }
   async addAssignment(eventId: string, userId: string, body: CreateAssignment) {
     //retreive eventCreator, moderators, and presenters ids
@@ -1267,17 +1298,16 @@ export class EventService {
       eventIds.eventCreatorId === userId ||
       eventIds.presenters.some((presenter) => presenter.id === userId) ||
       eventIds.moderators.some((moderator) => moderator.id === userId);
-    const remove = body.questions.some(
-      (question) => question.questionType === 'REMOVE',
-    );
-    if (remove) {
-      throw new BadRequestException(
-        "A question can't be added because it holds 'REMOVE' questionType",
-      );
-    }
+
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to add assignment to this event',
+      );
+    }
+    //Check if the start date is smaller than the end date
+    if (body.startDate > body.endDate) {
+      throw new BadRequestException(
+        'The start date should be smaller than the end date',
       );
     }
     const result = await this.prisma.event.update({
@@ -1455,7 +1485,7 @@ export class EventService {
     return assignmentTake;
   }
   async updateAssignment(
-    assignementId: string,
+    assignmentId: string,
     userId: string,
     body: UpdateAssignmentDTO,
   ) {
@@ -1465,7 +1495,7 @@ export class EventService {
       where: {
         Assignments: {
           some: {
-            id: assignementId, // will check for an event that has an assignment id matches assignmentId
+            id: assignmentId, // will check for an event that has an assignment id matches assignmentId
           },
         },
       },
@@ -1476,7 +1506,7 @@ export class EventService {
         moderators: { select: { id: true } },
         Assignments: {
           where: {
-            id: assignementId,
+            id: assignmentId,
           },
 
           select: { questions: { select: { id: true } } },
@@ -1498,29 +1528,9 @@ export class EventService {
       );
     }
 
-    const assignment = event.Assignments[0];
-
     //Extract the existing questions and the new questions
     if (body.questions) {
       //Remove all records, and add the new ones(even if they are the same)
-      let existingQuestions: UpdateAssignmentQuestionDTO[] = [];
-      let newQuestions: UpdateAssignmentQuestionDTO[] = [];
-      let removedQuestions: UpdateAssignmentQuestionDTO[] = [];
-      body.questions.forEach((question) => {
-        if (
-          assignment.questions.some(
-            (existQuestion) => existQuestion.id === question.id,
-          )
-        ) {
-          if (question.questionType === 'REMOVE') {
-            removedQuestions.push(question);
-          } else {
-            existingQuestions.push(question);
-          }
-        } else {
-          newQuestions.push(question);
-        }
-      });
 
       const result = await this.prisma.event.update({
         where: {
@@ -1530,29 +1540,23 @@ export class EventService {
           Assignments: {
             update: {
               where: {
-                id: assignementId,
+                id: assignmentId,
               },
               data: {
                 startDate: body.startDate,
                 endDate: body.endDate,
                 questions: {
-                  updateMany: existingQuestions.map((existQuestion) => ({
-                    where: { id: existQuestion.id },
-                    data: {
-                      ...existQuestion,
-                    },
-                  })),
+                  deleteMany: {
+                    assignment_id: assignmentId,
+                  },
                   createMany: {
-                    data: newQuestions.map((newQuestion) => ({
+                    data: body.questions.map((newQuestion) => ({
                       questionType: newQuestion.questionType,
                       text: newQuestion.text,
                       options: newQuestion.options,
                       correctAnswer: newQuestion.correctAnswer,
                     })),
                   },
-                  deleteMany: removedQuestions.map((removedQuestion) => ({
-                    id: removedQuestion.id,
-                  })),
                 },
               },
             },
@@ -1577,7 +1581,7 @@ export class EventService {
           Assignments: {
             update: {
               where: {
-                id: assignementId,
+                id: assignmentId,
               },
               data: {
                 startDate: body.startDate,
@@ -1599,7 +1603,7 @@ export class EventService {
       return updatedAssignment ?? []; //to remove the unnecessary structure from the response
     }
   }
-  async deleteAssignment(assignementId: string, userId: string) {
+  async deleteAssignment(assignmentId: string, userId: string) {
     //the following logic is to ensure that the assignment will not be deleted unless the user is authorized to do that
 
     //retreive eventCreator, moderators, ,presenters, and event ids
@@ -1608,7 +1612,7 @@ export class EventService {
       where: {
         Assignments: {
           some: {
-            id: assignementId, // will check for an event that has an assignment id matches assignmentId
+            id: assignmentId, // will check for an event that has an assignment id matches assignmentId
           },
         },
       },
@@ -1641,14 +1645,14 @@ export class EventService {
       data: {
         Assignments: {
           delete: {
-            id: assignementId,
+            id: assignmentId,
           },
         },
       },
     });
     if (result) {
       return {
-        message: `The assignment with id ${assignementId} has been deleted successfully`,
+        message: `The assignment with id ${assignmentId} has been deleted successfully`,
       };
     } else {
       throw new InternalServerErrorException(

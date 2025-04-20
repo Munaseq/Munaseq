@@ -247,8 +247,8 @@ enum ChatCategory {
 enum QuestionType {
   MULTIPLE_CHOICE
   ESSAY
-  TRUE_FALSE//REMOVE it, regarding to front-end team
-  REMOVE
+  // TRUE_FALSE//REMOVE it, regarding to front-end team
+
 }
 
 enum TakeStatus {
