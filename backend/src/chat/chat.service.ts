@@ -14,8 +14,9 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+
+import { Server, Socket } from 'socket.io';
 
 //This an enum of the listened events by the user
 enum ClientEvents {

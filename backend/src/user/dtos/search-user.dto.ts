@@ -15,7 +15,9 @@ export class SeacrhUser {
   @IsOptional()
   @IsString()
   username?: string;
-
+  @IsOptional()
+  @IsString()
+  category?: string;
   @IsOptional()
   @IsBoolean()
   highestRated?: boolean;

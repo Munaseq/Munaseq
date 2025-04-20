@@ -9,10 +9,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 
 import * as argon2 from 'argon2';
-import {
-  NotFoundError,
-  PrismaClientKnownRequestError,
-} from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { EditUserInfoDto, userChangePasswordDto } from './dtos';
 
 @Injectable()
@@ -178,7 +175,7 @@ export class UserService {
       });
     } catch (error) {
       // Catch specific errors when a record is not found
-      if (error instanceof NotFoundError) {
+      if (error instanceof NotFoundException) {
         throw new HttpException(
           'No account with the provided email has been found',
           HttpStatus.NOT_FOUND,
@@ -205,7 +202,7 @@ export class UserService {
       });
     } catch (error) {
       // Catch specific error when a record is not found
-      if (error instanceof NotFoundError) {
+      if (error instanceof NotFoundException) {
         throw new HttpException(
           'No account with the provided username has been found',
           HttpStatus.NOT_FOUND,
@@ -270,6 +267,7 @@ export class UserService {
     pageNumber: number = 1,
     pageSize: number = 5,
     highestRated?: boolean,
+    category?: string,
     execludedUsers?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
@@ -282,6 +280,7 @@ export class UserService {
         username: {
           contains: username,
         },
+        ...(category && { categories: { has: category } }), // Apply category filter only if it's provided
       },
       omit: {
         password: true,
