@@ -279,6 +279,12 @@ export class EventController {
   @ApiOperation({ summary: 'Update an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiConsumes('multipart/form-data')
+  @ApiQuery({
+    name: 'removeImage',
+    required: false,
+    type: Boolean,
+    description: 'Flag to remove the profile picture.',
+  })
   @ApiBody({
     description:
       'Payload for updating an event. Include all fields from UpdateEventDto and an optional image file.',
