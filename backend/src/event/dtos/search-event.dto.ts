@@ -21,6 +21,7 @@ export class SearchEvent {
   category?: string;
 
   @IsOptional()
+  @Type(() => Boolean)
   @IsBoolean()
   highestRated?: boolean;
 }

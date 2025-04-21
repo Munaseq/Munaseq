@@ -31,7 +31,7 @@ import {
   userChangePasswordDto,
 } from './dtos';
 import { multerUserLogic } from 'src/utils/multer.logic';
-import { ExecludeUsers } from 'src/event/dtos';
+
 @ApiTags('user')
 @Controller('user')
 export class UserController {
@@ -79,24 +79,13 @@ export class UserController {
     type: String,
     description: 'Retreives the users that have the category.',
   })
-  @ApiBody({
-    description:
-      'Excluded users, helpful when searching for users to invite and you want to exclude the ones that are already invited.',
-    required: false,
-    type: ExecludeUsers,
-  })
-  findAll(
-    @Query() query: SeacrhUser,
-    @Body() execludedUsersDto?: ExecludeUsers,
-  ) {
-    const { execludedUsers } = execludedUsersDto;
+  findAll(@Query() query: SeacrhUser) {
     return this.userService.findAllUsers(
       query.username,
       query.pageNumber,
       query.pageSize,
       query.highestRated,
       query.category,
-      execludedUsers,
     );
   }
 
@@ -133,6 +122,7 @@ export class UserController {
       'Payload for editing user info. Fields correspond to EditUserInfoDto and include file uploads for cv and profilePicture.',
     schema: {
       type: 'object',
+
       properties: {
         firstName: { type: 'string', description: 'First name of the user.' },
         lastName: { type: 'string', description: 'Last name of the user.' },
@@ -173,6 +163,18 @@ export class UserController {
         },
       },
     },
+  })
+  @ApiQuery({
+    name: 'removeImage',
+    required: false,
+    type: Boolean,
+    description: 'Flag to remove the profile picture.',
+  })
+  @ApiQuery({
+    name: 'removeCV',
+    required: false,
+    type: Boolean,
+    description: 'Flag to remove the CV.',
   })
   editUserInfo(
     @GetCurrentUserId() id,

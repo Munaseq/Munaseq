@@ -254,6 +254,7 @@ export class UserService {
         },
       });
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         'Invalid Information Provided',
         HttpStatus.BAD_REQUEST,
@@ -268,15 +269,11 @@ export class UserService {
     pageSize: number = 5,
     highestRated?: boolean,
     category?: string,
-    execludedUsers?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
 
     return this.prisma.user.findMany({
       where: {
-        id: {
-          notIn: execludedUsers,
-        },
         username: {
           contains: username,
         },

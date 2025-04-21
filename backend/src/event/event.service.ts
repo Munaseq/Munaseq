@@ -212,15 +212,11 @@ export class EventService {
     pageSize: number = 5,
     category?: string,
     highestRated?: boolean,
-    execludedEvents?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
 
     return this.prisma.event.findMany({
       where: {
-        id: {
-          notIn: execludedEvents,
-        },
         isPublic: true,
         title: {
           contains: title,
@@ -253,13 +249,11 @@ export class EventService {
     title?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
-    execludedEvents?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
     if (title) {
       return this.prisma.event.findMany({
         where: {
-          id: { notIn: execludedEvents },
           eventCreatorId,
           title: {
             contains: title,
@@ -286,7 +280,6 @@ export class EventService {
     } else {
       return this.prisma.event.findMany({
         where: {
-          id: { notIn: execludedEvents },
           eventCreatorId,
         },
         include: {
@@ -341,15 +334,11 @@ export class EventService {
     title?: string, //
     pageNumber: number = 1,
     pageSize: number = 5,
-    execludedEvents?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
     if (title) {
       return this.prisma.event.findMany({
         where: {
-          id: {
-            notIn: execludedEvents,
-          },
           joinedUsers: {
             some: {
               id: userId,
@@ -380,9 +369,6 @@ export class EventService {
     } else {
       return this.prisma.event.findMany({
         where: {
-          id: {
-            notIn: execludedEvents,
-          },
           joinedUsers: {
             some: {
               id: userId,
@@ -467,7 +453,6 @@ export class EventService {
     username?: string, //to enable search by username
     pageNumber: number = 1,
     pageSize: number = 5,
-    execludedUsers?: string[],
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
     if (username) {
@@ -480,9 +465,6 @@ export class EventService {
             where: {
               username: {
                 contains: username,
-              },
-              id: {
-                notIn: execludedUsers, //enables the client (front-end) to explicitly execlude users
               },
             },
             select: {
@@ -505,11 +487,7 @@ export class EventService {
         },
         select: {
           [role]: {
-            where: {
-              id: {
-                notIn: execludedUsers,
-              },
-            },
+            where: {},
             select: {
               id: true,
               firstName: true,

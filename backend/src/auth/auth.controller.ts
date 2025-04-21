@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 import { userSignInDto, userSignUpDto } from './dtos';
 import { multerUserLogic } from 'src/utils/multer.logic';
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
-
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

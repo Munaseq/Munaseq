@@ -20,8 +20,6 @@ import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorat
 import {
   CreateAssignment,
   CreateEventDto,
-  ExecludeEvents,
-  ExecludeUsers,
   JoinEventDto,
   LeaveEventDto,
   SeacrhUser,
@@ -47,8 +45,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
+import { Gender } from '@prisma/client';
 @ApiTags('event')
-
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -65,8 +63,19 @@ export class EventController {
     schema: {
       type: 'object',
       properties: {
-        // NOTE: Replace with your actual CreateEventDto properties.
-        // For example: title: { type: 'string' }, description: { type: 'string' }, etc.
+        title: { type: 'string' },
+        description: { type: 'string' },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        location: { type: 'string' },
+        seatCapacity: { type: 'number' },
+        isPublic: { type: 'boolean' },
+        isOnline: { type: 'boolean' },
+        gender: { type: 'string', enum: Object.values(Gender) },
+        startDateTime: { type: 'string', format: 'date-time' },
+        endDateTime: { type: 'string', format: 'date-time' },
         image: { type: 'string', format: 'binary' },
       },
     },
@@ -106,24 +115,13 @@ export class EventController {
     type: String,
     description: 'Retreives the events that have the category.',
   })
-  @ApiBody({
-    description:
-      'Excluded events, helpful when searching for events to join and you want to exclude the ones that are already joined.',
-    required: false,
-    type: ExecludeEvents,
-  })
-  getAllEvents(
-    @Query() query: SearchEvent,
-    @Body() execludedEventsDto?: ExecludeEvents,
-  ) {
-    const { execludedEvents } = execludedEventsDto;
+  getAllEvents(@Query() query: SearchEvent) {
     return this.eventService.getAllEvents(
       query.title,
       query.pageNumber,
       query.pageSize,
       query.category,
       query.highestRated,
-      execludedEvents,
     );
   }
 
@@ -138,15 +136,12 @@ export class EventController {
   findAllCurrentUserEvents(
     @GetCurrentUserId() eventCreatorId: string,
     @Query() query: SearchEvent,
-    @Body() execludedEventsDto?: ExecludeEvents,
   ) {
-    const { execludedEvents } = execludedEventsDto;
     return this.eventService.findAllCurrentUserEvents(
       eventCreatorId,
       query.title,
       query.pageNumber,
       query.pageSize,
-      execludedEvents,
     );
   }
 
@@ -157,19 +152,12 @@ export class EventController {
   @ApiQuery({ name: 'title', required: false, type: String })
   @ApiQuery({ name: 'pageNumber', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  findJoinedEvents(
-    @GetCurrentUserId() userId,
-    @Query() query: SearchEvent,
-    @Body()
-    execludedEventsDto?: ExecludeEvents,
-  ) {
-    const { execludedEvents } = execludedEventsDto;
+  findJoinedEvents(@GetCurrentUserId() userId, @Query() query: SearchEvent) {
     return this.eventService.findJoinedEvents(
       userId,
       query.title,
       query.pageNumber,
       query.pageSize,
-      execludedEvents,
     );
   }
   //must be DELETED
@@ -212,17 +200,13 @@ export class EventController {
   findUsersAttendEvent(
     @Param('eventId') eventId: string,
     @Query() query: SeacrhUser,
-    @Body() execludedUsersDto?: ExecludeUsers,
   ) {
-    const { execludedUsers } = execludedUsersDto;
-
     return this.eventService.findUsersParticipateInEvent(
       eventId,
       'joinedUsers',
       query.username,
       query.pageNumber,
       query.pageSize,
-      execludedUsers,
     );
   }
 
@@ -236,16 +220,13 @@ export class EventController {
   findUsersModerateEvent(
     @Param('eventId') eventId: string,
     @Query() query: SeacrhUser,
-    @Body() execludedUsersDto?: ExecludeUsers,
   ) {
-    const { execludedUsers } = execludedUsersDto;
     return this.eventService.findUsersParticipateInEvent(
       eventId,
       'moderators',
       query.username,
       query.pageNumber,
       query.pageSize,
-      execludedUsers,
     );
   }
 
@@ -259,7 +240,6 @@ export class EventController {
   findUsersPresentEvent(
     @Param('eventId') eventId: string,
     @Query() query: SeacrhUser,
-    @Body() execludedUsersDto?: ExecludeUsers,
   ): Promise<
     {
       id: string;
@@ -269,14 +249,12 @@ export class EventController {
       profilePictureUrl: string;
     }[]
   > {
-    const { execludedUsers } = execludedUsersDto;
     return this.eventService.findUsersParticipateInEvent(
       eventId,
       'presenters',
       query.username,
       query.pageNumber,
       query.pageSize,
-      execludedUsers,
     );
   }
 
@@ -307,7 +285,19 @@ export class EventController {
     schema: {
       type: 'object',
       properties: {
-        // NOTE: Replace with your actual UpdateEventDto properties.
+        title: { type: 'string' },
+        description: { type: 'string' },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        location: { type: 'string' },
+        seatCapacity: { type: 'number' },
+        isPublic: { type: 'boolean' },
+        isOnline: { type: 'boolean' },
+        gender: { type: 'string', enum: Object.values(Gender) },
+        startDateTime: { type: 'string', format: 'date-time' },
+        endDateTime: { type: 'string', format: 'date-time' },
         image: { type: 'string', format: 'binary' },
       },
     },
