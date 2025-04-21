@@ -1,10 +1,4 @@
-import {
-  IsOptional,
-  IsDateString,
-  IsInt,
-  IsArray,
-  IsNotEmpty,
-} from 'class-validator';
+import { IsOptional, IsDateString, IsInt, IsArray } from 'class-validator';
 import { UpdateQuestionDto } from './update-question.dto';
 
 export class UpdateQuizDto {

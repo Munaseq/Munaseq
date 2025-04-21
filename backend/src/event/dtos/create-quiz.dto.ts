@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsNotEmpty, IsArray, IsUUID } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateQuestionDto } from './create-question.dto';
 

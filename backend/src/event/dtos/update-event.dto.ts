@@ -9,7 +9,6 @@ import {
   IsInt,
   IsArray,
   IsEnum,
-  IsNumber,
   IsBoolean,
 } from 'class-validator';
 

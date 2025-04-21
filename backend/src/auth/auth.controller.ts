@@ -6,10 +6,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { userSignInDto } from './dtos/user-signin.dto';
-import { userSignUpDto } from './dtos/user-signup.dto';
+
 import { multerUserLogic } from 'src/utils/multer.logic';
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { userSignInDto, userSignUpDto } from './dtos';
 
 @ApiTags('auth')
 @Controller('auth')

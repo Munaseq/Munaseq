@@ -14,14 +14,11 @@ import {
   JoinEventDto,
   UpdateAssignmentDTO,
   UpdateEventDto,
+  UpdateQuizDto,
 } from './dtos';
-import { UpdateQuizDto } from './dtos/update-quiz.dto';
-import { AssignmentQuestionDTO } from './dtos/create-assignment-question.dto';
-import { UpdateAssignmentQuestionDTO } from './dtos/update-assignment-question.dto';
-import { TakeAssigmentDTO } from './dtos/take-assignment.dto';
-import { AssignRoles } from './dtos/assign-role.dto';
+
 import { InvitationType, RoleType } from '@prisma/client';
-import { create } from 'domain';
+
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
 @Injectable()

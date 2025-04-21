@@ -18,7 +18,6 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiResponse,
   ApiConsumes,
   ApiBody,
   ApiQuery,
@@ -573,17 +572,17 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Get('assignment/show/:eventId')
+  @Get('assignment/show/:assignmentId')
   @ApiOperation({
     summary:
       'Show assignment details. Adds takeAssignmentStatus if the user is an attendee, or numberParticipatedUsers if the user is a moderator, event creator, or presenter.',
   })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
   showAssignments(
-    @Param('eventId') eventId: string,
+    @Param('assignmentId') assignmentId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.showAssignment(userId, eventId);
+    return this.eventService.showAssignment(userId, assignmentId);
   }
 
   @UseGuards(AuthGuard)

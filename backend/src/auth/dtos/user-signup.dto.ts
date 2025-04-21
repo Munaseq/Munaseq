@@ -1,15 +1,12 @@
 // src/auth/dtos/user-signup.dto.ts
 import { Gender } from '@prisma/client';
 import {
-  IsArray,
-  IsBase64,
   IsEmail,
   IsEnum,
   IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUrl,
 } from 'class-validator';
 
 export class userSignUpDto {
