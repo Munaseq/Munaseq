@@ -1,13 +1,14 @@
-export const catagories: string[] = [
-    "الدراسات الإسلامية",
-    "التصميم والفنون",
-    "الطب",
-    "ريادة أعمال",
-    "برمجة",
-    "تكنولوجيا",
-    "القانون",
-    "الصحة والتغذية",
-    "التعليم والتدريس",
-    "العلوم",
-    "الهندسة",
-];
+export enum Category {
+    IslamicStudies = "الدراسات الإسلامية",
+    DesignAndArts = "التصميم والفنون",
+    Medicine = "الطب",
+    Entrepreneurship = "ريادة أعمال",
+    Programming = "برمجة",
+    Technology = "تكنولوجيا",
+    Law = "القانون",
+    HealthAndNutrition = "الصحة والتغذية",
+    EducationAndTeaching = "التعليم والتدريس",
+    Science = "العلوم",
+    Engineering = "الهندسة",
+
+}

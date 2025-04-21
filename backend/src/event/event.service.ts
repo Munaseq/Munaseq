@@ -7,6 +7,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+
 import {
   CreateAssignment,
   CreateEventDto,
@@ -210,6 +211,7 @@ export class EventService {
     title?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
+
     category?: string,
     highestRated?: boolean,
   ) {
@@ -487,7 +489,6 @@ export class EventService {
         },
         select: {
           [role]: {
-            where: {},
             select: {
               id: true,
               firstName: true,

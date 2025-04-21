@@ -15,7 +15,7 @@ export default function NotFound() {
                 />
 
                 <h1 className="text-custom-black text-5xl sm:text-6xl md:text-7xl font-bold text-center">
-                    <span className="bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent">
                         404
                     </span>{" "}
                     - الصفحة غير موجودة

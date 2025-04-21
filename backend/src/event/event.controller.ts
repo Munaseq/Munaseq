@@ -14,6 +14,16 @@ import {
   Query,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiConsumes,
+  ApiBody,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 import { EventService } from './event.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorator';
@@ -34,18 +44,10 @@ import {
   UpdateQuizDto,
   SubmitQuizDto,
 } from './dtos';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiConsumes,
-  ApiBody,
-  ApiQuery,
-  ApiParam,
-} from '@nestjs/swagger';
+
 import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
 import { Gender } from '@prisma/client';
+
 @ApiTags('event')
 @Controller('event')
 export class EventController {
@@ -76,6 +78,7 @@ export class EventController {
         gender: { type: 'string', enum: Object.values(Gender) },
         startDateTime: { type: 'string', format: 'date-time' },
         endDateTime: { type: 'string', format: 'date-time' },
+
         image: { type: 'string', format: 'binary' },
       },
     },
@@ -97,7 +100,8 @@ export class EventController {
     );
   }
 
-  // this should only return events that are public
+  // exec
+  // This should only return events that are public
   @Get()
   @ApiOperation({ summary: 'Get all public events' })
   @ApiQuery({ name: 'title', required: false, type: String })
@@ -120,12 +124,14 @@ export class EventController {
       query.title,
       query.pageNumber,
       query.pageSize,
+
       query.category,
       query.highestRated,
     );
   }
 
-  //Returns all event that've been created by current the user
+  // exec
+  // Returns all events that have been created by the current user
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('current')
@@ -145,8 +151,10 @@ export class EventController {
     );
   }
 
-  //Returns all events that the current user has joined
+  // exec
+  // Returns all events that the current user has joined
   @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @Get('joinedEvents')
   @ApiOperation({ summary: 'Get events joined by the current user' })
   @ApiQuery({ name: 'title', required: false, type: String })
@@ -190,7 +198,8 @@ export class EventController {
     return this.eventService.findAllUsersOfEvent(eventId);
   }
 
-  //Returns all users that attend in certain event
+  // exec 2
+  // Returns all users that attend a certain event
   @Get('attendees/:eventId')
   @ApiOperation({ summary: 'Get all attendees of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -210,7 +219,8 @@ export class EventController {
     );
   }
 
-  //Returns all users that moderate in certain event
+  // exec 2
+  // Returns all users that moderate a certain event
   @Get('moderators/:eventId')
   @ApiOperation({ summary: 'Get all moderators of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -230,7 +240,8 @@ export class EventController {
     );
   }
 
-  //Returns all users that attend in certain event
+  // exec 2
+  // Returns all users that present in a certain event
   @Get('presenters/:eventId')
   @ApiOperation({ summary: 'Get all presenters of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -264,7 +275,8 @@ export class EventController {
   findEventCreator(@Param('eventId') eventId: string) {
     return this.eventService.findEventCreator(eventId);
   }
-  // what if the event is not public?
+
+  // What if the event is not public?
   @Get(':eventId')
   @ApiOperation({ summary: 'Get event details by ID' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -304,6 +316,7 @@ export class EventController {
         gender: { type: 'string', enum: Object.values(Gender) },
         startDateTime: { type: 'string', format: 'date-time' },
         endDateTime: { type: 'string', format: 'date-time' },
+
         image: { type: 'string', format: 'binary' },
       },
     },
@@ -329,7 +342,7 @@ export class EventController {
   }
 
   //-----------------------------------------
-  //Joining/Leaving Event's endpoints
+  // Joining/Leaving Event's endpoints
   //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
@@ -364,7 +377,7 @@ export class EventController {
   }
 
   //-----------------------------------------
-  //Material's endpoints
+  // Material's endpoints
   //-----------------------------------------
 
   @UseGuards(AuthGuard)
@@ -542,7 +555,9 @@ export class EventController {
   }
 
   //-----------------------------------------
+
   //Assignment endpoints
+
   //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
@@ -555,6 +570,7 @@ export class EventController {
   ) {
     return this.eventService.getAssignments(userId, eventId);
   }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('assignment/show/:eventId')
@@ -614,6 +630,7 @@ export class EventController {
     return this.eventService.saveAssignment(
       userId,
       assignmentId,
+
       takeAssignmentDto.answers,
       'SUBMITTED',
     );
@@ -673,8 +690,9 @@ export class EventController {
   ) {
     return this.eventService.deleteAssignment(assignmentId, userId);
   }
+
   //-----------------------------------------
-  //Rating Event's endpoints
+  // Rating Event's endpoints
   //-----------------------------------------
 
   @UseGuards(AuthGuard)
@@ -728,7 +746,7 @@ export class EventController {
   }
 
   //-----------------------------------------
-  //Deleting Event's endpoint
+  // Deleting Event's endpoint
   //-----------------------------------------
 
   @UseGuards(AuthGuard)

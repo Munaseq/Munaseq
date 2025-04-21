@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.750.0",
+
     "@nestjs/common": "^11.0.20",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.20",
@@ -45,6 +46,7 @@
     "@nestjs/websockets": "^11.0.20",
     "@prisma/client": "^6.4.1",
     "@types/socket.io-client": "^1.4.36",
+
     "argon2": "^0.41.1",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
@@ -59,7 +61,9 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+
     "socket.io": "^4.8.1",
+
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -75,7 +79,9 @@
     "@types/multer-s3": "^3.0.3",
     "@types/node": "^22.13.5",
     "@types/passport-jwt": "^4.0.1",
+
     "@types/socket.io": "^3.0.1",
+
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",

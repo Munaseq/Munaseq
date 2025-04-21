@@ -9,7 +9,9 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 
 import * as argon2 from 'argon2';
+
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+
 import { EditUserInfoDto, userChangePasswordDto } from './dtos';
 
 @Injectable()
@@ -267,6 +269,7 @@ export class UserService {
     username?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
+
     highestRated?: boolean,
     category?: string,
   ) {

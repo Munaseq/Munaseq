@@ -1,11 +1,11 @@
 import getProfileAction from "@/proxy/user/get-profile-action";
-import userCircle from "@/assets/icons/user-circle.svg";
 import Image from "next/image";
 
 import { cookies } from "next/headers";
 import Dropdown from "@/components/authenticated-content/dropdown-options";
 import { redirect } from "next/navigation";
 import { UserDataDto } from "@/dtos/user-data.dto";
+import { CircleUserRoundIcon } from "lucide-react";
 
 export default async function MenuProfile() {
   const cookiesStore = cookies();
@@ -24,7 +24,7 @@ export default async function MenuProfile() {
               priority
             />
           ) : (
-            <Image src={userCircle} alt="user-circle" fill priority />
+            <CircleUserRoundIcon className="w-full h-full"/>
           )}
         </div>
         <div className="mt-2">

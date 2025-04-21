@@ -1,17 +1,7 @@
-- mobile menu fix by lifting the state up (or just make one request in the whole layout)
-- make add mod and add presneter like github. (done but there is an weird error 🔴)
-- add indicator of event create step in create event form.
 - add event presenters and modreators in the event before joining page and make them linkable
-- in mobile inside event cant go between sections in event itself
-- change order of add mod and add presenter inputs in create event form. (done but check 🟠)
-- leave event menu button now says cancel instade of leave (done ✅)
-- change redirect of join event and create event to actual event page. (done ✅)
-- error when seeing the details of the event -> getUserAction(id: string) return error (done ✅)
-- change menu for leaving and canceling events and make it inside actual event (done ✅)
-- date at create form not being set to current day. (done ✅)
-- add new toast (FOR HUSSAM)
-- add modal before cancel or leaving event (FOR HUSSAM)
-
-# Changes 🟣
--- I have changed getUserAction to make it able to search
--- I have added a bottom navigation for mobile(not complete yet) check this out 
+- update rating using (next js fecth tags)
+- same for profile picture  (next js fecth tags)
+- add modal before cancel or leaving event
+- change how members look.
+- fix how add content works
+- fix rating (you cant rate if you are a member)

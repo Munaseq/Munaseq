@@ -6,9 +6,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { userSignInDto, userSignUpDto } from './dtos';
+import { userSignInDto } from './dtos/user-signin.dto';
+import { userSignUpDto } from './dtos/user-signup.dto';
 import { multerUserLogic } from 'src/utils/multer.logic';
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -20,6 +22,7 @@ export class AuthController {
   signIn(@Body() signInDto: userSignInDto) {
     return this.authService.signIn(signInDto);
   }
+
   @Post('signUp')
   @UseInterceptors(multerUserLogic())
   @ApiConsumes('multipart/form-data')
@@ -45,6 +48,7 @@ export class AuthController {
         cv: { type: 'string', format: 'binary' },
         profilePicture: { type: 'string', format: 'binary' },
       },
+
       required: [
         'email',
         'password',
@@ -66,7 +70,7 @@ export class AuthController {
     const cvUrl = files?.cv ? files.cv[0].location : null; // S3 location of the CV
     const profilePictureUrl = files?.profilePicture
       ? files.profilePicture[0].location
-      : null; // S3 location of the profile pictures
+      : null; // S3 location of the profile picture
 
     return this.authService.signup(body, profilePictureUrl, cvUrl);
   }

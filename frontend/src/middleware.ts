@@ -4,25 +4,7 @@ import isInEventAction from "./proxy/user/is-in-event-action";
 import getEventAction from "./proxy/event/get-event-using-id-action";
 import { notFound } from "next/navigation";
 
-export const config = {
-    matcher: [
-        "/discover",
-        "/user/:username?",
-        "/coordinated-events/active",
-        "/coordinated-events/past",
-        "/coordinated-events/upcoming",
-        "/joined-events/active",
-        "/joined-events/past",
-        "/joined-events/upcoming",
-        "/account",
-        "/signin",
-        "/account/edit",
-        "/create-event",
-        "/event/:eventId*",
-    ],
-};
-
-const authRequiredStaticPaths = new Set([
+const authRequiredStaticPaths = [
     "/discover",
     "/coordinated-events/active",
     "/coordinated-events/past",
@@ -33,9 +15,23 @@ const authRequiredStaticPaths = new Set([
     "/account",
     "/account/edit",
     "/create-event",
-]);
+];
 
-// const authRequiredDynamicPaths = ["/user/", "/event/"];
+// Add additional routes that need special handling
+const additionalRoutes = [
+    "/user/:username?",
+    "/signin",
+    "/event/:eventId*"
+];
+
+export const config = {
+    matcher: [
+        ...authRequiredStaticPaths,
+        ...additionalRoutes
+    ],  
+};
+
+const authRequiredDynamicPaths = ["/user/", "/event/"];
 
 const checkAuth = async (req: NextRequest) => {
     const token = req.cookies.get("token")?.value;
@@ -96,18 +92,15 @@ export async function middleware(req: NextRequest) {
     const pathname: string = req.nextUrl.pathname;
 
     if (
-        authRequiredStaticPaths.has(pathname) ||
-        pathname.startsWith("/user/")
+        authRequiredStaticPaths.includes(pathname) ||
+        authRequiredDynamicPaths.some((path) => pathname.startsWith(path))
     ) {
+        
         return await checkAuth(req);
     }
 
     if (pathname.startsWith("/event/")) {
         
-        const token = req.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.redirect(new URL("/signin", req.url));
-        }
 
         const eventId = pathname.split("/")[2];
         const event = await getEventAction(eventId);

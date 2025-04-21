@@ -1,10 +1,11 @@
 import Image from "next/image";
-import puzzleIcon from "@/assets/icons/participants-gradient.svg";
 import CreateEventCard from "./create-event-card";
 import TextField from "@/components/common/text/text-field";
 import { Input } from "@/components/common/shadcn-ui/input";
 import Button from "@/components/common/buttons/button";
 import Radio from "@/components/common/radio-group";
+import { UsersRoundIcon } from "lucide-react";
+import { useRef, useState } from "react";
 export default function ParticipantsForm({
     nextStepHandler,
     step,
@@ -14,17 +15,31 @@ export default function ParticipantsForm({
     step: number;
     prevStepHandler: () => void;
 }>) {
+    const [isEmpty, setIsEmpty] = useState(false);
+    const [isOnline, setIsOnline] = useState(false);
+    const locationInputRef = useRef({} as HTMLInputElement);
+    const capacityInputRef = useRef({} as HTMLInputElement);
     return (
         <CreateEventCard actual={step} goal={2}>
             <h1 className="flex items-center gap-2 font-bold text-xl">
-                <Image src={puzzleIcon} alt="puzzle icon" />
+                <UsersRoundIcon
+                    size={32}
+                    className="text-custom-light-purple"
+                />
                 معلومات الحضور
             </h1>
             <div className="max-w-96 w-full grid gap-5 mt-2">
                 <label className="block text-lg text-custom-gray">
                     طريقة حضور الفعالية
                 </label>
-                <Radio name={"isOnline"} options={["حضوري", "عن بعد"]} values={["false" , 'true']} />
+                <Radio
+                    onChange={() => {
+                        setIsOnline(prev => !prev);
+                    }}
+                    name={"isOnline"}
+                    options={["حضوري", "عن بعد"]}
+                    values={["false", "true"]}
+                />
                 <label className="block text-lg text-custom-gray">
                     جنس الحاضرين
                 </label>
@@ -33,7 +48,11 @@ export default function ParticipantsForm({
                     options={["ذكر", "انثى", "الجميع"]}
                     values={["MALE", "FEMALE", "BOTH"]}
                 />
-                <TextField placeholder="عنوان الحضور" name="location" />
+                <TextField
+                    ref={locationInputRef}
+                    placeholder={isOnline ? "رابط الفعالية" : "مكان الفعالية"}
+                    name="location"
+                />
                 <div className="flex gap-4">
                     <label
                         htmlFor="capacity"
@@ -42,6 +61,7 @@ export default function ParticipantsForm({
                         عدد الحاضرين
                     </label>
                     <Input
+                        ref={capacityInputRef}
                         type="number"
                         name="capacity"
                         defaultValue={50}
@@ -50,10 +70,23 @@ export default function ParticipantsForm({
                     />
                 </div>
             </div>
+            {isEmpty && (
+                <p className="text-red-500 text-sm w-full text-center mt-5">
+                    يجب ملئ جميع الحقول المطلوبة
+                </p>
+            )}
             <div className="flex flex-row-reverse justify-between w-full mt-20">
                 <Button
                     onClick={e => {
                         e.preventDefault();
+                        if (
+                            locationInputRef.current.value === "" ||
+                            capacityInputRef.current.value === ""
+                        ) {
+                            setIsEmpty(true);
+                            return;
+                        }
+                        setIsEmpty(false);
                         nextStepHandler();
                     }}
                     gradient

@@ -10,6 +10,7 @@ export default async function getEventsAction({
   title?: string;
 } = {}) {
   try {
+  
     const url = new URL(`${process.env.BACKEND_URL}/event`);
     const params = new URLSearchParams();
 
@@ -25,12 +26,11 @@ export default async function getEventsAction({
 
     url.search = params.toString();
 
-    console.log(url.toString());
-
     const eventsRes = await fetch(url.toString(), {
       next: {
         tags: ["event"],
       },
+      // cache: 'no-store'
     });
 
     if (!eventsRes.ok) {
@@ -38,7 +38,7 @@ export default async function getEventsAction({
     }
 
     const data = await eventsRes.json();
-    console.log(data);
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Fake delay of 1 second
 
     return data;
   } catch (error: any) {

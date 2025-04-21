@@ -34,11 +34,11 @@ const config: Config = {
         },
       },
       colors: {
-        primary: "#ae00fe",
-        secondary: "#652bb7",
+        "custom-dark-purple": "#652bb7",
+        "custom-light-purple": "#ae00fe",
         "custom-gray": "#949494",
         "custom-black": "#333333",
-        "custome-light-gray": "#949494",
+        "custom-light-gray": "#525252",
         
       },
       backgroundImage: {

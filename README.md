@@ -36,7 +36,7 @@ Munasiq is a comprehensive platform designed to streamline the creation, managem
 - **Design**: [Figma](https://www.figma.com/) – Collaborative design tool for UI/UX mockups.
 - **Version Control**: [GitHub](https://github.com/) – Version control and collaboration.
 
----
+----
 
 ## 🚀 Getting Started
 

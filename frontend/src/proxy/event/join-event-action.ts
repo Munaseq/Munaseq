@@ -3,6 +3,7 @@
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import GetUserEventsAction from "../user/get-user-events-action";
+import { redirect } from "next/navigation";
 
 export default async function joinEventAction(eventId: string) {
     const cookiesList = cookies();
@@ -36,7 +37,7 @@ export default async function joinEventAction(eventId: string) {
         }
 
         revalidateTag("joined-events");
-        return joinResJson;
+        
     } catch (error: any) {
         const message = error.message;
         switch (message) {
@@ -54,4 +55,5 @@ export default async function joinEventAction(eventId: string) {
                 };
         }
     }
+    redirect('/event/' + eventId + '/about');
 }

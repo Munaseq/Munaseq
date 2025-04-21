@@ -7,7 +7,7 @@ export default function footerSection() {
     <div>
       <footer
         id="footer"
-        className="bg-gradient-to-l from-primary to-secondary"
+        className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple"
       >
         <div className="w-full max-w-screen-xl mx-auto p-4 md:py-8">
           <div className="sm:flex sm:items-center sm:justify-between">

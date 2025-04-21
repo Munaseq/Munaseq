@@ -37,22 +37,19 @@ export default async function createEventAction(
     revalidateTag("event");
 
     // FETCH HERE
-    const rolesValue = formDataRole.get("roles"); // This will be FormDataEntryValue (string | File)
+    const rolesValue = formDataRole.getAll("roles"); // This will be FormDataEntryValue (string | File)
+    console.log("Roles value:", rolesValue);
 
-    if (typeof rolesValue === "string") {
+
       try {
-        // Parse rolesValue into an object or array
-        const parsedRoles:
-          | { assignedUserId: string; role: string }
-          | { assignedUserId: string; role: string }[] = JSON.parse(rolesValue);
-
-        // Ensure parsedRoles is an array for consistent processing
-        const rolesArray = Array.isArray(parsedRoles)
-          ? parsedRoles
-          : [parsedRoles];
-
+   
+  
+    
         // Iterate through roles and make API calls
-        for (const role of rolesArray) {
+        for (const role of rolesValue) {
+          
+          const parsedRole = JSON.parse(role as string); 
+       
           try {
             const response = await fetch(
               `${process.env.BACKEND_URL}/event/assignRole/${eventData.id}`,
@@ -62,7 +59,7 @@ export default async function createEventAction(
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${token?.value}`,
                 },
-                body: JSON.stringify(role),
+                body: JSON.stringify(parsedRole),
               }
             );
 
@@ -77,9 +74,8 @@ export default async function createEventAction(
       } catch (parseError) {
         console.error("Failed to parse rolesValue:", parseError);
       }
-    } else {
-      console.error("rolesValue is not a string");
-    }
+   
+      
 
     // const ratingRes = await fetch(
     //   `${process.env.BACKEND_URL}/event/assignRole/${eventData.id}`,

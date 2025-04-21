@@ -1,27 +1,26 @@
 import Image from 'next/image';
-import userCircle from '@/assets/icons/user-circle.svg';
 import Link from 'next/link';
-import edit from '@/assets/icons/edit.svg';
 import Subtitle from '@/components/common/text/subtitle';
 import { cookies } from 'next/headers';
 import getProfileAction from '@/proxy/user/get-profile-action';
 import { notFound, redirect } from 'next/navigation';
-import tag from '@/assets/icons/tag.svg';
-import rateIcon from '@/assets/icons/rate-icon.svg';
 import XIcon from '@/assets/icons/x-icon.svg';
 import linkedinIcon from '@/assets/icons/linkedin-icon.svg';
-import cvIcon from '@/assets/icons/cv-icon.svg';
-import emailIcon from '@/assets/icons/email-icon.svg';
+import {
+  FileTextIcon,
+  CircleUserRoundIcon,
+  MailIcon,
+  PencilIcon,
+  StarIcon,
+  TagIcon,
+} from 'lucide-react';
 import Tag from '@/components/common/category';
 import { UserDataDto } from '@/dtos/user-data.dto';
 import getUserAction from '@/proxy/user/get-user-using-username-action';
 import TooltipWrapper from '@/components/common/tooltip';
+import getUserRating from '@/proxy/user/get-user-rating-action';
 
-export function generateMetadata({
-  params,
-}: {
-  params: { username: string };
-}) {
+export function generateMetadata({ params }: { params: { username: string } }) {
   return {
     title: params.username,
   };
@@ -41,6 +40,7 @@ export default async function UserProfile({
     if (!data) {
       notFound();
     }
+    // const rating = await getUserRating(data.id);
     const profile: UserDataDto = await getProfileAction();
     const hisProfile: boolean = data.username === profile.username;
     data.socialAccounts = JSON.parse(data.socialAccounts as string);
@@ -55,7 +55,7 @@ export default async function UserProfile({
               معلومات الحساب
             </Link>
             <Link href={'/account/edit'} className="grid place-items-center">
-              <Image src={edit} alt="edit icon" className="w-10" />
+              <PencilIcon size={32} />
             </Link>
           </div>
         )}
@@ -70,13 +70,7 @@ export default async function UserProfile({
                   priority
                 />
               ) : (
-                <Image
-                  src={userCircle}
-                  alt="user-circle"
-                  fill
-                  priority
-                  className="w-auto"
-                />
+                <CircleUserRoundIcon className="w-full h-full" />
               )}
             </div>
             <div className="mt-2">
@@ -95,35 +89,20 @@ export default async function UserProfile({
         <div className="flex gap-3 mt-3">
           {data.cvUrl && (
             <TooltipWrapper text="السيرة الذاتية">
-            <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
-              <Image
-                src={cvIcon}
-                alt="CV icon"
-                className="w-10 cursor-pointer"
-              />
-            </a>
+              <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
+                <FileTextIcon className="cursor-pointer" />
+              </a>
             </TooltipWrapper>
           )}
           {data.email && (
             <TooltipWrapper text="البريد الالكتروني">
-            <a href={`mailto:${data.email}`}>
-              <Image
-                src={emailIcon}
-                alt="email icon"
-                className="w-10 cursor-pointer"
-              />
-            </a>
+              <a href={`mailto:${data.email}`}>
+                <MailIcon className="cursor-pointer" />
+              </a>
             </TooltipWrapper>
           )}
-        </div>
-        <div className="mt-5 flex gap-24">
-          {/* <div>
-            <Image src={rateIcon} alt="rating icon" className="w-10" />
-            RATING
-          </div> */}
-
-          <div className="flex gap-3">
-            {data.socialAccounts?.linkedinLink && (
+          {data.socialAccounts?.linkedinLink && (
+            <TooltipWrapper text="حساب Linkedin">
               <a
                 href={data.socialAccounts.linkedinLink}
                 className="cursor-pointer"
@@ -131,20 +110,30 @@ export default async function UserProfile({
                 <Image
                   src={linkedinIcon}
                   alt="linkedin icon"
-                  className="w-10"
+                  className="w-6"
                 />
               </a>
-            )}
-            {data.socialAccounts?.xLink && (
+            </TooltipWrapper>
+          )}
+          {data.socialAccounts?.xLink && (
+            <TooltipWrapper text="حساب X">
               <a href={data.socialAccounts.xLink} className="cursor-pointer">
-                <Image src={XIcon} alt="X icon" className="w-10" />
+                <Image src={XIcon} alt="X icon" className="w-6" />
               </a>
-            )}
+            </TooltipWrapper>
+          )}
+        </div>
+        <div className="mt-5 flex gap-24">
+          <div>
+            <StarIcon className="text-custom-light-purple" />
+            {/* {rating} */}
           </div>
+
+          <div className="flex gap-3"></div>
         </div>
 
-        <div className="mt-5 flex gap-1">
-          <Image src={tag} alt="catigory icon" className="w-10" />
+        <div className="mt-5 flex items-center gap-1">
+          <TagIcon className="text-custom-light-purple" />
           <div className="flex flex-wrap gap-1">
             {data.categories.map((category: string) => {
               return <Tag key={category}>{category}</Tag>;

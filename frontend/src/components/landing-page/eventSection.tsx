@@ -33,7 +33,7 @@
 //         <div id="events" className="container mx-auto px-4 py-24 relative">
 //             <h1 className="text-custom-black text-3xl sm:text-4xl md:text-5xl font-bold mb-12 text-center">
 //                 فعاليات{" "}
-//                 <span className="bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent">
+//                 <span className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent">
 //                     منسقين
 //                 </span>{" "}
 //                 المنصة

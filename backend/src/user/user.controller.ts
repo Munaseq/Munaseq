@@ -11,6 +11,7 @@ import {
   UploadedFiles,
   Query,
 } from '@nestjs/common';
+
 import { UserService } from './user.service';
 import {
   ApiTags,
@@ -41,10 +42,11 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve the currently authenticated user.' })
   @Get('me')
+  @ApiOperation({ summary: 'Retrieve the currently authenticated user.' })
   getMe(@GetCurrentUserId() id: string) {
     return this.userService.findById(id);
   }
-  //allows to search by username letters (Used in search bar)
+
   @Get()
   @ApiOperation({
     summary: 'Search for users by username letters with optional pagination.',
@@ -84,6 +86,7 @@ export class UserController {
       query.username,
       query.pageNumber,
       query.pageSize,
+
       query.highestRated,
       query.category,
     );
@@ -102,12 +105,14 @@ export class UserController {
   findByUsername(@Param('username') username: string) {
     return this.userService.findByUsername(username);
   }
+
   @Get('roles/:userId')
   @ApiOperation({ summary: 'Get roles assigned to a specific user.' })
   @ApiParam({ name: 'userId', description: 'ID of the user.' })
   findUserRoles(@Param('userId') userId: string) {
     return this.userService.findUserRoles(userId);
   }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Patch()
@@ -127,6 +132,7 @@ export class UserController {
         firstName: { type: 'string', description: 'First name of the user.' },
         lastName: { type: 'string', description: 'Last name of the user.' },
         username: { type: 'string', description: 'Username of the user.' },
+
         email: {
           type: 'string',
           format: 'email',
@@ -141,12 +147,14 @@ export class UserController {
           enum: ['MALE', 'FEMALE', 'OTHER'],
           description: 'Gender of the user.',
         },
+
         categories: {
           type: 'array',
           items: { type: 'string' },
           description: 'Array of user interests.',
         },
         description: { type: 'string', description: 'User biography.' },
+
         socialAccounts: {
           type: 'object',
           description: 'JSON object for social media accounts.',
@@ -177,7 +185,7 @@ export class UserController {
     description: 'Flag to remove the CV.',
   })
   editUserInfo(
-    @GetCurrentUserId() id,
+    @GetCurrentUserId() id: string,
     @Body() EditUserDto: EditUserInfoDto,
     @UploadedFiles()
     files: {
@@ -187,10 +195,10 @@ export class UserController {
     @Query('removeImage') removeImage?: boolean,
     @Query('removeCV') removeCV?: boolean,
   ) {
-    const cvUrl = files?.cv ? files.cv[0].location : null; // S3 location of the CV
+    const cvUrl = files?.cv ? files.cv[0].location : null;
     const profilePictureUrl = files?.profilePicture
       ? files.profilePicture[0].location
-      : null; // S3 location of the profile picture
+      : null;
     return this.userService.editUserInfo(
       id,
       EditUserDto,
@@ -200,12 +208,14 @@ export class UserController {
       removeCV,
     );
   }
+
   @Get('rating/:userId')
   @ApiOperation({ summary: 'Get the rating of a user by their ID.' })
   @ApiParam({ name: 'userId', description: 'ID of the user.' })
   getUserRating(@Param('userId') userId: string) {
     return this.userService.getUserRating(userId);
   }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('invitation')
@@ -241,16 +251,18 @@ export class UserController {
   })
   changePassword(
     @Body() passwordChangeDto: userChangePasswordDto,
-    @GetCurrentUserId() userId,
+    @GetCurrentUserId() userId: string,
   ) {
     return this.userService.changeUserPassword(passwordChangeDto, userId);
   }
+
   @Get(':id')
   @ApiOperation({ summary: 'Retrieve a user by their ID.' })
   @ApiParam({ name: 'id', description: 'ID of the user to find.' })
   findById(@Param('id') id: string) {
     return this.userService.findById(id);
   }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Delete()

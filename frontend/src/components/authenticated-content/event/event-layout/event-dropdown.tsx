@@ -2,35 +2,43 @@
 
 import cancelEventAction from "@/proxy/event/cancel-event-action";
 import leaveEventAction from "@/proxy/event/leave-event-action";
-import signout from "@/assets/icons/signout.svg";
-import dots from "@/assets/icons/dots-white.svg";
+import toast from "react-hot-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/common/shadcn-ui/dropdown-menu";
-import Image from "next/image";
+} from "@/components/common/shadcn-ui/dropdown-menu";;
 import { useRouter } from "next/navigation";
-
+import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react";
 export default function EventDropdown({eventId, isEventCreator}: {eventId: string, isEventCreator: boolean}) {
 
     const router = useRouter();
 
       const leaveEvent = async () => {
         const res = await leaveEventAction(eventId);
+        if (res) {
+          toast.error("حدث خطأ ما");
+          return;
+        }
+        toast.success("تم المغادرة من الفعالية");
         router.push("/event/" + eventId);
       }
     
       const cancelEvent = async () => {
         const res = await cancelEventAction(eventId);
-        router.push("/coordinated-events/active");
+        if (res) {
+          toast.error("حدث خطأ ما");
+          return;
+        }
+        toast.success("تم الغاء الفعالية");
+        
       }
 
 
     return (
         <DropdownMenu dir="rtl">
-            <DropdownMenuTrigger className="absolute top-2 left-2 z-30">
-              <Image src={dots} alt="options" className="shadow-" />
+            <DropdownMenuTrigger className="absolute top-5 left-5 z-30">
+              <EllipsisVerticalIcon color='white' size={32}/>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-white relative">
 
@@ -40,7 +48,7 @@ export default function EventDropdown({eventId, isEventCreator}: {eventId: strin
                   className="px-4 py-2 flex items-center gap-2 transition-colors hover:bg-[#ebebeb] cursor-pointer"
                 >
                   الغاء الفعالية{" "}
-                  <Image src={signout} alt="user icon" className="w-8" />
+                  <LogOutIcon/>
                 </div>
               ) : (
                 <div
@@ -49,7 +57,7 @@ export default function EventDropdown({eventId, isEventCreator}: {eventId: strin
                 >
                   {" "}
                   الخروج من الفعالية{" "}
-                  <Image src={signout} alt="user icon" className="w-8" />
+                  <LogOutIcon/>
                 </div>
               )}
             </DropdownMenuContent>

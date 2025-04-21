@@ -1,47 +1,32 @@
 import Subtitle from "@/components/common/text/subtitle";
 import Title from "@/components/common/text/title";
-import discover from "@/assets/icons/discover-active.svg";
-import Image from "next/image";
 import { Metadata } from "next";
-import SmallCard from "@/components/common/cards/small-card";
-import getDate from "@/util/get-date";
-
-import getEventsAction from "@/proxy/event/get-events-action";
+import { SparklesIcon } from "lucide-react";
+import HighestRatedEvents from "@/components/authenticated-content/discover/highest-rated-events";
+import { Suspense } from "react";
+import LogoLoading from "@/components/common/logo-loading";
 
 export const metadata: Metadata = {
     title: "اكتشف",
 };
 
 export default async function Discover() {
-    const eventList = await getEventsAction();
-    
-    if (eventList?.length === 0) {
-        return (
-            <div className="mt-5 text-custom-gray">
-                لا يوجد فعاليات
-            </div>
-        );
-    }
     return (
         <div>
             <Title>
-                <Image src={discover} className="sm:w-14 w-10" alt="" />
+                <SparklesIcon size={32} color="var(--custom-light-purple)" />
                 اكتشف فعاليات المنسقين
             </Title>
             <Subtitle>من أعلى المنسقين تقييما </Subtitle>
-            <div className="flex mt-4 gap-8 flex-wrap lg:justify-start justify-center">
-                {eventList?.map((event: any) => (
-                    <SmallCard
-                        key={event.id}
-                        image={event.imageUrl}
-                        title={event.title}
-                        date={getDate(event.startDateTime)}
-                        eventCreator={event.eventCreator}
-                        eventId={event.id}
-                        badges={event.categories}
-                    />
-                ))}
-            </div>
+            <Suspense
+                fallback={
+                    <div className="grid place-items-center w-full">
+                        <LogoLoading className="w-20 aspect-square" />
+                    </div>
+                }
+            >
+                <HighestRatedEvents />
+            </Suspense>
         </div>
     );
 }

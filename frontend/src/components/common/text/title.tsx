@@ -1,6 +1,4 @@
 import React from "react";
-import Image from "next/image";
-import discover from "@/assets/icons/discover-active.svg";
 
 export default function title(props: { children: React.ReactNode }) {
   return (
