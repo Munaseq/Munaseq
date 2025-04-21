@@ -7,25 +7,47 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateEventDto, JoinEventDto, UpdateEventDto, UpdateQuizDto } from './dtos';
+
+import {
+  CreateAssignment,
+  CreateEventDto,
+  JoinEventDto,
+  UpdateAssignmentDTO,
+  UpdateEventDto,
+} from './dtos';
+import { UpdateQuizDto } from './dtos/update-quiz.dto';
+import { AssignmentQuestionDTO } from './dtos/create-assignment-question.dto';
+import { UpdateAssignmentQuestionDTO } from './dtos/update-assignment-question.dto';
+import { TakeAssigmentDTO } from './dtos/take-assignment.dto';
+import { AssignRoles } from './dtos/assign-role.dto';
+import { InvitationType, RoleType } from '@prisma/client';
+import { create } from 'domain';
+type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
 @Injectable()
 export class EventService {
   constructor(private prisma: PrismaService) {}
-  //----------------------------------------------------------------------
+  //
+  // ----------------------------------------------------------------------
   //THE FOLLOWING IS CREATING EVENT LOGIC
   //----------------------------------------------------------------------
-  createEvent(
+
+  async createEvent(
     createEventDto: CreateEventDto,
     eventCreatorId: string,
     imageUrl: any,
   ) {
-    return this.prisma.event.create({
+    if (!eventCreatorId) {
+      throw new BadRequestException('Event creator ID is required');
+    }
+    const event = await this.prisma.event.create({
       data: {
         ...createEventDto,
         imageUrl,
+
         eventCreatorId,
       },
+
       omit: {
         eventCreatorId: true,
       },
@@ -42,6 +64,17 @@ export class EventService {
         },
       },
     });
+    const chat = await this.prisma.chat.create({
+      data: {
+        Event: { connect: { id: event.id } }, // Link the chat to the created event
+        category: 'Group_Message_Chat',
+        Users: { connect: { id: eventCreatorId } }, //Link the creator of the event to the chat
+      },
+    });
+    return {
+      ...event,
+      chatId: chat.id,
+    };
   }
   //--------------------------------------------------
   //THE FOLLOWING IS FOR UPDATING/DELETING AN EVENT LOGIC
@@ -106,26 +139,60 @@ export class EventService {
   }
 
   async delete(userId: string, eventId: string) {
-    const eventIds = await this.prisma.event.findUnique({
+    const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
-        eventCreatorId: true,
+        eventCreator: {
+          select: {
+            id: true,
+            createdEvents: {
+              //select all events' ratings that've been created by the eventCreator expect the event that we want to delete
+              where: {
+                id: { not: eventId },
+              },
+              select: {
+                rating: true,
+                _count: { select: { GivenFeedbacks: true } },
+              },
+            },
+          },
+        },
       },
     });
     //Check wether the event exist or not
-    if (!eventIds) {
+    if (!event) {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized = eventIds.eventCreatorId === userId;
+    const isAuthorized = event.eventCreator.id === userId;
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to delete this event',
       );
     }
-    await this.prisma.event.delete({
-      where: { id: eventId },
+    const sumOfRatings = event.eventCreator.createdEvents.reduce(
+      (sum, curr) => sum + curr._count.GivenFeedbacks * curr.rating,
+      0,
+    );
+    const numberOfRatings = event.eventCreator.createdEvents.reduce(
+      (sum, curr) => sum + curr._count.GivenFeedbacks,
+      0,
+    );
+    const avgRating =
+      numberOfRatings === 0 ? 0 : sumOfRatings / numberOfRatings;
+
+    //delte update the eventCreator rating
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        rating: avgRating,
+        createdEvents: {
+          delete: {
+            id: eventId,
+          },
+        },
+      },
     });
     return {
       message: 'The event has been deleted successfully',
@@ -144,58 +211,40 @@ export class EventService {
     title?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
+
+    category?: string,
+    highestRated?: boolean,
   ) {
     const skipedRecords = (pageNumber - 1) * pageSize;
-    if (title) {
-      return this.prisma.event.findMany({
-        where: {
-          isPublic: true,
-          title: {
-            contains: title,
+
+    return this.prisma.event.findMany({
+      where: {
+        isPublic: true,
+        title: {
+          contains: title,
+          mode: 'insensitive',
+        },
+        ...(category && { categories: { has: category } }), // Apply category filter only if it's provided
+      },
+      include: {
+        eventCreator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profilePictureUrl: true,
+            username: true,
+            visibleName: true,
           },
         },
-        include: {
-          eventCreator: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              profilePictureUrl: true,
-              username: true,
-              visibleName: true,
-            },
-          },
-        },
-        omit: {
-          eventCreatorId: true,
-        },
-        take: pageSize,
-        skip: skipedRecords,
-      });
-    } else {
-      return this.prisma.event.findMany({
-        where: {
-          isPublic: true,
-        },
-        include: {
-          eventCreator: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              profilePictureUrl: true,
-              username: true,
-              visibleName: true,
-            },
-          },
-        },
-        omit: {
-          eventCreatorId: true,
-        },
-        take: pageSize,
-        skip: skipedRecords,
-      });
-    }
+      },
+      omit: {
+        eventCreatorId: true,
+      },
+      take: pageSize,
+      skip: skipedRecords,
+      ...(highestRated && { orderBy: { rating: 'desc' } }),
+    });
   }
   findAllCurrentUserEvents(
     eventCreatorId: string,
@@ -440,8 +489,6 @@ export class EventService {
         },
         select: {
           [role]: {
-            where: {
-            },
             select: {
               id: true,
               firstName: true,
@@ -886,8 +933,6 @@ export class EventService {
     quizId: string,
     answers: { questionId: string; answer: string }[],
   ) {
-    console.log('Received answers:', answers); // Log answers to debug
-
     // Check if answers is an array
     if (!Array.isArray(answers)) {
       throw new BadRequestException('Answers must be an array');
@@ -1114,49 +1159,88 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
+    const isAttendee = eventIds.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
     const isAuthorized =
       eventIds.eventCreatorId === userId ||
       eventIds.presenters.some((presenter) => presenter.id === userId) ||
       eventIds.moderators.some((moderator) => moderator.id === userId) ||
-      eventIds.joinedUsers.some((joinedUsers) => joinedUsers.id === userId);
+      isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to delete materials to this event',
+        'User is not authorized to view the assignments of this event',
       );
     }
-    const result = await this.prisma.event.findUnique({
+    //Check if the user is anttendee, then show the assignments and thier status, if not, then show how many users have partcipated in the assignment
+    let result = await this.prisma.event.findUnique({
       where: {
         id: eventId,
       },
       select: {
+        _count: { select: { Assignments: true } },
         Assignments: {
           select: {
+            _count: { select: { TakeAssignment: true } }, //for the number of users who have taken the assignment, ONLY for the authorized users
             id: true,
-            materialUrl: true,
-            endDate: true,
+            assignmentTitle: true,
             startDate: true,
+            endDate: true,
+            TakeAssignment: { where: { userId }, select: { status: true } }, //for the attendee
             createdAt: true,
-            updatedAt: true,
-            questions: true,
           },
+          orderBy: { updatedAt: 'desc' },
         },
       },
     });
-    return result ?? { message: "The event hasn't any assignments" };
-  }
-  async addAssignmentToEvent(
-    eventId: string,
-    userId: string,
-    startDate: Date,
-    endDate: Date,
-    questions?: string,
-    materialUrl?: string,
-  ) {
-    //the following logic is to ensure that the assignment will not be added to the event unless the user is authorized to do that
+    if (!result) {
+      throw new NotFoundException('Event not found');
+    }
+    // If the user is an attendee, show the status of the assignment
 
+    const assignmentsWithStatus = result.Assignments.map((assignment) => {
+      const currDate = new Date();
+      const { _count, TakeAssignment, ...assignmentWithoutCount } = assignment; // Exclude _count
+      let status;
+      if (currDate < assignment.startDate) {
+        status = 'AVAILABLE_SOON'; //Alows the authorized to update
+      } else if (currDate > assignment.endDate) {
+        status = 'EXPIRED';
+      } else {
+        status = 'AVAILABLE';
+        //TODO SUbmitted / Saved  status
+      }
+
+      if (isAttendee) {
+        let takeAssignmentStatus: string;
+        if (TakeAssignment.length > 0) {
+          const takeAssignment = TakeAssignment[0];
+          takeAssignmentStatus = takeAssignment.status;
+        } else {
+          takeAssignmentStatus = 'NOT_ANSWERED';
+        }
+        return {
+          assignmentStatus: status,
+          takeAssignmentStatus,
+          ...assignmentWithoutCount,
+        };
+      } else {
+        return {
+          assignmentStatus: status,
+          numberParticipatedUsers: _count.TakeAssignment,
+          ...assignmentWithoutCount,
+        };
+      }
+    });
+    return {
+      numberOfAssignments: result._count.Assignments,
+      assignments: assignmentsWithStatus,
+    };
+  }
+  async addAssignment(eventId: string, userId: string, body: CreateAssignment) {
     //retreive eventCreator, moderators, and presenters ids
-    const eventIds = await this.prisma.event.findUniqueOrThrow({
+    const eventIds = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
         eventCreatorId: true,
@@ -1164,6 +1248,10 @@ export class EventService {
         moderators: { select: { id: true } },
       },
     });
+    //Check wether the event exist or not
+    if (!eventIds) {
+      throw new NotFoundException('Event not found');
+    }
     // Check if the userId matches any of the roles
     const isAuthorized =
       eventIds.eventCreatorId === userId ||
@@ -1172,7 +1260,13 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to add materials to this event',
+        'User is not authorized to add assignment to this event',
+      );
+    }
+    //Check if the start date is smaller than the end date
+    if (body.startDate > body.endDate) {
+      throw new BadRequestException(
+        'The start date should be smaller than the end date',
       );
     }
     const result = await this.prisma.event.update({
@@ -1182,45 +1276,47 @@ export class EventService {
       data: {
         Assignments: {
           create: {
-            startDate,
-            endDate,
-            materialUrl,
-            questions,
+            assignmentTitle: body.assignmentTitle,
+            startDate: body.startDate,
+            endDate: body.endDate,
+            questions: {
+              createMany: {
+                data: body.questions.map((question) => ({
+                  questionType: question.questionType,
+                  text: question.text,
+
+                  correctAnswer: question.correctAnswer,
+                  options: question.options,
+                })),
+              },
+            },
           },
         },
       },
       select: {
         Assignments: {
-          where: {
-            materialUrl: {
-              equals: materialUrl,
-            },
-          },
           select: {
             id: true,
             startDate: true,
             endDate: true,
-            materialUrl: true,
+
             questions: true,
           },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
         },
       },
     });
     return result?.Assignments[0] ?? []; //to remove the unnecessary structure from the response
   }
-  async submitAssignemnt(
-    userId: string,
-    assignmentId: string,
-    answerMaterialUrl?: string,
-    questions?: string,
-  ) {
-    //retreive joinedUsers
-    const eventIds = await this.prisma.event.findFirst({
-      //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
+
+  //Show the assignment and the saved answers if any
+  async showAssignment(userId: string, assignmentId: string) {
+    const event = await this.prisma.event.findFirst({
       where: {
         Assignments: {
           some: {
-            id: assignmentId, // will check for an event that has an assignment id matches assignmentId
+            id: assignmentId,
           },
         },
       },
@@ -1230,73 +1326,186 @@ export class EventService {
             id: true,
           },
         },
+        eventCreatorId: true,
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+        Assignments: {
+          where: { id: assignmentId },
+          select: {
+            id: true,
+            assignmentTitle: true,
+            questions: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            _count: {
+              select: { TakeAssignment: true },
+            },
+            TakeAssignment: {
+              where: { userId },
+              select: {
+                id: true,
+                answers: true,
+                status: true,
+                updatedAt: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
       },
     });
-    if (!eventIds) {
+    if (!event) {
       throw new NotFoundException('assignment not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized = eventIds.joinedUsers.some(
-      (presenter) => presenter.id === userId,
+    const isAttendee = event.joinedUsers.some(
+      (joinedUsers) => joinedUsers.id === userId,
     );
+    const isAuthorized =
+      event.eventCreatorId === userId ||
+      event.presenters.some((presenter) => presenter.id === userId) ||
+      event.moderators.some((moderator) => moderator.id === userId) ||
+      isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to submit the assignemnt',
+        "You're not allowed to show this assignment",
       );
     }
-    const result = await this.prisma.user.update({
+    const assignment = event.Assignments[0];
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+    //show the status of the assignment
+    const currDate = new Date();
+    const { _count, TakeAssignment, ...assignmentWithoutCount } =
+      event.Assignments[0]; // Exclude _count
+    let status: string;
+    if (currDate < assignment.startDate) {
+      status = 'AVAILABLE_SOON'; //Alows the authorized to update
+    } else if (currDate > assignment.endDate) {
+      status = 'EXPIRED';
+    } else {
+      status = 'AVAILABLE';
+    }
+    if (isAttendee) {
+      {
+        let takeAssignmentStatus: string;
+        if (TakeAssignment?.length > 0) {
+          const takeAssignment = TakeAssignment[0];
+          takeAssignmentStatus = takeAssignment.status;
+        } else {
+          takeAssignmentStatus = 'NOT_ANSWERED';
+        }
+
+        return {
+          assignmentStatus: status,
+          takeAssignmentStatus,
+          ...assignmentWithoutCount,
+          TakeAssignment: TakeAssignment[0] ?? {},
+        };
+      }
+    } else {
+      return {
+        assignmentStatus: status,
+        numberParticipatedUsers: _count.TakeAssignment,
+        ...assignmentWithoutCount,
+      };
+    }
+  }
+
+  //TODO endpoint for creating a
+  async saveAssignment(
+    userId: string,
+    assignmentId: string,
+    answers: object,
+    typeOfSubmission: TypeOfSubmisson,
+  ) {
+    //retreive joinedUsers and the assignment allowed period as well as the taken assignment by the user
+    const event = await this.prisma.event.findFirst({
       where: {
-        id: userId,
-      },
-      data: {
-        TakeAssignment: {
-          create: {
-            answerMaterialUrl,
-            textAnswers: questions,
-            assignmentId,
+        Assignments: {
+          some: {
+            id: assignmentId,
           },
         },
       },
       select: {
-        TakeAssignment: {
+        joinedUsers: {
           select: {
             id: true,
-            assignmentId: true,
-            answerMaterialUrl: true,
-            textAnswers: true,
-            createdAt: true,
           },
-          orderBy: {
-            createdAt: 'desc',
+        },
+        Assignments: {
+          where: { id: assignmentId },
+          select: {
+            startDate: true,
+            endDate: true,
+            TakeAssignment: {
+              where: { assignmentId, userId },
+              select: { id: true, status: true },
+            },
           },
-          take: 1,
         },
       },
     });
-    if (result) {
-      return result;
-    } else {
-      throw new BadRequestException('Something went wrong');
+    if (!event) {
+      throw new NotFoundException('assignment not found');
     }
+
+    // Check if the userId matches any of the roles ---> refactor the authorization logic into single one function
+    const isAuthorized = event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
+    if (!isAuthorized) {
+      throw new BadRequestException("You're not allowed to do this assignment");
+    }
+    //check if the assignment is submitted, if so, throw an error
+    let assignmentTake = event.Assignments[0].TakeAssignment[0];
+    if (assignmentTake?.status === 'SUBMITTED') {
+      throw new BadRequestException("You've already submitted this assignment");
+    }
+    //check if assignment is within the valid period (means available to take)
+    const currDate = new Date();
+    if (
+      event?.Assignments[0]?.endDate < currDate ||
+      event?.Assignments[0]?.startDate > currDate
+    ) {
+      throw new BadRequestException(
+        'The Assignment time expired Or not started yet',
+      );
+    }
+    //check if the  user has an existing taken assignment, if not,create a new one
+    if (!assignmentTake) {
+      assignmentTake = await this.prisma.takeAssignment.create({
+        data: { answers, assignmentId, userId, status: typeOfSubmission },
+      });
+    } else {
+      assignmentTake = await this.prisma.takeAssignment.update({
+        where: {
+          id: assignmentTake.id,
+        },
+        data: {
+          answers,
+          status: typeOfSubmission,
+        },
+      });
+    }
+    return assignmentTake;
   }
   async updateAssignment(
-    assignementId: string,
+    assignmentId: string,
     userId: string,
-    startDate?: Date,
-    endDate?: Date,
-    questions?: string,
-    materialUrl?: string,
+    body: UpdateAssignmentDTO,
   ) {
-    //the following logic is to ensure that the assignment will not be edited unless the user is authorized to do that
-
-    //retreive eventCreator, moderators, ,presenters, and event ids
-    const eventIds = await this.prisma.event.findFirstOrThrow({
+    //retreive eventCreator, moderators, ,presenters, and event ids, also retrieve the ids of the assignment's questions
+    const event = await this.prisma.event.findFirst({
       //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
       where: {
         Assignments: {
           some: {
-            id: assignementId, // will check for an event that has an assignment id matches assignmentId
+            id: assignmentId, // will check for an event that has an assignment id matches assignmentId
           },
         },
       },
@@ -1305,73 +1514,117 @@ export class EventService {
         eventCreatorId: true,
         presenters: { select: { id: true } },
         moderators: { select: { id: true } },
+        Assignments: {
+          where: {
+            id: assignmentId,
+          },
+
+          select: { startDate: true, endDate: true },
+        },
       },
     });
-    if (!eventIds) {
+    if (!event) {
       throw new NotFoundException('assignment not found');
     }
     // Check if the userId matches any of the roles
     const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+      event.eventCreatorId === userId ||
+      event.presenters.some((presenter) => presenter.id === userId) ||
+      event.moderators.some((moderator) => moderator.id === userId);
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to add materials to this event',
+        'User is not authorized to update this assignment',
+      );
+    } //Check if the start date is smaller than the end date
+    if (body.startDate > body.endDate) {
+      throw new BadRequestException(
+        'The start date should be smaller than the end date',
       );
     }
-    // The following is to append the new data to newData object in order to use it in prisma logic
-    let newData: {
-      startDate?: Date;
-      endDate?: Date;
-      questions?: string;
-      materialUrl?: string;
-    } = {};
-    if (startDate) {
-      newData = { ...newData, startDate };
+    const currDate = new Date();
+    if (event.Assignments[0]?.startDate < currDate) {
+      throw new BadRequestException(
+        'The Assignment has already started, you cannot update it',
+      );
     }
-    if (endDate) {
-      newData = { ...newData, endDate };
-    }
-    if (questions) {
-      newData = { ...newData, questions };
-    }
-    if (materialUrl) {
-      newData = { ...newData, materialUrl };
-    }
-    const result = await this.prisma.event.update({
-      where: {
-        id: eventIds.id,
-      },
-      data: {
-        Assignments: {
-          update: {
-            where: {
-              id: assignementId,
+
+    //Extract the existing questions and the new questions
+    if (body.questions) {
+      //Remove all records, and add the new ones(even if they are the same)
+
+      const result = await this.prisma.event.update({
+        where: {
+          id: event.id,
+        },
+        data: {
+          Assignments: {
+            update: {
+              where: {
+                id: assignmentId,
+              },
+              data: {
+                startDate: body.startDate,
+                endDate: body.endDate,
+                questions: {
+                  deleteMany: {
+                    assignment_id: assignmentId,
+                  },
+                  createMany: {
+                    data: body.questions.map((newQuestion) => ({
+                      questionType: newQuestion.questionType,
+                      text: newQuestion.text,
+                      options: newQuestion.options,
+                      correctAnswer: newQuestion.correctAnswer,
+                    })),
+                  },
+                },
+              },
             },
-            data: { ...newData },
           },
         },
-      },
-      select: {
-        Assignments: {
-          where: {
-            id: assignementId,
-          },
-          select: {
-            id: true,
-            startDate: true,
-            endDate: true,
-            materialUrl: true,
-            questions: true,
+        select: {
+          Assignments: {
+            include: { questions: true },
+            take: 1,
+            orderBy: { updatedAt: 'desc' },
           },
         },
-      },
-    });
-    return result?.Assignments[0] ?? []; //to remove the unnecessary structure from the response
+      });
+      const updatedAssignment = result?.Assignments[0];
+      return updatedAssignment ?? []; //to remove the unnecessary structure from the response
+    } else {
+      const result = await this.prisma.event.update({
+        where: {
+          id: event.id,
+        },
+        data: {
+          Assignments: {
+            update: {
+              where: {
+                id: assignmentId,
+              },
+              data: {
+                startDate: body.startDate,
+                endDate: body.endDate,
+                assignmentTitle: body.assignmentTitle,
+              },
+            },
+          },
+        },
+        select: {
+          Assignments: {
+            include: { questions: true },
+            take: 1,
+            orderBy: { updatedAt: 'desc' },
+          },
+        },
+      });
+      const updatedAssignment = result?.Assignments[0];
+      return updatedAssignment ?? []; //to remove the unnecessary structure from the response
+    }
   }
-  async deleteAssignment(assignementId: string, userId: string) {
+  async deleteAssignment(assignmentId: string, userId: string) {
     //the following logic is to ensure that the assignment will not be deleted unless the user is authorized to do that
 
     //retreive eventCreator, moderators, ,presenters, and event ids
@@ -1380,7 +1633,7 @@ export class EventService {
       where: {
         Assignments: {
           some: {
-            id: assignementId, // will check for an event that has an assignment id matches assignmentId
+            id: assignmentId, // will check for an event that has an assignment id matches assignmentId
           },
         },
       },
@@ -1403,7 +1656,7 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to add materials to this event',
+        'User is not authorized to delete this assignment',
       );
     }
     const result = await this.prisma.event.update({
@@ -1413,14 +1666,14 @@ export class EventService {
       data: {
         Assignments: {
           delete: {
-            id: assignementId,
+            id: assignmentId,
           },
         },
       },
     });
     if (result) {
       return {
-        message: `The assignment with id "${assignementId}" has been deleted successfully`,
+        message: `The assignment with id ${assignmentId} has been deleted successfully`,
       };
     } else {
       throw new InternalServerErrorException(
@@ -1436,13 +1689,27 @@ export class EventService {
     const { eventId } = joinEventDto;
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      include: { joinedUsers: true },
+      include: {
+        joinedUsers: true,
+        moderators: true,
+        presenters: true,
+      },
     });
 
     if (!event) {
       throw new NotFoundException('Event not found');
     }
 
+    //To ensure that the user cannot join if he creator, moderator, or presenter of the event
+    const isAssigned =
+      event.eventCreatorId === userId ||
+      event.presenters.some((presenter) => presenter.id === userId) ||
+      event.moderators.some((moderator) => moderator.id === userId);
+    if (isAssigned) {
+      throw new BadRequestException(
+        'User is assigned as eventCreator, moderator, or presenter',
+      );
+    }
     // Fetch the user to get their gender
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -1475,13 +1742,15 @@ export class EventService {
         throw new BadRequestException('Event has reached its seat capacity');
       }
     }
-    // LOGICAL ERROR: The creator, moderator, and presenter of event can join the event as attendees
+
+    //Add the user to joined users as well as the EventChat
     await this.prisma.event.update({
       where: { id: eventId },
       data: {
         joinedUsers: {
           connect: { id: userId },
         },
+        EventChat: { update: { Users: { connect: { id: userId } } } },
       },
     });
   }
@@ -1489,23 +1758,35 @@ export class EventService {
   async leaveEvent(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      include: { joinedUsers: true },
+      include: { joinedUsers: true, moderators: true, presenters: true },
     });
 
     if (!event) {
       throw new NotFoundException('Event not found');
     }
-
+    let role;
     const isUserJoined = event.joinedUsers.some((user) => user.id === userId);
-    if (!isUserJoined) {
+    const isUserPresenter = event.presenters.some((user) => user.id === userId);
+    const isUserModerator = event.moderators.some((user) => user.id === userId);
+    if (!isUserJoined && !isUserModerator && !isUserPresenter) {
       throw new BadRequestException('User is not joined to this event');
     }
-
+    if (isUserJoined) {
+      role = 'joinedUsers';
+    } else if (isUserModerator) {
+      role = 'moderators';
+    } else {
+      role = 'presenters';
+    }
+    //disconnect the user from the joinedUsers and the EventChat
     await this.prisma.event.update({
       where: { id: eventId },
       data: {
-        joinedUsers: {
+        [role]: {
           disconnect: { id: userId },
+        },
+        EventChat: {
+          update: { Users: { disconnect: { id: userId } } },
         },
       },
     });
@@ -1547,13 +1828,14 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to add materials to this event',
+        'User is not authorized to rate this event',
       );
     }
     //Check wether the user has already rated an event or not
     const hasRated = eventIds.GivenFeedbacks.some(
       (feedback) => feedback.userId === userId,
     );
+    let finalResult;
     if (!hasRated) {
       const result = await this.prisma.event.update({
         where: {
@@ -1581,11 +1863,19 @@ export class EventService {
         0,
       );
       const avgRating = sumOfRating / numberOfRatings;
-      return {
-        message: 'The rating has been added successfully',
-        avgRating,
-        numberOfRatings,
-      };
+      finalResult = await this.prisma.event.update({
+        where: {
+          id: eventId,
+        },
+        data: {
+          rating: avgRating, //num of rating is the count
+        },
+        select: {
+          eventCreatorId: true,
+          rating: true,
+          _count: { select: { GivenFeedbacks: true } },
+        },
+      });
     } else {
       const feedbackId = eventIds.GivenFeedbacks.find(
         (feedback) => feedback.userId === userId,
@@ -1618,12 +1908,60 @@ export class EventService {
         0,
       );
       const avgRating = sumOfRating / numberOfRatings;
-      return {
-        message: 'The rating has been updated successfully',
-        avgRating,
-        numberOfRatings,
-      };
+      finalResult = await this.prisma.event.update({
+        where: {
+          id: eventId,
+        },
+        data: {
+          rating: avgRating, //num of rating is the count
+        },
+        select: {
+          rating: true,
+          eventCreatorId: true,
+          _count: { select: { GivenFeedbacks: true } },
+        },
+      });
     }
+    if (!finalResult) {
+      throw new InternalServerErrorException(
+        "The event's rating couldn't be updated successfully",
+      );
+    }
+    //update the eventCreator rating
+    //step 1: retreive all event's created by the eventCreator with their ratings and number of ratings as well
+    const eventCreatorEvents = await this.prisma.event.findMany({
+      where: {
+        eventCreatorId: finalResult.eventCreatorId,
+      },
+      select: {
+        rating: true,
+        _count: { select: { GivenFeedbacks: true } },
+      },
+    });
+    //step 2: calculate the average rating of the eventCreator
+    const totalRatings = eventCreatorEvents.reduce(
+      (sum, event) => sum + event._count.GivenFeedbacks,
+      0,
+    );
+    const sumOfRatings = eventCreatorEvents.reduce(
+      (sum, event) => sum + event.rating * event._count.GivenFeedbacks,
+      0,
+    );
+    const avgRating = sumOfRatings / totalRatings;
+    //step 3: update the eventCreator rating
+    await this.prisma.user.update({
+      where: {
+        id: finalResult.eventCreatorId,
+      },
+      data: {
+        rating: avgRating,
+      },
+    });
+    return {
+      message: 'The rating has been added successfully',
+      avgRating: finalResult.rating,
+      numberOfRatings: finalResult._count.GivenFeedbacks,
+    };
   }
   async eventRating(eventId: string) {
     const result = await this.prisma.event.findUnique({
@@ -1631,28 +1969,21 @@ export class EventService {
         id: eventId,
       },
       select: {
-        GivenFeedbacks: {
-          select: {
-            rating: true,
-          },
-        },
+        rating: true,
+        _count: { select: { GivenFeedbacks: true } },
       },
     });
     //Check wether the event exist or not
     if (!result) {
       throw new NotFoundException('Event not found');
     }
-    const numberOfRatings = result.GivenFeedbacks.length;
-    const sumOfRating = result.GivenFeedbacks.reduce(
-      (preRatings, currRating) => preRatings + currRating.rating,
-      0,
-    );
-    const avgRating = sumOfRating / numberOfRatings;
+
     return {
-      avgRating: avgRating || 0,
-      numberOfRatings,
+      avgRating: result.rating,
+      numberOfRatings: result._count.GivenFeedbacks,
     };
   }
+  //not useful anymore, it should be removed
   async assignRole(
     userId: string,
     eventId: string,
@@ -1691,6 +2022,11 @@ export class EventService {
         id: eventId,
       },
       data: {
+        EventChat: {
+          connect: {
+            id: assignedUserId,
+          },
+        },
         [role]: {
           connect: {
             id: assignedUserId,
@@ -1705,5 +2041,197 @@ export class EventService {
         },
       },
     });
+  }
+
+  //Add endpoint, also revise the logic and discuss if the unassigned user will be removed from the event or he will be considered as joinedUser(attendee)
+  async unAssignRole(
+    userId: string,
+    eventId: string,
+    assignedUserId: string,
+    role: string,
+  ) {
+    const eventIds = await this.prisma.event.findUnique({
+      where: {
+        id: eventId,
+      },
+      select: {
+        eventCreatorId: true,
+        moderators: {
+          select: {
+            id: true,
+          },
+        },
+        presenters: { select: { id: true } },
+      },
+    });
+    //Check wether the event exist or not
+    if (!eventIds) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const isAuthorized =
+      eventIds.eventCreatorId === userId ||
+      eventIds.moderators.every((moderator) => moderator.id === userId);
+
+    if (!isAuthorized) {
+      throw new BadRequestException(
+        'User is not authorized to add materials to this event',
+      );
+    }
+    const isAssigned =
+      eventIds.presenters.some((presenter) => presenter.id === userId) ||
+      eventIds.moderators.some((moderator) => moderator.id === userId);
+    if (!isAssigned) {
+      throw new BadRequestException("The user isn't assigned");
+    }
+    return this.prisma.event.update({
+      where: {
+        id: eventId,
+      },
+      data: {
+        EventChat: {
+          disconnect: {
+            id: assignedUserId,
+          },
+        },
+        [role]: {
+          disconnect: {
+            id: assignedUserId,
+          },
+        },
+      },
+      select: {
+        [role]: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+  }
+
+  //-----------------------------------------
+  //Invitation endpoints
+  //-----------------------------------------
+  async sendInvitation(
+    userId: string,
+    eventId: string,
+    receiverId: string,
+    invitationType: InvitationType,
+    roleType?: RoleType,
+  ) {
+    // Check if the user is authorized to send invitations
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        eventCreator: true,
+        presenters: true,
+        moderators: true,
+        joinedUsers: true,
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const isEventCreator = event.eventCreatorId === userId;
+    const isPresenter = event.presenters.some(
+      (presenter) => presenter.id === userId,
+    );
+    const isModerator = event.moderators.some(
+      (moderator) => moderator.id === userId,
+    );
+    const isJoinedUser = event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
+    if (receiverId === userId || event.eventCreatorId === receiverId) {
+      throw new BadRequestException(
+        'You cannot send an invitation to yourself or the event creator',
+      );
+    }
+
+    if (!isEventCreator && !isPresenter && !isModerator && !isJoinedUser) {
+      throw new ForbiddenException(
+        'You do not have permission to send invitations for this event because you are not related to it',
+      );
+    }
+    //ensures that the there's no existing invitation with the same details in pending status
+    const previousInvitation = await this.prisma.invitation.findFirst({
+      where: {
+        sender_id: userId,
+        receiver_id: receiverId,
+        event_id: eventId,
+        invitationType,
+        status: 'PENDING',
+        roleType,
+      },
+    });
+    if (previousInvitation) {
+      throw new BadRequestException('Invitation already sent');
+    }
+    //Check if the invitation is for assigning a role
+    if (invitationType === 'ROLE_INVITATION') {
+      if (!roleType) {
+        throw new BadRequestException('Role type is required');
+      }
+      const isAuthoiorized =
+        event.eventCreatorId === userId ||
+        event.moderators.some((moderator) => moderator.id === userId);
+      if (!isAuthoiorized) {
+        throw new ForbiddenException(
+          'You do not have permission to assign this role',
+        );
+      }
+      //check if the receiver is already in the deisred role
+      const isAlreadyAssigned =
+        roleType === 'MODERATOR' ? isModerator : isPresenter;
+      if (isAlreadyAssigned) {
+        throw new BadRequestException('User is already assigned to this role');
+      }
+      // Create the invitation
+      return await this.prisma.invitation.create({
+        data: {
+          sender_id: userId,
+          receiver_id: receiverId,
+          event_id: eventId,
+          invitationType,
+          roleType,
+        },
+      });
+    } else {
+      //Innvitation for event
+      //check if the event is private, if so, then only the assinged users can send invites
+      if (!event.isPublic) {
+        const isAuthorized =
+          event.eventCreatorId === userId ||
+          event.presenters.some((presenter) => presenter.id === userId) ||
+          event.moderators.some((moderator) => moderator.id === userId);
+        if (!isAuthorized) {
+          throw new ForbiddenException(
+            'You do not have permission to send invitations for this event',
+          );
+        }
+      }
+      // Check if the receiver is already a participant
+      const isAlreadyParticipant =
+        event.eventCreatorId === receiverId ||
+        event.presenters.some((presenter) => presenter.id === receiverId) ||
+        event.moderators.some((moderator) => moderator.id === receiverId) ||
+        event.joinedUsers.some((joinedUser) => joinedUser.id === receiverId);
+      if (isAlreadyParticipant) {
+        throw new BadRequestException('User is already a participant');
+      }
+
+      // Create the invitation
+      return await this.prisma.invitation.create({
+        data: {
+          sender_id: userId,
+          receiver_id: receiverId,
+          event_id: eventId,
+          invitationType,
+        },
+      });
+    }
   }
 }

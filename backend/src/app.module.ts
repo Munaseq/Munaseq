@@ -10,6 +10,7 @@ import { UserService } from './user/user.service';
 import { EventService } from './event/event.service';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ConfigModule } from '@nestjs/config';
     UserModule,
     EventModule,
     AuthModule,
+    ChatModule,
   ],
   controllers: [AppController, UserController, EventController],
   providers: [AppService, UserService, EventService],

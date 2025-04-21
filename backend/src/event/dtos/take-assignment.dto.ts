@@ -1,7 +1,6 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsJSON, IsObject, IsOptional, IsString } from 'class-validator';
 
-export class TakeAssigment {
-  @IsOptional()
-  @IsString()
-  questions?: string;
+export class TakeAssigmentDTO {
+  @IsObject()
+  answers: object;
 }

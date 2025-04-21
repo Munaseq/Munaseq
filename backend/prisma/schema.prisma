@@ -15,11 +15,11 @@ generator client {
 }
 
 model User {
-  id                String           @id @default(uuid())
+  id                String   @id @default(uuid())
   firstName         String
   lastName          String
-  username          String           @unique
-  email             String           @unique
+  username          String   @unique
+  email             String   @unique
   password          String
   // organizationName String? // Optional for organizations -> not needed
   profilePictureUrl String? // Optional profile picture
@@ -29,15 +29,21 @@ model User {
   socialAccounts    Json? // Optional social accounts linked
   categories        String[] // Array of strings for interests in event categories
   description       String? // New: Optional description field for the user
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  createdEvents     Event[]          @relation("UserCreatedEvents") // Relation to created events
-  joinedEvents      Event[]          @relation("UserEventsJoined") // New: Events joined by the user (many-to-many)
-  presentedEvents   Event[]          @relation("EventPresenters") // Relation to events where user is a presenter (many-to-many)
-  moderatedEvents   Event[]          @relation("EventModerators") // Relation to events where user is a moderator (many-to-many)
-  TakeQuiz          TakeQuiz[]
-  TakeAssignment    TakeAssignment[]
-  GiveFeedback      GiveFeedback[]
+  rating            Float?   @default(0)
+
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  createdEvents      Event[]          @relation("UserCreatedEvents") // Relation to created events
+  joinedEvents       Event[]          @relation("UserEventsJoined") // New: Events joined by the user (many-to-many)
+  presentedEvents    Event[]          @relation("EventPresenters") // Relation to events where user is a presenter (many-to-many)
+  moderatedEvents    Event[]          @relation("EventModerators") // Relation to events where user is a moderator (many-to-many)
+  TakeQuiz           TakeQuiz[]
+  TakeAssignment     TakeAssignment[]
+  GiveFeedback       GiveFeedback[]
+  SentMessages       Message[]        @relation("Sender")
+  Chats              Chat[]           @relation("AssociatedWith")
+  SentInvitation     Invitation[]     @relation("InvitationSender")
+  ReceivedInvitation Invitation[]     @relation("InvitationReceiver")
 }
 
 model Event {
@@ -55,17 +61,21 @@ model Event {
   endDateTime    DateTime // Date without time
   imageUrl       String? // New: Optional image string
   price          Int?           @default(0) // New: Price for the event
+  rating         Float?         @default(0)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   presenters     User[]         @relation("EventPresenters") // New: List of event presenters (many-to-many)
   moderators     User[]         @relation("EventModerators") // New: List of event moderators (many-to-many)
   joinedUsers    User[]         @relation("UserEventsJoined") // New: Users who have joined the event (many-to-many)
-  eventCreator   User           @relation("UserCreatedEvents", fields: [eventCreatorId], references: [id], onDelete: Cascade)
   eventCreatorId String
+  eventCreator   User           @relation("UserCreatedEvents", fields: [eventCreatorId], references: [id], onDelete: Cascade)
   Quizzes        Quiz[]
   Assignments    Assignment[]
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
+
+  EventChat  Chat?        @relation("EventChat") // one to one relationship
+  Invitation Invitation[] @relation("InvitationEvent")
 }
 
 model Question {
@@ -80,17 +90,30 @@ model Question {
   updatedAt     DateTime     @updatedAt
 }
 
+model AssignmentQuestion {
+  id            String       @id @default(uuid())
+  text          String // The question text
+  questionType  QuestionType // e.g., multiple-choice, true/false
+  options       Json? // Array of options 
+  correctAnswer String? // The correct answer(s) (could be a string, or an array if multiple answers)|| null if the question is essay
+  assignment_id String
+  Assignment    Assignment   @relation("AssignmentQuestion", fields: [assignment_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Assignment {
-  id             String           @id @default(uuid())
-  startDate      DateTime
-  endDate        DateTime
-  questions      String?
-  materialUrl    String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  Event          Event            @relation(fields: [eventId], references: [id], onDelete: Cascade) // Event has MANY Assignment, while Assignment belongs to ONLY ONE Event (One-To-Many)
-  eventId        String
-  TakeAssignment TakeAssignment[]
+  id              String               @id @default(uuid())
+  assignmentTitle String
+  startDate       DateTime?
+  endDate         DateTime?
+  questions       AssignmentQuestion[] @relation("AssignmentQuestion")
+  Event           Event                @relation(fields: [eventId], references: [id], onDelete: Cascade) // Event has MANY Assignment, while Assignment belongs to ONLY ONE Event (One-To-Many)
+  eventId         String
+  TakeAssignment  TakeAssignment[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 }
 
 model Material {
@@ -135,15 +158,16 @@ model Quiz {
 
 //To represent many-to-many relationship that conatains "textAnswers" and "answerMaterialUrl" attributes
 model TakeAssignment {
-  id                String     @id @default(uuid())
-  textAnswers       String?
-  answerMaterialUrl String? //Store the uploaded answerfile in AWS S3
-  User              User       @relation(fields: [userId], references: [id])
-  userId            String
-  Assignment        Assignment @relation(fields: [assignmentId], references: [id])
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  assignmentId      String
+  id           String     @id @default(uuid())
+  score        Float? // Score out of 100
+  status       TakeStatus @default(NOT_ANSWERED)
+  answers      Json? // optional because it will throw an error if the answers isn't provided while creating the TakeAssignment
+  User         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  Assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assignmentId String
 }
 
 // -------------------------------------------------------------------------------------
@@ -153,13 +177,61 @@ model TakeAssignment {
 model GiveFeedback {
   id        String   @id @default(uuid())
   rating    Float
-  User      User     @relation(fields: [userId], references: [id])
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  Event     Event    @relation(fields: [eventId], references: [id])
+  Event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// -------------------------------------------------------------------------------------
+// The Following Models Is Chatting Related Models
+// -------------------------------------------------------------------------------------
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  //Sender id one-to-many 
+  sender_id String
+  Sender    User     @relation("Sender", fields: [sender_id], references: [id], onDelete: Cascade)
+  chat_id   String
+  Chat      Chat     @relation("BelongsTo", fields: [chat_id], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Chat {
+  id                 String       @id @default(uuid())
+  Users              User[]       @relation("AssociatedWith") //Chat contains many users
+  Messages           Message[]    @relation("BelongsTo") //Chat contains many messages
+  event_id           String?      @unique
+  Event              Event?       @relation("EventChat", fields: [event_id], references: [id], onDelete: Cascade) //Chat 
+  category           ChatCategory
+  isAttendeesAllowed Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+// -------------------------------------------------------------------------------------
+// The Following Models Is Invitation Related Models
+// -------------------------------------------------------------------------------------
+model Invitation {
+  id             String           @id @default(uuid())
+  invitationType InvitationType
+  status         InvitationStatus @default(PENDING)
+  roleType       RoleType?
+  sender_id      String
+  Sender         User             @relation("InvitationSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver_id    String
+  Receiver       User             @relation("InvitationReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+  event_id       String
+  Event          Event            @relation("InvitationEvent", fields: [event_id], references: [id], onDelete: Cascade)
+  updatedAt      DateTime         @updatedAt
+  createdAt      DateTime         @default(now())
+}
+
+// -------------------------------------------------------------------------------------
+// ENUMs
+// -------------------------------------------------------------------------------------
 
 enum Gender {
   MALE
@@ -167,7 +239,37 @@ enum Gender {
   BOTH
 }
 
+enum ChatCategory {
+  Direct_Message_Chat
+  Group_Message_Chat
+}
+
 enum QuestionType {
   MULTIPLE_CHOICE
-  TRUE_FALSE
+  ESSAY
+  // TRUE_FALSE//REMOVE it, regarding to front-end team
+
+}
+
+enum TakeStatus {
+  NOT_ANSWERED
+  SAVED_ANSWERS
+  SUBMITTED
+}
+
+enum RoleType {
+  MODERATOR
+  PRESENTER
+}
+
+enum InvitationType {
+  ROLE_INVITATION
+  EVENT_INVITATION
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED_BY_SYSTEM
 }

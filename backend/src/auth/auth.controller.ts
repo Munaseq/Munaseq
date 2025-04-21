@@ -48,7 +48,15 @@ export class AuthController {
         cv: { type: 'string', format: 'binary' },
         profilePicture: { type: 'string', format: 'binary' },
       },
-      required: ['email', 'password', 'firstName', 'lastName', 'username', 'gender'],
+
+      required: [
+        'email',
+        'password',
+        'firstName',
+        'lastName',
+        'username',
+        'gender',
+      ],
     },
   })
   signUp(

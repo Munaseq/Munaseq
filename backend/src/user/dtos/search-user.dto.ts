@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator';
 
 export class SeacrhUser {
   @IsOptional()
@@ -15,4 +15,10 @@ export class SeacrhUser {
   @IsOptional()
   @IsString()
   username?: string;
+  @IsOptional()
+  @IsString()
+  category?: string;
+  @IsOptional()
+  @IsBoolean()
+  highestRated?: boolean;
 }
