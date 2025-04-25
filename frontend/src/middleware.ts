@@ -17,21 +17,28 @@ const authRequiredStaticPaths = [
     "/create-event",
 ];
 
-// Add additional routes that need special handling
-const additionalRoutes = [
-    "/user/:username?",
-    "/signin",
-    "/event/:eventId*"
-];
+
+const authRequiredDynamicPaths = ["/user/", "/event/"];
+
 
 export const config = {
     matcher: [
-        ...authRequiredStaticPaths,
-        ...additionalRoutes
-    ],  
+        "/user/:username?",
+        "/signin",
+        "/event/:eventId*",
+        "/discover",
+        "/coordinated-events/active",
+        "/coordinated-events/past",
+        "/coordinated-events/upcoming",
+        "/joined-events/active",
+        "/joined-events/past",
+        "/joined-events/upcoming",
+        "/account",
+        "/account/edit",
+        "/create-event",
+    ],
 };
 
-const authRequiredDynamicPaths = ["/user/", "/event/"];
 
 const checkAuth = async (req: NextRequest) => {
     const token = req.cookies.get("token")?.value;
@@ -93,15 +100,12 @@ export async function middleware(req: NextRequest) {
 
     if (
         authRequiredStaticPaths.includes(pathname) ||
-        authRequiredDynamicPaths.some((path) => pathname.startsWith(path))
+        authRequiredDynamicPaths.some(path => pathname.startsWith(path))
     ) {
-        
         return await checkAuth(req);
     }
 
     if (pathname.startsWith("/event/")) {
-        
-
         const eventId = pathname.split("/")[2];
         const event = await getEventAction(eventId);
         if (!event) {

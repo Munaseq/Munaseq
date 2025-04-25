@@ -10,13 +10,14 @@ export async function signinAction(formData: FormData) {
   };
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/auth/signin`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/auth/signIn`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(signinData),
     });
+
 
 
     if (response.status === 404 || response.status === 401) {
