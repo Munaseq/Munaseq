@@ -248,7 +248,6 @@ enum QuestionType {
   MULTIPLE_CHOICE
   ESSAY
   // TRUE_FALSE//REMOVE it, regarding to front-end team
-
 }
 
 enum TakeStatus {
@@ -265,6 +264,8 @@ enum RoleType {
 enum InvitationType {
   ROLE_INVITATION
   EVENT_INVITATION
+  ROLE_REQUEST
+  EVENT_REQUEST
 }
 
 enum InvitationStatus {

@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 
 import {
+  Answer,
   CreateAssignment,
   CreateEventDto,
   JoinEventDto,
@@ -1416,7 +1417,7 @@ export class EventService {
   async saveAssignment(
     userId: string,
     assignmentId: string,
-    answers: object,
+    answers: Answer[],
     typeOfSubmission: TypeOfSubmisson,
   ) {
     //retreive joinedUsers and the assignment allowed period as well as the taken assignment by the user
@@ -1459,7 +1460,7 @@ export class EventService {
       throw new BadRequestException("You're not allowed to do this assignment");
     }
     //check if the assignment is submitted, if so, throw an error
-    let assignmentTake = event.Assignments[0].TakeAssignment[0];
+    let assignmentTake: any = event.Assignments[0].TakeAssignment[0];
     if (assignmentTake?.status === 'SUBMITTED') {
       throw new BadRequestException("You've already submitted this assignment");
     }
@@ -1476,7 +1477,12 @@ export class EventService {
     //check if the  user has an existing taken assignment, if not,create a new one
     if (!assignmentTake) {
       assignmentTake = await this.prisma.takeAssignment.create({
-        data: { answers, assignmentId, userId, status: typeOfSubmission },
+        data: {
+          answers: JSON.stringify(answers),
+          assignmentId,
+          userId,
+          status: typeOfSubmission,
+        },
       });
     } else {
       assignmentTake = await this.prisma.takeAssignment.update({
@@ -1484,12 +1490,12 @@ export class EventService {
           id: assignmentTake.id,
         },
         data: {
-          answers,
+          answers: JSON.stringify(answers),
           status: typeOfSubmission,
         },
       });
     }
-    return assignmentTake;
+    return { ...assignmentTake, answers: JSON.parse(assignmentTake.answers) }; //to remove the unnecessary structure from the response
   }
   async updateAssignment(
     assignmentId: string,
@@ -2167,6 +2173,14 @@ export class EventService {
     if (previousInvitation) {
       throw new BadRequestException('Invitation already sent');
     }
+    //check if the receiver is existing user or not
+    const receiver = await this.prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { id: true },
+    });
+    if (!receiver) {
+      throw new NotFoundException('Receiver not found');
+    }
     //Check if the invitation is for assigning a role
     if (invitationType === 'ROLE_INVITATION') {
       if (!roleType) {
@@ -2180,11 +2194,19 @@ export class EventService {
           'You do not have permission to assign this role',
         );
       }
+      const isReceiverModerator = event.moderators.some(
+        (moderator) => moderator.id === receiverId,
+      );
+      const isReceiverPresenter = event.presenters.some(
+        (presenter) => presenter.id === receiverId,
+      );
       //check if the receiver is already in the deisred role
       const isAlreadyAssigned =
-        roleType === 'MODERATOR' ? isModerator : isPresenter;
+        roleType === 'MODERATOR' ? isReceiverModerator : isReceiverPresenter;
       if (isAlreadyAssigned) {
-        throw new BadRequestException('User is already assigned to this role');
+        throw new BadRequestException(
+          `User is already assigned to ${roleType} role`,
+        );
       }
       // Create the invitation
       return await this.prisma.invitation.create({

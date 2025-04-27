@@ -208,14 +208,18 @@ export class UserController {
       removeCV,
     );
   }
-
+  //-----------------------------------------
+  // User's Rating endpoints
+  //-----------------------------------------
   @Get('rating/:userId')
   @ApiOperation({ summary: 'Get the rating of a user by their ID.' })
   @ApiParam({ name: 'userId', description: 'ID of the user.' })
   getUserRating(@Param('userId') userId: string) {
     return this.userService.getUserRating(userId);
   }
-
+  //-----------------------------------------
+  //Invitation endpoint
+  //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('invitation')
@@ -228,14 +232,15 @@ export class UserController {
   //SWAGGER NOT APPLIED
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('invitation')
+  @Post('invitation/:invitationId')
   respondInvitation(
     @Body() body: RespondInvitationDto,
     @GetCurrentUserId() userId: string,
+    @Param('invitationId') invitationId: string,
   ) {
     return this.userService.resopndInvitation(
       userId,
-      body.invitationId,
+      invitationId,
       body.decision,
     );
   }
@@ -262,7 +267,9 @@ export class UserController {
   findById(@Param('id') id: string) {
     return this.userService.findById(id);
   }
-
+  //-----------------------------------------
+  // Deleting User endpoint
+  //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Delete()

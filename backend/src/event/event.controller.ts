@@ -733,7 +733,7 @@ export class EventController {
   sendInvitation(
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
-    body: SendInvitationDTO,
+    @Body() body: SendInvitationDTO,
   ) {
     return this.eventService.sendInvitation(
       userId,
