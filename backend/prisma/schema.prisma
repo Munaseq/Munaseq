@@ -78,7 +78,7 @@ model Event {
   Invitation Invitation[] @relation("InvitationEvent")
 }
 
-model Question {
+model QuizQuestion {
   id            String       @id @default(uuid())
   text          String // The question text
   questionType  QuestionType // e.g., multiple-choice, true/false
@@ -130,26 +130,28 @@ model Material {
 
 //To represent many-to-many relationship that conatains "answers" attribute
 model TakeQuiz {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   userId    String
   quizId    String
+  status    TakeStatus @default(NOT_ANSWERED)
   score     Float? // Score out of 100
   answers   Json? // Answers are stored as JSON (array of question-answer pairs)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  User User @relation(fields: [userId], references: [id])
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
   Quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade) // Cascade delete
 }
 
 model Quiz {
-  id        String     @id @default(uuid())
+  id        String         @id @default(uuid())
+  quizTitle String
   startDate DateTime
   endDate   DateTime
   timeLimit Int // Time limit in minutes
-  questions Question[] // One-to-many relation with the Question model
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  questions QuizQuestion[] // One-to-many relation with the Question model
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   Event    Event      @relation(fields: [eventId], references: [id], onDelete: Cascade) // Event cascade delete
   eventId  String

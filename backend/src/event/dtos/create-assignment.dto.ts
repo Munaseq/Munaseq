@@ -11,10 +11,12 @@ export class CreateAssignment {
   @IsNotEmpty()
   @IsString()
   assignmentTitle: string;
+
   @IsArray()
   @IsNotEmpty({ each: true })
   @Type(() => AssignmentQuestionDTO)
   questions: AssignmentQuestionDTO[];
+
   @IsDate()
   @Transform(({ value }) => new Date(value))
   startDate: Date;

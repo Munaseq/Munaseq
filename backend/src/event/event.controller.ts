@@ -445,14 +445,14 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Get('quiz/:eventId')
-  @ApiOperation({ summary: 'Get quiz for an event' })
+  @Get('quizzes/:eventId')
+  @ApiOperation({ summary: 'Get quizzes for an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
-  getQuiz(
+  getQuizzes(
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.getQuiz(userId, eventId);
+    return this.eventService.getQuizzes(userId, eventId);
   }
 
   @UseGuards(AuthGuard)
@@ -474,57 +474,96 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Patch('quiz/:eventId/:quizId')
+  @Patch('quiz/:quizId')
   @ApiOperation({ summary: 'Update a quiz for an event' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
   @ApiBody({
     description: 'Payload for updating a quiz',
     type: UpdateQuizDto,
   })
   updateQuiz(
-    @Param('eventId') eventId: string,
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
     @Body() UpdateQuizDto: UpdateQuizDto,
   ) {
-    return this.eventService.updateQuiz(userId, eventId, quizId, UpdateQuizDto);
+    return this.eventService.updateQuiz(userId, quizId, UpdateQuizDto);
   }
+
+  //SEE THE COMMENT IN EVENT.SERVICE LINE 961
+  // @UseGuards(AuthGuard)
+  // @ApiBearerAuth()
+  // @Post('quiz/start/:quizId')
+  // @ApiOperation({ summary: 'Start a quiz' })
+  // @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  // @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
+  // startQuiz(
+  //   @Param('quizId') quizId: string,
+  //   @GetCurrentUserId() userId: string,
+  // ) {
+  //   return this.eventService.startQuiz(userId, quizId);
+  // }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('quiz/start/:eventId/:quizId')
-  @ApiOperation({ summary: 'Start a quiz' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @Get('quiz/show/:quizId')
+  @ApiOperation({
+    summary:
+      'Show quiz details. Adds takeQuizStatus if the user is an attendee, or numberParticipatedUsers if the user is a moderator, event creator, or presenter.',
+  })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
-  startQuiz(
-    @Param('eventId') eventId: string,
+  showQuiz(
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.startQuiz(userId, eventId, quizId);
+    return this.eventService.showQuiz(userId, quizId);
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('quiz/submit/:eventId/:quizId')
+  @Post('quiz/save/:quizId')
+  @ApiOperation({ summary: 'Save quiz answers' })
+  @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
+  @ApiBody({
+    description: 'Payload containing quiz answers',
+    type: SubmitQuizDto,
+  })
+  saveQuiz(
+    @Param('quizId') quizId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() submitQuizDto: SubmitQuizDto,
+  ) {
+    return this.eventService.saveQuiz(
+      userId,
+      quizId,
+      submitQuizDto.answers,
+      'SAVED_ANSWERS',
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('quiz/submit/:quizId')
   @ApiOperation({ summary: 'Submit quiz answers' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
   @ApiBody({
     description: 'Payload containing quiz answers',
     type: SubmitQuizDto,
   })
   submitQuiz(
-    @Param('eventId') eventId: string,
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
     @Body() submitQuizDto: SubmitQuizDto,
   ) {
-    return this.eventService.submitQuiz(userId, quizId, submitQuizDto.answers);
+    return this.eventService.saveQuiz(
+      userId,
+      quizId,
+      submitQuizDto.answers,
+      'SUBMITTED',
+    );
   }
   @UseGuards(AuthGuard)
-  @ApiBearerAuth()
-  @Get('quiz/results/:eventId/:quizId')
+  @ApiBearerAuth() //CHECK IF NEEDED
+  @Get('quiz/results/:eventId/:quizId') //check if needed
   @ApiOperation({ summary: 'Get all quiz results for an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })

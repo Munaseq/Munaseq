@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsEnum, IsArray, IsJSON } from 'class-validator';
 import { QuestionType } from '@prisma/client';
 
-export class CreateQuestionDto {
+export class QuizQuestionDto {
   @IsString()
   @IsNotEmpty()
   text: string;

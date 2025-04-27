@@ -1,24 +1,25 @@
-import { IsOptional, IsString, IsEnum, IsJSON, IsUUID } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
 import { QuestionType } from '@prisma/client';
 
 export class UpdateQuestionDto {
-  @IsUUID()
-  @IsOptional()
-  id: string;
-
   @IsString()
   @IsOptional()
-  text: string;
+  text?: string;
 
   @IsEnum(QuestionType)
   @IsOptional()
-  questionType: QuestionType;
+  questionType?: QuestionType;
 
-  @IsJSON()
+  @IsArray()
   @IsOptional()
-  options: object;
+  options?: object;
 
   @IsString()
   @IsOptional()
-  correctAnswer: string;
+  correctAnswer?: string;
 }

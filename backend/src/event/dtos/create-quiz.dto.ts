@@ -1,21 +1,33 @@
-import { IsDateString, IsInt, IsNotEmpty, IsArray } from 'class-validator';
-import { Type } from 'class-transformer';
-import { CreateQuestionDto } from './create-question.dto';
+import {
+  IsDateString,
+  IsInt,
+  IsNotEmpty,
+  IsArray,
+  IsString,
+  IsDate,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { QuizQuestionDto } from './create-question.dto';
 
 export class CreateQuizDto {
-  @IsDateString()
   @IsNotEmpty()
-  startDate: string;
+  @IsString()
+  quizTitle: string;
 
-  @IsDateString()
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  startDate: Date;
+
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  endDate: Date;
+
   @IsNotEmpty()
-  endDate: string;
-
   @IsInt()
   timeLimit: number;
 
   @IsArray()
   @IsNotEmpty({ each: true })
-  @Type(() => CreateQuestionDto)
-  questions: CreateQuestionDto[];
+  @Type(() => QuizQuestionDto)
+  questions: QuizQuestionDto[];
 }

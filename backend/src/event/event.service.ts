@@ -681,8 +681,8 @@ export class EventService {
   //THE FOLLOWING IS FOR SHOWING/ADDING/UPDATING/DELETING QUIZ LOGIC
   //--------------------------------------------------
 
-  async getQuiz(userId: string, eventId: string) {
-    //the following logic is to ensure that the quiz will not be shown  unless the user is authorized to do that
+  async getQuizzes(userId: string, eventId: string) {
+    //the following logic is to ensure that the ass will not be shown  unless the user is authorized to do that
 
     //retreive eventCreator, moderators, and presenters ids
     const eventIds = await this.prisma.event.findFirst({
@@ -701,45 +701,198 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
+    const isAttendee = eventIds.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
     const isAuthorized =
       eventIds.eventCreatorId === userId ||
       eventIds.presenters.some((presenter) => presenter.id === userId) ||
       eventIds.moderators.some((moderator) => moderator.id === userId) ||
-      eventIds.joinedUsers.some((joinedUsers) => joinedUsers.id === userId);
+      isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to delete materials to this event',
+        'User is not authorized to view the quizzes of this event',
       );
     }
-    const result = await this.prisma.event.findUnique({
+    //Check if the user is anttendee, then show the quizzes and thier status, if not, then show how many users have partcipated in the Quiz
+    let result = await this.prisma.event.findUnique({
       where: {
         id: eventId,
       },
       select: {
+        _count: { select: { Quizzes: true } },
         Quizzes: {
           select: {
+            _count: { select: { TakeQuiz: true } }, //for the number of users who have taken the Quiz, ONLY for the authorized users
             id: true,
+            quizTitle: true,
+            timeLimit: true,
+            startDate: true,
+            endDate: true,
+            TakeQuiz: { where: { userId }, select: { status: true } }, //for the attendee
+            createdAt: true,
+            updatedAt: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+        },
+      },
+    });
+    if (!result) {
+      throw new NotFoundException('Event not found');
+    }
+    // If the user is an attendee, show the status of the Quiz
+
+    const quizsWithStatus = result.Quizzes.map((Quiz) => {
+      const currDate = new Date();
+      const { _count, TakeQuiz, ...quizzesWithoutCount } = Quiz; // Exclude _count
+      let status;
+      if (currDate < Quiz.startDate) {
+        status = 'AVAILABLE_SOON'; //Alows the authorized to update
+      } else if (currDate > Quiz.endDate) {
+        status = 'EXPIRED';
+      } else {
+        status = 'AVAILABLE';
+        //TODO SUbmitted / Saved  status
+      }
+
+      if (isAttendee) {
+        let takeQuizStatus: string;
+        if (TakeQuiz.length > 0) {
+          const takeQuiz = TakeQuiz[0];
+          takeQuizStatus = takeQuiz.status;
+        } else {
+          takeQuizStatus = 'NOT_ANSWERED';
+        }
+        return {
+          quizStatus: status,
+          takeQuizStatus,
+          ...quizzesWithoutCount,
+        };
+      } else {
+        return {
+          quizStatus: status,
+          numberParticipatedUsers: _count.TakeQuiz,
+          ...quizzesWithoutCount,
+        };
+      }
+    });
+    return {
+      numberOfQuizzes: result._count.Quizzes,
+      quizzes: quizsWithStatus,
+    };
+  }
+  async showQuiz(userId: string, quizId: string) {
+    const event = await this.prisma.event.findFirst({
+      where: {
+        Quizzes: {
+          some: {
+            id: quizId,
+          },
+        },
+      },
+      select: {
+        joinedUsers: {
+          select: {
+            id: true,
+          },
+        },
+        eventCreatorId: true,
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+        Quizzes: {
+          where: { id: quizId },
+          select: {
+            id: true,
+            quizTitle: true,
+            timeLimit: true,
             questions: true,
             startDate: true,
             endDate: true,
-            timeLimit: true,
             createdAt: true,
+            updatedAt: true,
+            _count: {
+              select: { TakeQuiz: true },
+            },
+            TakeQuiz: {
+              where: { userId },
+              select: {
+                id: true,
+                answers: true,
+                status: true,
+                updatedAt: true,
+                createdAt: true,
+              },
+            },
           },
         },
       },
     });
-    return result ?? { message: 'The event doesnt have any quizzes' };
+    if (!event) {
+      throw new NotFoundException('quiz or event not found');
+    }
+    // Check if the userId matches any of the roles
+    const isAttendee = event.joinedUsers.some(
+      (joinedUsers) => joinedUsers.id === userId,
+    );
+    const isAuthorized =
+      event.eventCreatorId === userId ||
+      event.presenters.some((presenter) => presenter.id === userId) ||
+      event.moderators.some((moderator) => moderator.id === userId) ||
+      isAttendee;
+
+    if (!isAuthorized) {
+      throw new BadRequestException("You're not allowed to show this Quiz");
+    }
+    const quiz = event.Quizzes[0];
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+    //show the status of the quiz
+    const currDate = new Date();
+    const { _count, TakeQuiz, ...quizWithoutCount } = event.Quizzes[0]; // Exclude _count
+    let status: string;
+    if (currDate < quiz.startDate) {
+      status = 'AVAILABLE_SOON'; //Alows the authorized to update
+    } else if (currDate > quiz.endDate) {
+      status = 'EXPIRED';
+    } else {
+      status = 'AVAILABLE';
+    }
+    if (isAttendee) {
+      {
+        let takeQuizStatus: string;
+        if (TakeQuiz?.length > 0) {
+          const takeQuiz = TakeQuiz[0];
+          takeQuizStatus = takeQuiz.status;
+        } else {
+          takeQuizStatus = 'NOT_ANSWERED';
+        }
+
+        return {
+          quizStatus: status,
+          takeQuizStatus,
+          ...quizWithoutCount,
+          TakeQuiz: TakeQuiz[0]
+            ? {
+                ...TakeQuiz[0],
+                answers: JSON.parse(TakeQuiz[0].answers as string),
+              }
+            : {},
+        };
+      }
+    } else {
+      return {
+        quizStatus: status,
+        numberParticipatedUsers: _count.TakeQuiz,
+        ...quizWithoutCount,
+      };
+    }
   }
 
-  async addQuizToEvent(
-    userId: string,
-    eventId: string,
-    CreateQuizDto: CreateQuizDto,
-  ) {
-    //the following logic is to ensure that the quiz will not be added to the event unless the user is authorized to do that
-
-    const eventIds = await this.prisma.event.findUniqueOrThrow({
+  async addQuizToEvent(userId: string, eventId: string, body: CreateQuizDto) {
+    //retreive eventCreator, moderators, and presenters ids
+    const eventIds = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
         eventCreatorId: true,
@@ -747,7 +900,10 @@ export class EventService {
         moderators: { select: { id: true } },
       },
     });
-
+    //Check wether the event exist or not
+    if (!eventIds) {
+      throw new NotFoundException('Event not found');
+    }
     // Check if the userId matches any of the roles
     const isAuthorized =
       eventIds.eventCreatorId === userId ||
@@ -756,18 +912,36 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to add materials to this event',
+        'User is not authorized to add quiz to this event',
       );
     }
-
-    return this.prisma.event.update({
-      where: { id: eventId },
+    //Check if the start date is smaller than the end date
+    if (body.startDate > body.endDate) {
+      throw new BadRequestException(
+        'The start date should be smaller than the end date',
+      );
+    }
+    const result = await this.prisma.event.update({
+      where: {
+        id: eventId,
+      },
       data: {
         Quizzes: {
           create: {
-            ...CreateQuizDto,
+            quizTitle: body.quizTitle,
+            startDate: body.startDate,
+            endDate: body.endDate,
+            timeLimit: body.timeLimit,
             questions: {
-              create: CreateQuizDto.questions,
+              createMany: {
+                data: body.questions.map((question) => ({
+                  questionType: question.questionType,
+                  text: question.text,
+
+                  correctAnswer: question.correctAnswer,
+                  options: question.options,
+                })),
+              },
             },
           },
         },
@@ -776,28 +950,27 @@ export class EventService {
         Quizzes: {
           select: {
             id: true,
-            questions: true,
             startDate: true,
             endDate: true,
-            timeLimit: true,
+
+            questions: true,
           },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
         },
       },
     });
+    return result?.Quizzes[0] ?? []; //to remove the unnecessary structure from the response
   }
 
-  async updateQuiz(
-    userId: string,
-    eventId: string,
-    quizId: string,
-    updateQuizDto: UpdateQuizDto,
-  ) {
-    // Step 1: Retrieve eventCreator, moderators, presenters, and event IDs
-    const event = await this.prisma.event.findFirstOrThrow({
+  async updateQuiz(userId: string, quizId: string, body: UpdateQuizDto) {
+    //retreive eventCreator, moderators, ,presenters, and event ids, also retrieve the ids of the quiz's questions
+    const event = await this.prisma.event.findFirst({
+      //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
       where: {
         Quizzes: {
           some: {
-            id: quizId, // Check for an event containing the quizId
+            id: quizId, // will check for an event that has an quiz id matches quizId
           },
         },
       },
@@ -806,10 +979,19 @@ export class EventService {
         eventCreatorId: true,
         presenters: { select: { id: true } },
         moderators: { select: { id: true } },
+        Quizzes: {
+          where: {
+            id: quizId,
+          },
+
+          select: { startDate: true, endDate: true },
+        },
       },
     });
-
-    // Step 2: Check if the user is authorized to update the quiz
+    if (!event) {
+      throw new NotFoundException('quiz or event not found');
+    }
+    // Check if the userId matches any of the roles
     const isAuthorized =
       event.eventCreatorId === userId ||
       event.presenters.some((presenter) => presenter.id === userId) ||
@@ -819,184 +1001,233 @@ export class EventService {
       throw new BadRequestException(
         'User is not authorized to update this quiz',
       );
-    }
-
-    // Step 3: Verify that the quiz exists and retrieve its associated questions
-    const existingQuiz = await this.prisma.quiz.findUnique({
-      where: { id: quizId },
-      select: {
-        questions: {
-          select: { id: true },
-        },
-      },
-    });
-
-    if (!existingQuiz) {
-      throw new BadRequestException('Quiz not found');
-    }
-
-    // Step 4: Ensure the provided questions are part of the quiz
-    const existingQuestionIds = existingQuiz.questions.map((q) => q.id);
-    const invalidQuestions = updateQuizDto.questions.filter(
-      (question) => !existingQuestionIds.includes(question.id),
-    );
-
-    if (invalidQuestions.length > 0) {
+    } //Check if the start date is smaller than the end date
+    if (body.startDate > body.endDate) {
       throw new BadRequestException(
-        'One or more questions are not linked to this quiz',
+        'The start date should be smaller than the end date',
       );
     }
 
-    // Step 5: Update the quiz and questions
-    return this.prisma.quiz.update({
-      where: { id: quizId },
-      data: {
-        startDate: updateQuizDto.startDate,
-        endDate: updateQuizDto.endDate,
-        timeLimit: updateQuizDto.timeLimit,
-        questions: {
-          updateMany: updateQuizDto.questions.map((question) => ({
-            where: { id: question.id },
-            data: {
-              text: question.text,
-              questionType: question.questionType,
-              options: question.options,
-              correctAnswer: question.correctAnswer,
-            },
-          })),
-        },
-      },
-    });
-  }
+    //check if the timelimit is zero or less
+    if (body?.timeLimit <= 0) {
+      throw new BadRequestException('The timelimit should be greater than 0');
+    }
+    const currDate = new Date();
+    if (event.Quizzes[0]?.startDate < currDate) {
+      throw new BadRequestException(
+        'The Quiz has already started, you cannot update it',
+      );
+    }
 
-  async startQuiz(userId: string, eventId: string, quizId: string) {
-    // Step 1: Retrieve the quiz and its details
-    const quiz = await this.prisma.quiz.findUnique({
-      where: { id: quizId },
-      select: {
-        id: true,
-        startDate: true,
-        endDate: true,
-        timeLimit: true,
-        questions: {
-          select: {
-            id: true,
-            text: true,
-            questionType: true,
-            options: true,
+    //Remove all records, and add the new ones(even if they are the same)
+
+    const result = await this.prisma.event.update({
+      where: {
+        id: event.id,
+      },
+      data: {
+        Quizzes: {
+          update: {
+            where: {
+              id: quizId,
+            },
+            data: {
+              startDate: body.startDate,
+              endDate: body.endDate,
+              timeLimit: body.timeLimit,
+              quizTitle: body.quizTitle,
+              ...(body.questions && {
+                questions: {
+                  deleteMany: {
+                    quizId,
+                  },
+                  createMany: {
+                    data: body.questions.map((newQuestion) => ({
+                      questionType: newQuestion.questionType,
+                      text: newQuestion.text,
+                      options: newQuestion.options,
+                      correctAnswer: newQuestion.correctAnswer,
+                    })),
+                  },
+                },
+              }),
+            },
           },
         },
       },
-    });
-
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
-    }
-
-    // Step 2: Verify the quiz is within the allowed timeframe
-    if (new Date() < quiz.startDate) {
-      throw new BadRequestException('Quiz has not started yet');
-    }
-
-    if (new Date() > quiz.endDate) {
-      throw new BadRequestException('Quiz has ended');
-    }
-
-    // Step 3: Check if the user has already started or taken the quiz
-    const existingResult = await this.prisma.takeQuiz.findFirst({
-      where: {
-        userId,
-        quizId,
+      select: {
+        Quizzes: {
+          include: { questions: true },
+          take: 1,
+          orderBy: { updatedAt: 'desc' },
+        },
       },
     });
-
-    if (existingResult) {
-      throw new BadRequestException('Quiz has already been taken or started');
-    }
-
-    // Step 4: Create a new TakeQuiz record when the user starts the quiz
-    const takeQuizRecord = await this.prisma.takeQuiz.create({
-      data: {
-        userId, // userId is a string
-        quizId, // quizId is a string
-        // We don't need to set score and answers at the start
-      },
-    });
-
-    return takeQuizRecord; // Return the created TakeQuiz record
+    const updatedQuiz = result?.Quizzes[0];
+    return updatedQuiz ?? []; //to remove the unnecessary structure from the response
   }
+  //READ THE NEXT FUNCTION COMMENT...
+  // async startQuiz(userId: string, quizId: string) {
+  //   // Step 1: Retrieve the quiz and its details
+  //   const quiz = await this.prisma.quiz.findUnique({
+  //     where: { id: quizId },
+  //     select: {
+  //       id: true,
+  //       startDate: true,
+  //       endDate: true,
+  //       timeLimit: true,
+  //       questions: {
+  //         select: {
+  //           id: true,
+  //           text: true,
+  //           questionType: true,
+  //           options: true,
+  //         },
+  //       },
+  //       TakeQuiz: {
+  //         where: {
+  //           userId,
+  //         },
+  //       },
+  //     },
+  //   });
 
-  async submitQuiz(
+  //   if (!quiz) {
+  //     throw new NotFoundException('Quiz not found');
+  //   }
+  //   //check if the quiz is already started
+  //   if (quiz.TakeQuiz.length > 0) {
+  //     throw new BadRequestException('Quiz has already been started');
+  //   }
+
+  //   // Step 2: Verify the quiz is within the allowed timeframe
+  //   if (new Date() < quiz.startDate) {
+  //     throw new BadRequestException('Quiz has not started yet');
+  //   }
+
+  //   if (new Date() > quiz.endDate) {
+  //     throw new BadRequestException('Quiz has ended');
+  //   }
+
+  //   // Step 4: Create a new TakeQuiz record when the user starts the quiz
+  //   const takeQuizRecord = await this.prisma.takeQuiz.create({
+  //     data: {
+  //       userId, // userId is a string
+  //       quizId, // quizId is a string
+  //       // We don't need to set score and answers at the start
+  //     },
+  //   });
+
+  //   return takeQuizRecord; // Return the created TakeQuiz record
+  // }
+
+  async saveQuiz(
     userId: string,
     quizId: string,
-    answers: { questionId: string; answer: string }[],
+    answers: Answer[],
+    typeOfSubmission: TypeOfSubmisson,
   ) {
+    //-----------------------------------------------------------------------
+    // IMPORTANT THIS METHOD IS INTENDED TO SAVE QUIZ ANSWERS AFTER STARTING THE QUIZ IN ORDER TO ENSURE THAT THE USER CAN'T SAVE/SUBMIT THE QUIZ UNLESS HE STARTED IT , BUT, MAHMOUD SAID THAT WE WILL NOT DO THE BEST PRACTICE, RATHER WE WILL DO THE EASIER WAY DUE TO TIME CONSTRAINTS
+    //-----------------------------------------------------------------------
+
     // Check if answers is an array
     if (!Array.isArray(answers)) {
       throw new BadRequestException('Answers must be an array');
     }
-    // Step 1: Retrieve the quiz and its details
-    const quiz = await this.prisma.quiz.findUnique({
-      where: { id: quizId },
+
+    //retreive joinedUsers and the quiz allowed period as well as the taken quiz by the user
+    const event = await this.prisma.event.findFirst({
+      where: {
+        Quizzes: {
+          some: {
+            id: quizId,
+          },
+        },
+      },
       select: {
-        id: true,
-        timeLimit: true,
-        questions: {
+        joinedUsers: {
           select: {
             id: true,
-            correctAnswer: true,
+          },
+        },
+        Quizzes: {
+          where: { id: quizId },
+          select: {
+            startDate: true,
+            endDate: true,
+            timeLimit: true,
+            TakeQuiz: {
+              where: { quizId, userId },
+              select: { id: true, status: true, createdAt: true },
+            },
           },
         },
       },
     });
-
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
+    if (!event) {
+      throw new NotFoundException('quiz or event not found');
     }
 
-    // Step 2: Retrieve the user's TakeQuiz record
-    const takeQuizRecord = await this.prisma.takeQuiz.findFirst({
-      where: {
-        userId,
-        quizId,
-      },
-    });
-
-    if (!takeQuizRecord) {
-      throw new BadRequestException('User has not started this quiz');
+    // Check if the userId matches any of the roles
+    const isAuthorized = event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
+    if (!isAuthorized) {
+      throw new BadRequestException("You're not allowed to do this quiz");
     }
-
-    // Step 3: Check if the user has already submitted their answers
-    if (takeQuizRecord.score !== null) {
-      throw new BadRequestException('Quiz has already been submitted');
+    // //check if the quiz is already started
+    // if (event.Quizzes[0]?.TakeQuiz.length === 0) {
+    //   throw new BadRequestException("Quiz has'nt started yet...");
+    // }
+    //check if the quiz is submitted, if so, throw an error
+    let quizTake: any = event.Quizzes[0].TakeQuiz[0];
+    if (quizTake?.status === 'SUBMITTED') {
+      throw new BadRequestException("You've already submitted this quiz");
+    } //check if Quiz is within the valid period (means available to take)
+    const currDate = new Date();
+    // const timeLimit = event.Quizzes[0].timeLimit * 60 * 1000; // Convert time limit to milliseconds
+    // const quizEndDate = new Date(quizTake.createdAt.getTime() + timeLimit); //FUTURE
+    if (
+      event?.Quizzes[0]?.endDate < currDate ||
+      event?.Quizzes[0]?.startDate > currDate
+      // || quizEndDate < currDate
+    ) {
+      throw new BadRequestException(
+        "The Quiz time expired Or hasn't started yet",
+      );
     }
-
-    // Step 4: Check if the user is submitting past the time limit
-    const elapsedTime =
-      (new Date().getTime() - takeQuizRecord.createdAt.getTime()) / 60000; // Time in minutes
-    if (elapsedTime > quiz.timeLimit) {
-      throw new BadRequestException('Time limit exceeded');
+    let updatedTakeQuiz: any;
+    if (!quizTake) {
+      updatedTakeQuiz = await this.prisma.takeQuiz.create({
+        data: {
+          userId,
+          quizId,
+          status: typeOfSubmission, // Update the status based on the submission type
+          answers: JSON.stringify(answers), // Save the answers as a JSON array
+        },
+      });
+    } else {
+      updatedTakeQuiz = await this.prisma.takeQuiz.update({
+        where: { id: quizTake.id },
+        data: {
+          status: typeOfSubmission, // Update the status based on the submission type
+          answers: JSON.stringify(answers), // Save the answers as a JSON array
+        },
+      });
     }
+    return { ...updatedTakeQuiz, answers: JSON.parse(updatedTakeQuiz.answers) };
 
-    // Step 5: Calculate the user's score out of 100
-    let score = 0;
-    answers.forEach((answer) => {
-      const question = quiz.questions.find((q) => q.id === answer.questionId);
-      if (question && question.correctAnswer === answer.answer) {
-        score++;
-      }
-    });
+    // const updatedTakeQuiz: any = await this.prisma.takeQuiz.update({
+    //   where: { id: event.Quizzes[0].TakeQuiz[0].id },
+    //   data: {
+    //     status: typeOfSubmission, // Update the status based on the submission type
 
-    // Step 6: Update the TakeQuiz record with the answers and score
-    const updatedTakeQuiz = await this.prisma.takeQuiz.update({
-      where: { id: takeQuizRecord.id },
-      data: {
-        score: (score / quiz.questions.length) * 100, // Calculate score out of 100
-        answers: JSON.stringify(answers), // Save the answers as a JSON array
-      },
-    });
+    //     answers: JSON.stringify(answers), // Save the answers as a JSON array
+    //   },
+    // });
 
-    return updatedTakeQuiz; // Return the updated TakeQuiz record
+    // return { ...updatedTakeQuiz, answers: JSON.parse(updatedTakeQuiz.answers) }; // Return the updated TakeQuiz record
   }
 
   // Method to retrieve quiz results for an event
@@ -1186,6 +1417,7 @@ export class EventService {
             startDate: true,
             endDate: true,
             TakeAssignment: { where: { userId }, select: { status: true } }, //for the attendee
+            updatedAt: true,
             createdAt: true,
           },
           orderBy: { updatedAt: 'desc' },
@@ -1336,6 +1568,7 @@ export class EventService {
             startDate: true,
             endDate: true,
             createdAt: true,
+            updatedAt: true,
             _count: {
               select: { TakeAssignment: true },
             },
@@ -1373,7 +1606,7 @@ export class EventService {
     }
     const assignment = event.Assignments[0];
     if (!assignment) {
-      throw new NotFoundException('Assignment not found');
+      throw new NotFoundException('Assignment or event not found ');
     }
     //show the status of the assignment
     const currDate = new Date();
@@ -1401,7 +1634,12 @@ export class EventService {
           assignmentStatus: status,
           takeAssignmentStatus,
           ...assignmentWithoutCount,
-          TakeAssignment: TakeAssignment[0] ?? {},
+          TakeAssignment: TakeAssignment[0]
+            ? {
+                ...TakeAssignment[0],
+                answers: JSON.parse(TakeAssignment[0].answers as string),
+              }
+            : {},
         };
       }
     } else {
@@ -1413,7 +1651,6 @@ export class EventService {
     }
   }
 
-  //TODO endpoint for creating a
   async saveAssignment(
     userId: string,
     assignmentId: string,
@@ -1449,7 +1686,7 @@ export class EventService {
       },
     });
     if (!event) {
-      throw new NotFoundException('assignment not found');
+      throw new NotFoundException('assignment or event not found');
     }
 
     // Check if the userId matches any of the roles ---> refactor the authorization logic into single one function
@@ -1527,7 +1764,7 @@ export class EventService {
       },
     });
     if (!event) {
-      throw new NotFoundException('assignment not found');
+      throw new NotFoundException('assignment or event not found');
     }
     // Check if the userId matches any of the roles
     const isAuthorized =
@@ -1552,23 +1789,23 @@ export class EventService {
       );
     }
 
-    //Extract the existing questions and the new questions
-    if (body.questions) {
-      //Remove all records, and add the new ones(even if they are the same)
+    //Remove all records, and add the new ones(even if they are the same)
 
-      const result = await this.prisma.event.update({
-        where: {
-          id: event.id,
-        },
-        data: {
-          Assignments: {
-            update: {
-              where: {
-                id: assignmentId,
-              },
-              data: {
-                startDate: body.startDate,
-                endDate: body.endDate,
+    const result = await this.prisma.event.update({
+      where: {
+        id: event.id,
+      },
+      data: {
+        Assignments: {
+          update: {
+            where: {
+              id: assignmentId,
+            },
+            data: {
+              startDate: body.startDate,
+              endDate: body.endDate,
+              assignmentTitle: body.assignmentTitle,
+              ...(body.questions && {
                 questions: {
                   deleteMany: {
                     assignment_id: assignmentId,
@@ -1582,50 +1819,21 @@ export class EventService {
                     })),
                   },
                 },
-              },
+              }),
             },
           },
         },
-        select: {
-          Assignments: {
-            include: { questions: true },
-            take: 1,
-            orderBy: { updatedAt: 'desc' },
-          },
+      },
+      select: {
+        Assignments: {
+          include: { questions: true },
+          take: 1,
+          orderBy: { updatedAt: 'desc' },
         },
-      });
-      const updatedAssignment = result?.Assignments[0];
-      return updatedAssignment ?? []; //to remove the unnecessary structure from the response
-    } else {
-      const result = await this.prisma.event.update({
-        where: {
-          id: event.id,
-        },
-        data: {
-          Assignments: {
-            update: {
-              where: {
-                id: assignmentId,
-              },
-              data: {
-                startDate: body.startDate,
-                endDate: body.endDate,
-                assignmentTitle: body.assignmentTitle,
-              },
-            },
-          },
-        },
-        select: {
-          Assignments: {
-            include: { questions: true },
-            take: 1,
-            orderBy: { updatedAt: 'desc' },
-          },
-        },
-      });
-      const updatedAssignment = result?.Assignments[0];
-      return updatedAssignment ?? []; //to remove the unnecessary structure from the response
-    }
+      },
+    });
+    const updatedAssignment = result?.Assignments[0];
+    return updatedAssignment ?? []; //to remove the unnecessary structure from the response
   }
   async deleteAssignment(assignmentId: string, userId: string) {
     //the following logic is to ensure that the assignment will not be deleted unless the user is authorized to do that
