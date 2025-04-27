@@ -1328,11 +1328,15 @@ export class EventService {
     return quiz;
   }
 
-  async deleteQuiz(userId: string, eventId: string, quizId: string) {
+  async deleteQuiz(userId: string, quizId: string) {
     // Step 1: Retrieve eventCreator, moderators, presenters, and event IDs
     const event = await this.prisma.event.findFirst({
       where: {
-        id: eventId,
+        Quizzes: {
+          some: {
+            id: quizId,
+          },
+        },
       },
       select: {
         id: true,
@@ -1341,7 +1345,9 @@ export class EventService {
         moderators: { select: { id: true } },
       },
     });
-
+    if (!event) {
+      throw new NotFoundException('quiz not found');
+    }
     // Step 2: Check if the user is authorized to delete the quiz
     const isAuthorized =
       event.eventCreatorId === userId ||

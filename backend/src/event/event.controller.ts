@@ -561,35 +561,35 @@ export class EventController {
       'SUBMITTED',
     );
   }
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth() //CHECK IF NEEDED
-  @Get('quiz/results/:eventId/:quizId') //check if needed
-  @ApiOperation({ summary: 'Get all quiz results for an event' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
-  @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
-  getAllQuizResults(
-    @Param('eventId') eventId: string,
-    @Param('quizId') quizId: string,
-    @GetCurrentUserId() userId: string,
-  ) {
-    return this.eventService.getAllParticipantsQuizResults(
-      userId,
-      eventId,
-      quizId,
-    );
-  }
+
+  // @UseGuards(AuthGuard)
+  // @ApiBearerAuth() //CHECK IF NEEDED
+  // @Get('quiz/results/:eventId/:quizId') //check if needed
+  // @ApiOperation({ summary: 'Get all quiz results for an event' })
+  // @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  // @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
+  // getAllQuizResults(
+  //   @Param('eventId') eventId: string,
+  //   @Param('quizId') quizId: string,
+  //   @GetCurrentUserId() userId: string,
+  // ) {
+  //   return this.eventService.getAllParticipantsQuizResults(
+  //     userId,
+  //     eventId,
+  //     quizId,
+  //   );
+  // }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Delete('quiz/:eventId/:quizId')
+  @Delete('quiz/:quizId')
   @ApiOperation({ summary: 'Delete a quiz from an event' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
   deleteQuiz(
-    @Param('eventId') eventId: string,
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.deleteQuiz(userId, eventId, quizId);
+    return this.eventService.deleteQuiz(userId, quizId);
   }
 
   //-----------------------------------------
