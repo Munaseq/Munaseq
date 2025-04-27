@@ -42,6 +42,7 @@ import {
   CreateQuizDto,
   UpdateQuizDto,
   SubmitQuizDto,
+  SendRequestDTO,
 } from './dtos';
 
 import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
@@ -763,7 +764,10 @@ export class EventController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('invitation/:eventId')
-  @ApiOperation({ summary: 'Send Invitation' })
+  @ApiOperation({
+    summary:
+      'Send Invitation to users in order to join or to be assigned to certain role',
+  })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiBody({
     description: 'Payload for sending an invitation',
@@ -782,6 +786,31 @@ export class EventController {
       body.roleType,
     );
   }
+
+    //-----------------------------------------
+  //Request endpoints
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('request/:eventId')
+  @ApiOperation({
+    summary: 'Request to join an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for sending a request for joining an event or to be assigned to certain role',
+    type: SendRequestDTO,
+  })
+  sendRequest(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: SendRequestDTO,
+  ) {
+    return this.eventService.sendRequest(
+      userId,
+      eventId,
+      body.requestType
+    );
 
   //-----------------------------------------
   // Deleting Event's endpoint

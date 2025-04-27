@@ -44,6 +44,7 @@ model User {
   Chats              Chat[]           @relation("AssociatedWith")
   SentInvitation     Invitation[]     @relation("InvitationSender")
   ReceivedInvitation Invitation[]     @relation("InvitationReceiver")
+  SentRequest        Request[]        @relation("RequestSender") // New: Requests sent by the user
 }
 
 model Event {
@@ -75,7 +76,8 @@ model Event {
   Materials      Material[]
 
   EventChat  Chat?        @relation("EventChat") // one to one relationship
-  Invitation Invitation[] @relation("InvitationEvent")
+  Invitation Invitation[] @relation("InvitationEvent") // one to many relationship
+  Request    Request[]    @relation("RequestedEvent") // one to many relationship
 }
 
 model QuizQuestion {
@@ -214,7 +216,7 @@ model Chat {
 }
 
 // -------------------------------------------------------------------------------------
-// The Following Models Is Invitation Related Models
+// The Following Models Is Invitation And Request Related Models
 // -------------------------------------------------------------------------------------
 model Invitation {
   id             String           @id @default(uuid())
@@ -229,6 +231,18 @@ model Invitation {
   Event          Event            @relation("InvitationEvent", fields: [event_id], references: [id], onDelete: Cascade)
   updatedAt      DateTime         @updatedAt
   createdAt      DateTime         @default(now())
+}
+
+model Request {
+  id          String           @id @default(uuid())
+  requestType RequestType
+  status      InvitationStatus @default(PENDING)
+  sender_id   String
+  Sender      User             @relation("RequestSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  event_id    String
+  Event       Event            @relation("RequestedEvent", fields: [event_id], references: [id], onDelete: Cascade)
+  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime         @default(now())
 }
 
 // -------------------------------------------------------------------------------------
@@ -266,6 +280,11 @@ enum RoleType {
 enum InvitationType {
   ROLE_INVITATION
   EVENT_INVITATION
+  ROLE_REQUEST
+  EVENT_REQUEST
+}
+
+enum RequestType {
   ROLE_REQUEST
   EVENT_REQUEST
 }

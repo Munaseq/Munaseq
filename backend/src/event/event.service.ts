@@ -1927,6 +1927,7 @@ export class EventService {
         'User is assigned as eventCreator, moderator, or presenter',
       );
     }
+
     // Fetch the user to get their gender
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -1952,7 +1953,12 @@ export class EventService {
     if (isAlreadyJoined) {
       throw new BadRequestException('User already joined this event');
     }
-
+    //Check if the event is public or private
+    if (!event.isPublic) {
+      throw new BadRequestException(
+        'Event is private, you cannot join it directly, instead you should request to join it',
+      );
+    }
     if (event.seatCapacity !== null && event.seatCapacity > 0) {
       const joinedCount = event.joinedUsers.length;
       if (joinedCount >= event.seatCapacity) {
@@ -2467,4 +2473,12 @@ export class EventService {
       });
     }
   }
+    //-----------------------------------------
+  //Request endpoints
+  //-----------------------------------------
+  async sendRequest(
+    userId: string,
+    eventId: string,
+    requestType: RequestType,
+  ) {
 }

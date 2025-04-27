@@ -13,7 +13,7 @@ export * from './take-assignment.dto';
 export * from './send-invitation.dto';
 
 export * from './update-question.dto';
-
+export * from './send-request.dto';
 export * from './update-quiz.dto';
 export * from './create-quiz.dto';
 export * from './submit-quiz.dto';
