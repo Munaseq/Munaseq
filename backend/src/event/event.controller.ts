@@ -828,6 +828,9 @@ export class EventController {
   ) {
     return this.eventService.getRequests(userId, eventId);
   }
+
+//TODO : endpoint for responding to the request
+
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------

@@ -663,4 +663,35 @@ export class UserService {
       invitationId,
     };
   }
+  //-----------------------------------------
+  //Request
+  //-----------------------------------------
+  async getRequest(userId: string) {
+    const requests = await this.prisma.request.findMany({
+      where: { sender_id: userId },
+      select: {
+        id: true,
+        status: true,
+        requestType: true,
+        roleType: true,
+        Event: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            eventCreator: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                profilePictureUrl: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return requests;
+  }
 }

@@ -229,10 +229,21 @@ export class UserController {
   getInvitation(@GetCurrentUserId() userId) {
     return this.userService.getInvitation(userId);
   }
-  //SWAGGER NOT APPLIED
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('invitation/:invitationId')
+  @ApiOperation({
+    summary: 'Respond to an invitation with an accept or reject decision.',
+  })
+  @ApiParam({
+    name: 'invitationId',
+    description: 'ID of the invitation to respond to.',
+  })
+  @ApiBody({
+    description: 'Decision to accept or reject the invitation.',
+    type: RespondInvitationDto,
+  })
   respondInvitation(
     @Body() body: RespondInvitationDto,
     @GetCurrentUserId() userId: string,
@@ -244,6 +255,24 @@ export class UserController {
       body.decision,
     );
   }
+  //-----------------------------------------
+  //Request endpoints
+  //-----------------------------------------
+
+  //Get all requests
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('requests')
+  @ApiOperation({
+    summary: 'Get all requests',
+  })
+  getRequest(@GetCurrentUserId() userId) {
+    return this.userService.getRequest(userId);
+  }
+
+  //-----------------------------------------
+  //User stuff endpoint
+  //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('changePassword')
