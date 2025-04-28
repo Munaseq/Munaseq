@@ -1,5 +1,11 @@
 import { InvitationType, RoleType } from '@prisma/client';
-import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class SendInvitationDTO {
   @IsString()
@@ -9,10 +15,12 @@ export class SendInvitationDTO {
 
   @IsString()
   @IsNotEmpty()
+  @IsEnum(InvitationType)
   invitationType: InvitationType;
-  
+
   @IsOptional()
   @IsNotEmpty()
+  @IsEnum(RoleType)
   @IsString()
   roleType?: RoleType;
 }

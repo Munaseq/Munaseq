@@ -787,7 +787,7 @@ export class EventController {
     );
   }
 
-    //-----------------------------------------
+  //-----------------------------------------
   //Request endpoints
   //-----------------------------------------
   @UseGuards(AuthGuard)
@@ -798,7 +798,8 @@ export class EventController {
   })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiBody({
-    description: 'Payload for sending a request for joining an event or to be assigned to certain role',
+    description:
+      'Payload for sending a request for joining an event or to be assigned to certain role',
     type: SendRequestDTO,
   })
   sendRequest(
@@ -809,9 +810,24 @@ export class EventController {
     return this.eventService.sendRequest(
       userId,
       eventId,
-      body.requestType
+      body.requestType,
+      body.roleType,
     );
+  }
 
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('requests/:eventId')
+  @ApiOperation({
+    summary: 'Get all requests for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  getRequests(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.getRequests(userId, eventId);
+  }
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------

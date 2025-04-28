@@ -31,20 +31,20 @@ model User {
   description       String? // New: Optional description field for the user
   rating            Float?   @default(0)
 
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  createdEvents      Event[]          @relation("UserCreatedEvents") // Relation to created events
-  joinedEvents       Event[]          @relation("UserEventsJoined") // New: Events joined by the user (many-to-many)
-  presentedEvents    Event[]          @relation("EventPresenters") // Relation to events where user is a presenter (many-to-many)
-  moderatedEvents    Event[]          @relation("EventModerators") // Relation to events where user is a moderator (many-to-many)
-  TakeQuiz           TakeQuiz[]
-  TakeAssignment     TakeAssignment[]
-  GiveFeedback       GiveFeedback[]
-  SentMessages       Message[]        @relation("Sender")
-  Chats              Chat[]           @relation("AssociatedWith")
-  SentInvitation     Invitation[]     @relation("InvitationSender")
-  ReceivedInvitation Invitation[]     @relation("InvitationReceiver")
-  SentRequest        Request[]        @relation("RequestSender") // New: Requests sent by the user
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  createdEvents       Event[]          @relation("UserCreatedEvents") // Relation to created events
+  joinedEvents        Event[]          @relation("UserEventsJoined") // New: Events joined by the user (many-to-many)
+  presentedEvents     Event[]          @relation("EventPresenters") // Relation to events where user is a presenter (many-to-many)
+  moderatedEvents     Event[]          @relation("EventModerators") // Relation to events where user is a moderator (many-to-many)
+  TakeQuiz            TakeQuiz[]
+  TakeAssignment      TakeAssignment[]
+  GiveFeedback        GiveFeedback[]
+  SentMessages        Message[]        @relation("Sender")
+  Chats               Chat[]           @relation("AssociatedWith")
+  SentInvitations     Invitation[]     @relation("InvitationSender")
+  ReceivedInvitations Invitation[]     @relation("InvitationReceiver")
+  SentRequests        Request[]        @relation("RequestSender") // New: Requests sent by the user
 }
 
 model Event {
@@ -75,9 +75,9 @@ model Event {
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
 
-  EventChat  Chat?        @relation("EventChat") // one to one relationship
-  Invitation Invitation[] @relation("InvitationEvent") // one to many relationship
-  Request    Request[]    @relation("RequestedEvent") // one to many relationship
+  EventChat   Chat?        @relation("EventChat") // one to one relationship
+  Invitations Invitation[] @relation("InvitationEvent") // one to many relationship
+  Requests    Request[]    @relation("RequestedEvent") // one to many relationship
 }
 
 model QuizQuestion {
@@ -237,6 +237,7 @@ model Request {
   id          String           @id @default(uuid())
   requestType RequestType
   status      InvitationStatus @default(PENDING)
+  roleType    RoleType?
   sender_id   String
   Sender      User             @relation("RequestSender", fields: [sender_id], references: [id], onDelete: Cascade)
   event_id    String
@@ -280,8 +281,6 @@ enum RoleType {
 enum InvitationType {
   ROLE_INVITATION
   EVENT_INVITATION
-  ROLE_REQUEST
-  EVENT_REQUEST
 }
 
 enum RequestType {

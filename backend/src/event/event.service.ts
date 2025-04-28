@@ -18,7 +18,7 @@ import {
   UpdateQuizDto,
 } from './dtos';
 
-import { InvitationType, RoleType } from '@prisma/client';
+import { InvitationType, RequestType, RoleType } from '@prisma/client';
 
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
@@ -2473,12 +2473,167 @@ export class EventService {
       });
     }
   }
-    //-----------------------------------------
+  //-----------------------------------------
   //Request endpoints
   //-----------------------------------------
   async sendRequest(
     userId: string,
     eventId: string,
     requestType: RequestType,
+    roleType?: RoleType,
   ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, joinedEvents: { select: { id: true } } },
+    });
+    //check if the user exists
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    //check if the user is already joined the event
+    let isAlreadyJoined = user.joinedEvents.some(
+      (joinedEvent) => joinedEvent.id === eventId,
+    );
+    if (requestType === 'EVENT_REQUEST' && isAlreadyJoined) {
+      throw new BadRequestException('User is already joined the event');
+    }
+    //check if the user is joined in order to send a role request
+    if (requestType === 'ROLE_REQUEST' && !isAlreadyJoined) {
+      throw new BadRequestException('User is not joined the event');
+    }
+    //check if the event exist and if the user is already sent a request
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        joinedUsers: { select: { id: true } },
+        eventCreatorId: true,
+        presenters: { select: { id: true } },
+        moderators: { select: { id: true } },
+        Requests: {
+          where: {
+            sender_id: userId,
+            status: 'PENDING',
+            requestType,
+            roleType,
+          },
+        },
+      },
+    });
+    //check if the event exists
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    //check if the user is already sent a request
+    const isAlreadyRequested = event.Requests.length > 0;
+    if (isAlreadyRequested) {
+      throw new BadRequestException('User has already sent a request');
+    }
+    isAlreadyJoined = event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === userId,
+    );
+    const isAlreadyModerator = event.moderators.some(
+      (moderator) => moderator.id === userId,
+    );
+    const isAlreadyPresenter = event.presenters.some(
+      (presenter) => presenter.id === userId,
+    );
+    const isEventCreator = event.eventCreatorId === userId;
+    //check if the user is already an event creator
+    if (isEventCreator) {
+      throw new BadRequestException('User is already an event creator');
+    }
+    if (requestType === 'EVENT_REQUEST') {
+      //check if the user is already joined
+      if (isAlreadyJoined) {
+        throw new BadRequestException('User is already joined the event');
+      }
+      //check if the user is already a moderator or presenter
+      if (isAlreadyModerator || isAlreadyPresenter) {
+        throw new BadRequestException(
+          'User is already a moderator or presenter',
+        );
+      }
+
+      //create the request
+      return await this.prisma.request.create({
+        data: {
+          sender_id: userId,
+          event_id: eventId,
+          requestType,
+        },
+      });
+    } else if (requestType === 'ROLE_REQUEST') {
+      //check if the user is joined
+      if (!isAlreadyJoined) {
+        throw new BadRequestException('User is not joined the event');
+      }
+
+      //check if the user is already a moderator or presenter
+      const isAlreadyAssigned =
+        roleType === 'MODERATOR' ? isAlreadyModerator : isAlreadyPresenter;
+      if (isAlreadyAssigned) {
+        throw new BadRequestException(
+          `User is already assigned to ${roleType} role`,
+        );
+      }
+      return await this.prisma.request.create({
+        data: {
+          sender_id: userId,
+          event_id: eventId,
+          requestType,
+          roleType,
+        },
+      });
+    }
+  }
+  async getRequests(userId: string, eventId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        eventCreatorId: true,
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+        Requests: {
+          where: { event_id: eventId },
+          select: {
+            id: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            requestType: true,
+            roleType: true,
+            Sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                gender: true,
+                profilePictureUrl: true,
+              },
+            },
+          },
+          orderBy: { updatedAt: 'desc' },
+        },
+      },
+    });
+    //Check wether the event exist or not
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    // Check if the userId matches any of the roles
+    const isAuthorized =
+      event.eventCreatorId === userId ||
+      event.presenters.some((presenter) => presenter.id === userId) ||
+      event.moderators.some((moderator) => moderator.id === userId);
+    if (!isAuthorized) {
+      throw new BadRequestException(
+        'User is not authorized to view requests for this event',
+      );
+    }
+    const requests = event.Requests;
+    if (!requests || requests.length === 0) {
+      throw new NotFoundException('No requests found for this event');
+    }
+    return requests;
+  }
 }
