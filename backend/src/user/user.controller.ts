@@ -244,12 +244,12 @@ export class UserController {
     description: 'Decision to accept or reject the invitation.',
     type: RespondInvitationDto,
   })
-  respondInvitation(
+  respondToInvitation(
     @Body() body: RespondInvitationDto,
     @GetCurrentUserId() userId: string,
     @Param('invitationId') invitationId: string,
   ) {
-    return this.userService.resopndInvitation(
+    return this.userService.resopndToInvitation(
       userId,
       invitationId,
       body.decision,

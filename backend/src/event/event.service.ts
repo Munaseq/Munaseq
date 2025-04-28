@@ -2484,23 +2484,32 @@ export class EventService {
   ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, joinedEvents: { select: { id: true } } },
+      select: {
+        id: true,
+        joinedEvents: { select: { id: true } },
+        createdEvents: { select: { id: true } },
+        moderatedEvents: { select: { id: true } },
+        presentedEvents: { select: { id: true } },
+      },
     });
     //check if the user exists
     if (!user) {
       throw new NotFoundException('User not found');
     }
     //check if the user is already joined the event
-    let isAlreadyJoined = user.joinedEvents.some(
+    const isAlreadyJoined = user.joinedEvents.some(
       (joinedEvent) => joinedEvent.id === eventId,
     );
-    if (requestType === 'EVENT_REQUEST' && isAlreadyJoined) {
-      throw new BadRequestException('User is already joined the event');
-    }
-    //check if the user is joined in order to send a role request
-    if (requestType === 'ROLE_REQUEST' && !isAlreadyJoined) {
-      throw new BadRequestException('User is not joined the event');
-    }
+    const isAlreadyModerator = user.moderatedEvents.some(
+      (moderatedEvent) => moderatedEvent.id === eventId,
+    );
+    const isAlreadyPresenter = user.presentedEvents.some(
+      (presentedEvent) => presentedEvent.id === eventId,
+    );
+    const isEventCreator = user.createdEvents.some(
+      (createdEvent) => createdEvent.id === eventId,
+    );
+
     //check if the event exist and if the user is already sent a request
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -2528,16 +2537,7 @@ export class EventService {
     if (isAlreadyRequested) {
       throw new BadRequestException('User has already sent a request');
     }
-    isAlreadyJoined = event.joinedUsers.some(
-      (joinedUser) => joinedUser.id === userId,
-    );
-    const isAlreadyModerator = event.moderators.some(
-      (moderator) => moderator.id === userId,
-    );
-    const isAlreadyPresenter = event.presenters.some(
-      (presenter) => presenter.id === userId,
-    );
-    const isEventCreator = event.eventCreatorId === userId;
+
     //check if the user is already an event creator
     if (isEventCreator) {
       throw new BadRequestException('User is already an event creator');
@@ -2564,10 +2564,12 @@ export class EventService {
       });
     } else if (requestType === 'ROLE_REQUEST') {
       //check if the user is joined
-      if (!isAlreadyJoined) {
+      if (!isAlreadyJoined && !isAlreadyModerator && !isAlreadyPresenter) {
         throw new BadRequestException('User is not joined the event');
       }
-
+      if (!roleType) {
+        throw new BadRequestException('roleType is required');
+      }
       //check if the user is already a moderator or presenter
       const isAlreadyAssigned =
         roleType === 'MODERATOR' ? isAlreadyModerator : isAlreadyPresenter;
@@ -2586,6 +2588,7 @@ export class EventService {
       });
     }
   }
+  //see the logic of updating status once request is made to invitation's endpoint
   async getRequests(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -2621,19 +2624,230 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
+    const isPresenter = event.presenters.some(
+      (presenter) => presenter.id === userId,
+    );
     const isAuthorized =
       event.eventCreatorId === userId ||
-      event.presenters.some((presenter) => presenter.id === userId) ||
+      isPresenter ||
       event.moderators.some((moderator) => moderator.id === userId);
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to view requests for this event',
       );
     }
-    const requests = event.Requests;
+    let requests = event.Requests;
     if (!requests || requests.length === 0) {
       throw new NotFoundException('No requests found for this event');
     }
+    //if the user is presenter, then exclude the RoleRequest
+    if (isPresenter)
+      requests = requests.filter(
+        (request) => request.requestType !== 'ROLE_REQUEST',
+      );
     return requests;
+  }
+  async respondToRequest(userId: string, requestId: string, decision: boolean) {
+    // Check if the user is authorized to respond to the request
+    const request = await this.prisma.request.findUnique({
+      where: { id: requestId },
+
+      include: {
+        Sender: {
+          select: {
+            id: true,
+          },
+        },
+        Event: {
+          select: {
+            isPublic: true,
+            eventCreatorId: true,
+            moderators: { select: { id: true } },
+            presenters: { select: { id: true } },
+            joinedUsers: { select: { id: true } },
+          },
+        },
+      },
+    });
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
+    if (!request.Event) {
+      throw new NotFoundException('Event not found');
+    }
+    if (request.status !== 'PENDING') {
+      throw new BadRequestException('This request has already been responded');
+    }
+
+    // Check if the sender of the request is the same as the userId  -> it's helpful when the user is moderator and you don't want the moderator to change his role by requesting and responding to his request. I COMMENTTED IT ,LATER WE'LL DISCUSS IT
+    // if (request.Sender.id !== userId) {
+    //   throw new BadRequestException(
+    //     'User is not authorized to respond to his request',
+    //   );
+    // }
+
+    const isSenderIsPresenter = request.Event.presenters.some(
+      (presenter) => presenter.id === request.sender_id,
+    );
+    const isSenderIsModerator = request.Event.moderators.some(
+      (moderator) => moderator.id === request.sender_id,
+    );
+    const isSenderIsJoinedUser = request.Event.joinedUsers.some(
+      (joinedUser) => joinedUser.id === request.sender_id,
+    );
+
+    if (decision) {
+      if (request.requestType === 'ROLE_REQUEST') {
+        // Check if the userId matches any of the roles
+        const isAuthorized =
+          request.Event.eventCreatorId === userId ||
+          request.Event.moderators.some((moderator) => moderator.id === userId);
+        if (!isAuthorized) {
+          throw new BadRequestException(
+            'User is not authorized to respond to this request',
+          );
+        }
+        const role =
+          request.roleType === 'MODERATOR' ? 'moderators' : 'presenters';
+        //check if the user is already in the desired role
+        const isAlreadyInRole = request.Event[role].some(
+          (user) => user.id === userId,
+        );
+        //check if the user is already in the desired rol
+        if (isAlreadyInRole) {
+          //might be better to delete the request
+          await this.prisma.request.update({
+            where: {
+              id: requestId,
+            },
+            data: {
+              status: 'CANCELED_BY_SYSTEM',
+            },
+          });
+          throw new BadRequestException(
+            `You are already in the ${request.roleType} role, and the request has been canceled`,
+          );
+        }
+        // check if the user has other roles already, if so, override the role
+        if (
+          isSenderIsJoinedUser ||
+          isSenderIsModerator ||
+          isSenderIsPresenter
+        ) {
+          let roleToRemove;
+          if (isSenderIsJoinedUser) {
+            roleToRemove = 'joinedUsers';
+          } else if (isSenderIsPresenter) {
+            roleToRemove = 'presenters';
+          } else {
+            roleToRemove = 'moderators';
+          }
+          // remove the user from the previous role
+          await this.prisma.event.update({
+            where: {
+              id: request.event_id,
+            },
+            data: {
+              [roleToRemove]: {
+                disconnect: {
+                  id: request.sender_id,
+                },
+              },
+            },
+          });
+        }
+        // connect the user to the new role
+        await this.prisma.event.update({
+          where: {
+            id: request.event_id,
+          },
+          data: {
+            [role]: {
+              connect: {
+                id: request.sender_id,
+              },
+            },
+            EventChat: {
+              update: { Users: { connect: { id: request.sender_id } } },
+            },
+          },
+        });
+        await this.prisma.request.update({
+          where: {
+            id: requestId,
+          },
+          data: {
+            status: 'ACCEPTED',
+          },
+        });
+      } else if (request.requestType === 'EVENT_REQUEST') {
+        //if the event is private then, only the authorized roles can response
+        if (!request.Event.isPublic) {
+          const isAuthorized =
+            request.Event.eventCreatorId === userId ||
+            request.Event.moderators.some(
+              (moderator) => moderator.id === userId,
+            );
+          if (!isAuthorized) {
+            throw new BadRequestException(
+              "You're not authorized to respond since the event is private and you aren't a moderator or eventCreator",
+            );
+          }
+        }
+        //If the request is to joinning the event and the sender is already joined the event despite the role he assigned to, the system will mark the request as Canceled and will throw an Error
+        if (
+          isSenderIsModerator ||
+          isSenderIsPresenter ||
+          isSenderIsJoinedUser
+        ) {
+          await this.prisma.request.update({
+            where: { id: requestId },
+            data: {
+              status: 'CANCELED_BY_SYSTEM',
+            },
+          });
+          throw new BadRequestException(
+            'The sender is Already joined or play a role the event ',
+          );
+        }
+        await this.prisma.event.update({
+          where: {
+            id: request.event_id,
+          },
+          data: {
+            joinedUsers: {
+              connect: {
+                id: request.sender_id,
+              },
+            },
+            EventChat: {
+              update: { Users: { connect: { id: request.sender_id } } },
+            },
+          },
+        });
+        await this.prisma.request.update({
+          where: {
+            id: requestId,
+          },
+          data: {
+            status: 'ACCEPTED',
+          },
+        });
+      }
+    } else {
+      await this.prisma.request.update({
+        where: {
+          id: requestId,
+        },
+        data: {
+          status: 'REJECTED',
+        },
+      });
+    }
+    return {
+      message: 'Request has been responded successfully',
+      status: decision ? 'ACCEPTED' : 'REJECTED',
+      requestId,
+    };
   }
 }

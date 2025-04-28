@@ -45,10 +45,22 @@ export class UpdateEventDto {
   @Transform(({ value }) => parseInt(value, 10))
   seatCapacity?: number;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    if (typeof value === 'number') return value === 1;
+    return false;
+  })
   @IsOptional()
   @IsBoolean()
   isOnline?: boolean;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    if (typeof value === 'number') return value === 1;
+    return false;
+  })
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;

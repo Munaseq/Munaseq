@@ -43,6 +43,7 @@ import {
   UpdateQuizDto,
   SubmitQuizDto,
   SendRequestDTO,
+  RespondRequestDto,
 } from './dtos';
 
 import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
@@ -790,6 +791,27 @@ export class EventController {
   //-----------------------------------------
   //Request endpoints
   //-----------------------------------------
+
+  //TODO : endpoint for responding to the request
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('request/respond/:requestId')
+  @ApiOperation({
+    summary: 'Respond to a request',
+  })
+  @ApiParam({ name: 'requestId', description: 'ID of the request' })
+  @ApiBody({
+    description: 'Decision to accept or reject the request',
+    type: RespondRequestDto,
+  })
+  respondToRequest(
+    @Param('requestId') requestId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: RespondRequestDto,
+  ) {
+    return this.eventService.respondToRequest(userId, requestId, body.decision);
+  }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('request/:eventId')
@@ -829,12 +851,9 @@ export class EventController {
     return this.eventService.getRequests(userId, eventId);
   }
 
-//TODO : endpoint for responding to the request
-
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------
-
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Delete(':eventId')

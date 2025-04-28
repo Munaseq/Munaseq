@@ -427,7 +427,7 @@ export class UserService {
     });
     return { sentInvitations, receivedInvitations };
   }
-  async resopndInvitation(
+  async resopndToInvitation(
     userId: string,
     invitationId: string,
     decision: boolean,
@@ -451,6 +451,9 @@ export class UserService {
     });
     if (!invitation) {
       throw new NotFoundException('Invitation not found');
+    }
+    if (!invitation.Event) {
+      throw new NotFoundException('Event not found');
     }
     if (invitation.receiver_id !== userId) {
       throw new ForbiddenException(
@@ -589,7 +592,7 @@ export class UserService {
             status: 'ACCEPTED',
           },
         });
-      } else {
+      } else if (invitation.invitationType === 'EVENT_INVITATION') {
         if (
           isSenderIsJoinedUser ||
           isSenderIsPresenter ||
@@ -599,6 +602,14 @@ export class UserService {
           //if the event is private, then, the sender must be the event creator or a moderator
           if (!invitation.Event.isPublic) {
             if (!isSenderIsEventCreator && !isSenderIsModerator) {
+              await this.prisma.invitation.update({
+                where: {
+                  id: invitationId,
+                },
+                data: {
+                  status: 'CANCELED_BY_SYSTEM',
+                },
+              });
               throw new BadRequestException(
                 "The invitation's sender is no longer authorized to send this invitation",
               );
@@ -647,7 +658,6 @@ export class UserService {
         });
       }
     } else {
-      //if the invitation is not accepted, then, it will be canceled
       await this.prisma.invitation.update({
         where: {
           id: invitationId,
@@ -691,6 +701,7 @@ export class UserService {
           },
         },
       },
+      orderBy: { updatedAt: 'desc' },
     });
     return requests;
   }
