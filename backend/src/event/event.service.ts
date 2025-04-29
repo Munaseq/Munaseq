@@ -19,7 +19,12 @@ import {
 } from './dtos';
 
 import { InvitationType, RequestType, RoleType } from '@prisma/client';
-
+import { PDFDocument, rgb } from 'pdf-lib';
+const fontKit = require('@pdf-lib/fontkit');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as fontkit from '@pdf-lib/fontkit';
+import * as ArabicReshaper from 'arabic-reshaper';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 
 @Injectable()
@@ -2849,5 +2854,233 @@ export class EventService {
       status: decision ? 'ACCEPTED' : 'REJECTED',
       requestId,
     };
+  }
+  //-----------------------------------------
+  // Certificate endpoint
+  //-----------------------------------------
+  // async generateCertificate(userId: string) {
+  //   const pdfDoc = await PDFDocument.create();
+
+  //   // Register fontkit
+  //   pdfDoc.registerFontkit(fontkit);
+
+  //   // Load the Arabic font (make sure you have a TTF/OTF Arabic font)
+  //   const basePath = path.resolve(__dirname, '../../src/event/pdfassets');
+  //   const arabicFontPath = path.resolve(basePath, 'Amiri-BoldItalic.ttf');
+  //   const arabicFontBytes = fs.readFileSync(arabicFontPath);
+  //   const arabicFont = await pdfDoc.embedFont(arabicFontBytes);
+
+  //   // Create a page for the PDF
+  //   const page = pdfDoc.addPage([842, 595]); // A4 size (landscape)
+
+  //   // Add Arabic text to the PDF
+  //   let arabicText = ArabicReshaper.convertArabic('السلام عليكم');
+  //   const fontSize = 34;
+
+  //   // Get the width of the Arabic text to center it
+  //   const textWidth = arabicFont.widthOfTextAtSize(arabicText, fontSize);
+
+  //   // Place the Arabic text at the center of the page
+  //   page.drawText(arabicText, {
+  //     x: 442,
+  //     y: 400, // Vertical position
+  //     size: fontSize,
+  //     font: arabicFont,
+  //     color: rgb(0, 0, 0),
+  //   });
+
+  //   // Save the PDF to a file
+  //   const pdfBytes = await pdfDoc.save();
+  //   const outputPath = path.resolve(
+  //     __dirname,
+  //     `../../src/event/pdfassets/${userId}.pdf`,
+  //   );
+  //   fs.writeFileSync(outputPath, pdfBytes);
+
+  //   return `Certificate generated successfully: ${outputPath}`;
+  // }
+  // Generate Arabic PDF
+
+  async generateCertificate(userId: string, eventId: string) {
+    try {
+      // Define consistent paths
+
+      const basePath = path.resolve(__dirname, '../../src/event/pdfassets');
+      const pdfPath = path.join(basePath, 'EmptyCertif.pdf');
+      const outputPath = path.join(
+        basePath,
+        `certificate_${new Date().getSeconds()}.pdf`,
+      );
+      const arabicFontPath = path.resolve(basePath, '103-Tahoma.ttf');
+      const arabicFontBytes = fs.readFileSync(arabicFontPath);
+
+      // Check if files exist
+      if (!fs.existsSync(pdfPath)) {
+        throw new Error(`PDF template not found at: ${pdfPath}`);
+      }
+
+      const existingPdfBytes = fs.readFileSync(pdfPath);
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+      pdfDoc.registerFontkit(fontkit);
+      // Use a standard font instead of a custom font
+      const arabicFont = await pdfDoc.embedFont(arabicFontBytes);
+
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[0];
+      const { width, height } = firstPage.getSize();
+      //retreive or create the certificate
+      let certificate = await this.prisma.certificate.findFirst({
+        where: {
+          user_Id: userId,
+          event_Id: eventId,
+        },
+        select: {
+          id: true,
+          Event: {
+            select: {
+              title: true,
+              eventCreator: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+              startDateTime: true,
+              endDateTime: true,
+            },
+          },
+          User: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      });
+      if (!certificate) {
+        certificate = await this.prisma.certificate.create({
+          data: {
+            user_Id: userId,
+            event_Id: eventId,
+          },
+          select: {
+            id: true,
+            Event: {
+              select: {
+                title: true,
+                eventCreator: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+                startDateTime: true,
+                endDateTime: true,
+              },
+            },
+            User: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        });
+      }
+      //extract the data from the certificate
+      const eventCreatorFirstName = certificate.Event.eventCreator.firstName;
+      const eventCreatorLastName = certificate.Event.eventCreator.lastName;
+      const eventCreatorName = ArabicReshaper.convertArabic(
+        `${eventCreatorLastName} ${eventCreatorFirstName}`,
+      );
+      const eventTitle = ArabicReshaper(certificate.Event.title);
+      const participantFirstName = ArabicReshaper(certificate.User.firstName);
+      const participantLastName = ArabicReshaper(certificate.User.lastName);
+      const participantName = ArabicReshaper.convertArabic(
+        `${participantFirstName} ${participantLastName}`,
+      );
+      //if the start date is equal to the end date, then we will show only the start date
+      const startDate = new Date(certificate.Event.startDateTime);
+      const endDate = new Date(certificate.Event.endDateTime);
+      let completionDate: string;
+      const startDateString = startDate.toLocaleDateString('en-CA', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+      });
+      const endDateString = endDate.toLocaleDateString('en-CA', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+      });
+      if (startDate === endDate) {
+        completionDate = startDateString;
+      } else {
+        completionDate = `${endDateString}   إلى   ${startDateString} من`;
+      }
+
+      const certifId = certificate.id;
+      const certifLabel = 'معرف الفعالية:';
+
+      // Certificate title
+      firstPage.drawText(eventTitle, {
+        x: width / 2 - arabicFont.widthOfTextAtSize(eventTitle, 38) / 2,
+        y: height - 172,
+        size: 38,
+        font: arabicFont,
+        color: rgb(33 / 255, 36 / 255, 39 / 255),
+      });
+
+      // Name text
+      firstPage.drawText(participantName, {
+        x: width / 2 - arabicFont.widthOfTextAtSize(participantName, 22) / 2,
+        y: height - 255,
+        size: 22,
+        font: arabicFont,
+        color: rgb(33 / 255, 36 / 255, 39 / 255),
+      });
+
+      // Course name
+      firstPage.drawText(eventCreatorName, {
+        x:
+          width * 0.75 - arabicFont.widthOfTextAtSize(eventCreatorName, 16) / 2,
+        y: height / 2 - 120,
+        size: 16,
+        font: arabicFont,
+        color: rgb(33 / 255, 36 / 255, 39 / 255),
+      });
+
+      firstPage.drawText(completionDate, {
+        x: width * 0.25 - arabicFont.widthOfTextAtSize(completionDate, 16) / 2,
+        y: height / 2 - 120,
+        size: 16,
+        font: arabicFont,
+        color: rgb(33 / 255, 36 / 255, 39 / 255),
+      });
+
+      // Certificate ID
+      firstPage.drawText(certifId, {
+        x:
+          width -
+          arabicFont.widthOfTextAtSize(certifLabel, 10) -
+          arabicFont.widthOfTextAtSize(certifId, 10) -
+          12,
+        y: 74,
+        size: 10,
+        font: arabicFont,
+        color: rgb(84 / 255, 84 / 255, 84 / 255),
+      });
+
+      // Save the modified PDF
+      const pdfBytes = await pdfDoc.save();
+      fs.writeFileSync(outputPath, pdfBytes);
+
+      console.log(`Certificate generated successfully: ${outputPath}`);
+      return outputPath;
+    } catch (error) {
+      console.error('Failed to generate certificate:', error);
+      throw error;
+    }
   }
 }

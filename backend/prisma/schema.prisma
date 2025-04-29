@@ -45,6 +45,7 @@ model User {
   SentInvitations     Invitation[]     @relation("InvitationSender")
   ReceivedInvitations Invitation[]     @relation("InvitationReceiver")
   SentRequests        Request[]        @relation("RequestSender") // New: Requests sent by the user
+  Certificate         Certificate[]
 }
 
 model Event {
@@ -75,9 +76,10 @@ model Event {
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
 
-  EventChat   Chat?        @relation("EventChat") // one to one relationship
-  Invitations Invitation[] @relation("InvitationEvent") // one to many relationship
-  Requests    Request[]    @relation("RequestedEvent") // one to many relationship
+  EventChat   Chat?         @relation("EventChat") // one to one relationship
+  Invitations Invitation[]  @relation("InvitationEvent") // one to many relationship
+  Requests    Request[]     @relation("RequestedEvent") // one to many relationship
+  Certificate Certificate[]
 }
 
 model QuizQuestion {
@@ -244,6 +246,21 @@ model Request {
   Event       Event            @relation("RequestedEvent", fields: [event_id], references: [id], onDelete: Cascade)
   updatedAt   DateTime         @updatedAt
   createdAt   DateTime         @default(now())
+}
+
+// -------------------------------------------------------------------------------------
+// The Following Models Is Invitation And Request Related Models
+// -------------------------------------------------------------------------------------
+
+model Certificate {
+  id             String   @id @default(uuid())
+  user_Id        String
+  event_Id       String
+  User           User     @relation(fields: [user_Id], references: [id], onDelete: Cascade)
+  Event          Event    @relation(fields: [event_Id], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  certificateUrl String?
 }
 
 // -------------------------------------------------------------------------------------

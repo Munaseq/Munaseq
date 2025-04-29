@@ -850,7 +850,18 @@ export class EventController {
   ) {
     return this.eventService.getRequests(userId, eventId);
   }
+  //-----------------------------------------
+  // Event Certificate endpoint
+  //-----------------------------------------
 
+  @UseGuards(AuthGuard)
+  @Get('certificate/generate/:eventId')
+  generateCertificate(
+    @GetCurrentUserId() userId: string,
+    @Param('eventId') eventId: string,
+  ) {
+    return this.eventService.generateCertificate(userId, eventId);
+  }
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------
