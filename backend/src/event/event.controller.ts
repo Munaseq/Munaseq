@@ -792,7 +792,6 @@ export class EventController {
   //Request endpoints
   //-----------------------------------------
 
-  //TODO : endpoint for responding to the request
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('request/respond/:requestId')
@@ -853,14 +852,19 @@ export class EventController {
   //-----------------------------------------
   // Event Certificate endpoint
   //-----------------------------------------
-
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Get a certificate for an event. The user must an attendee to generate the certificate.',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @UseGuards(AuthGuard)
-  @Get('certificate/generate/:eventId')
-  generateCertificate(
+  @Get('certificate/:eventId')
+  getCertificate(
     @GetCurrentUserId() userId: string,
     @Param('eventId') eventId: string,
   ) {
-    return this.eventService.generateCertificate(userId, eventId);
+    return this.eventService.getCertificate(userId, eventId);
   }
   //-----------------------------------------
   // Deleting Event's endpoint
