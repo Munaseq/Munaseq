@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 
-export default async function getAssignmentAction(eventID: string) {
+export default async function getQuizAction(eventID: string) {
   const cookieStore = cookies();
   const token = cookieStore.get("token");
   try {
-    const assignments = await fetch(
-      `${process.env.BACKEND_URL}/event/assignments/${eventID}`,
+    const quizzes = await fetch(
+      `${process.env.BACKEND_URL}/event/quizzes/${eventID}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -14,10 +14,10 @@ export default async function getAssignmentAction(eventID: string) {
       }
     );
 
-    const data = await assignments.json();
-    console.log("Assignments data:", data.assignments); // Debugging line
+    const data = await quizzes.json();
+    console.log("quizzes data:", data.quizzes); // Debugging line
 
-    return data.assignments;
+    return data.quizzes;
   } catch (error: any) {
     return [];
   }

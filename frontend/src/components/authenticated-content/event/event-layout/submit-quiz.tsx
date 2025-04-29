@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Input } from "@/components/common/shadcn-ui/input";
 import Button from "@/components/common/buttons/button";
+import submitQuizAction from "@/proxy/quizzes/submit-quiz-action";
 
 const MCS = ["أ", "ب", "ج", "د"];
 
@@ -19,11 +20,13 @@ type Answer = {
 };
 
 type Props = {
-  questions: Question[];
+  questions: any[];
   time: number; // in minutes
+  quizId: string;
+  eventId: string;
 };
 
-export default function TakeQuiz({ questions, time }: Props) {
+export default function TakeQuiz({ questions, time, quizId, eventId }: Props) {
   const router = useRouter();
 
   const totalSeconds = time * 60;
@@ -43,12 +46,26 @@ export default function TakeQuiz({ questions, time }: Props) {
     setAnswers(updated);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
     setSubmitted(true);
     console.log("Submitted answers:", answers);
     alert("تم تسليم الاختبار!");
+
+    console.log(
+      "Submitted answers:######################################x",
+      answers
+    );
+
+    const answersToSubmit = {
+      answers: answers,
+    };
+
+    const error = await submitQuizAction(quizId, eventId, answersToSubmit);
+    if (error !== undefined && error !== null) {
+      console.error("Error creating activity:", error);
+    }
   };
 
   const handleNextAndSubmit = () => {
@@ -163,9 +180,9 @@ export default function TakeQuiz({ questions, time }: Props) {
         السؤال {currentIndex + 1} : {currentQuestion.text}
       </div>
 
-      {currentQuestion.questionType === "multiple-choice" ? (
+      {currentQuestion.questionType === "MULTIPLE_CHOICE" ? (
         <div className="flex flex-col gap-4">
-          {currentQuestion.options?.map((option, index) => (
+          {currentQuestion.options?.map((option: any, index: any) => (
             <label
               key={index}
               className={`border rounded-lg px-4 py-2 cursor-pointer ${

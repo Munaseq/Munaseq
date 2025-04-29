@@ -16,6 +16,7 @@ type AddQuestionProps = {
   handleOptionChange: any;
   showQuestion: any;
   handleShowQuestion: any;
+  handleRemoveQuestion: any;
 };
 
 const MCS = ["أ", "ب", "ج", "د"];
@@ -30,6 +31,7 @@ export default function AddQuestion({
   handleOptionChange,
   showQuestion,
   handleShowQuestion,
+  handleRemoveQuestion,
 }: AddQuestionProps) {
   return (
     <motion.div
@@ -55,7 +57,7 @@ export default function AddQuestion({
 
       <div className="flex flex-col gap-8 my-10">
         <motion.div
-          className="flex gap-24 items-center"
+          className="flex gap-24 items-center justify-between"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
@@ -65,13 +67,15 @@ export default function AddQuestion({
             <select
               name="questionType"
               onChange={handleChange}
+              defaultValue={"MULTIPLE_CHOICE"}
               value={formData.questions[questionNum].questionType}
               className="cursor-pointer text-lg hover:text-custom-light-purple bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all"
             >
-              <option value="multiple-choice">اختيار من متعدد</option>
-              <option value="essay">مقالي</option>
+              <option value="MULTIPLE_CHOICE">اختيار من متعدد</option>
+              <option value="ESSAY">مقالي</option>
             </select>
           </div>
+          <Button onClick={() => handleRemoveQuestion(questionNum)}>حذف</Button>
         </motion.div>
 
         <motion.div
@@ -93,7 +97,7 @@ export default function AddQuestion({
           </div>
         </motion.div>
 
-        {formData.questions[questionNum].questionType === "multiple-choice" && (
+        {formData.questions[questionNum].questionType === "MULTIPLE_CHOICE" && (
           <motion.div
             className="flex flex-col gap-6"
             initial={{ opacity: 0, height: 0 }}
@@ -162,7 +166,7 @@ export default function AddQuestion({
           </motion.div>
         )}
 
-        {formData.questions[questionNum].questionType === "multiple-choice" && (
+        {formData.questions[questionNum].questionType === "MULTIPLE_CHOICE" && (
           <motion.div
             className="flex gap-4 items-center"
             initial={{ opacity: 0 }}
@@ -178,10 +182,12 @@ export default function AddQuestion({
               value={formData.questions[questionNum].correctAnswer}
               className="cursor-pointer text-lg hover:text-custom-light-purple bg-white border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all"
             >
-              <option value="">اختر الإجابة الصحيحة</option>
               {formData.questions[questionNum].options.map(
                 (_: string, index: number) => (
-                  <option key={index} value={MCS[index]}>
+                  <option
+                    key={index}
+                    value={formData.questions[questionNum].options[index]}
+                  >
                     {MCS[index]}
                   </option>
                 )
@@ -190,7 +196,7 @@ export default function AddQuestion({
           </motion.div>
         )}
 
-        {formData.questions[questionNum].questionType === "essay" && (
+        {formData.questions[questionNum].questionType === "ESSAY" && (
           <motion.div
             className="flex flex-col gap-4"
             initial={{ opacity: 0, height: 0 }}

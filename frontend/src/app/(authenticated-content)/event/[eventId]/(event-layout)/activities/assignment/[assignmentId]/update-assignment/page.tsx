@@ -1,5 +1,6 @@
 import React from "react";
 import UpdateAssignmentForm from "@/components/authenticated-content/event/event-layout/update-assignment-form";
+import showAssignmentAction from "@/proxy/assignments/show-assignment-action";
 
 type Assignment = {
   id: string;
@@ -14,24 +15,14 @@ type Assignment = {
   }[];
 };
 
-const assignment: Assignment = {
-  id: "1",
-  state: "NotSubmitted",
-  endDate: "2025-10-10",
-  startDate: "2025-10-01",
-  questions: [
-    {
-      text: "What is the capital of Egypt?",
-      questionType: "multiple-choice",
-      options: ["Cairo", "Alexandria", "Giza", "Luxor"],
-      correctAnswer: "Cairo",
-    },
-  ],
-};
-export default function UpdateAssignment({}: {
-  params: { eventId: string; assignmentId: string };
+export default async function UpdateAssignment({
+  params,
+}: {
+  params: { eventId: any; assignmentId: string };
 }) {
-  // const assignment:Assignment = getAssignmentId();
+  const assignment: any = await showAssignmentAction(params.assignmentId);
 
-  return <UpdateAssignmentForm assignment={assignment} />;
+  return (
+    <UpdateAssignmentForm assignment={assignment} eventId={params.eventId} />
+  );
 }

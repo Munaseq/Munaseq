@@ -1,5 +1,8 @@
 import React from "react";
 import Assignment from "@/components/authenticated-content/event/event-layout/submit-assignment";
+import { get } from "http";
+import getAssignmentAction from "@/proxy/assignments/get-assignments-action";
+import showAssignmentAction from "@/proxy/assignments/show-assignment-action";
 
 type Assignment = {
   id: string;
@@ -14,26 +17,26 @@ type Assignment = {
   }[];
 };
 
-const assignment: Assignment = {
-  id: "1",
-  state: "NotSubmitted",
-  endDate: "2025-10-10",
-  startDate: "2025-10-01",
-  questions: [
-    {
-      text: "What is the capital of Egypt?",
-      questionType: "multiple-choice",
-      options: ["Cairo", "Alexandria", "Giza", "Luxor"],
-      correctAnswer: "Cairo",
-    },
-    {
-      text: "What is the capital of Egypt?",
-      questionType: "essay",
-      options: [],
-      correctAnswer: "Cairo",
-    },
-  ],
-};
+// const assignment: Assignment = {
+//   id: "1",
+//   state: "NotSubmitted",
+//   endDate: "2025-10-10",
+//   startDate: "2025-10-01",
+//   questions: [
+//     {
+//       text: "What is the capital of Egypt?",
+//       questionType: "multiple-choice",
+//       options: ["Cairo", "Alexandria", "Giza", "Luxor"],
+//       correctAnswer: "Cairo",
+//     },
+//     {
+//       text: "What is the capital of Egypt?",
+//       questionType: "essay",
+//       options: [],
+//       correctAnswer: "Cairo",
+//     },
+//   ],
+// };
 
 type Question = {
   text: string;
@@ -41,18 +44,24 @@ type Question = {
   options?: string[];
 };
 
-export default function SubmitAssignment({
+export default async function SubmitAssignment({
   params,
 }: {
   params: { eventId: string; assignmentId: string };
 }) {
-  // const assignment:Assignment = getAssignmentId();
+  const assignment: any = await showAssignmentAction(params.assignmentId);
 
-  const questions: any[] = assignment.questions.map((question) => ({
+  const questions: any[] = assignment.questions.map((question: any) => ({
     text: question.text,
     questionType: question.questionType,
     options: question.options,
   }));
 
-  return <Assignment questions={questions} />;
+  return (
+    <Assignment
+      questions={questions}
+      assignmentId={params.assignmentId}
+      eventId={params.eventId}
+    />
+  );
 }

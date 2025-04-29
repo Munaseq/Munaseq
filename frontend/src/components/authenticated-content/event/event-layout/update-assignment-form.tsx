@@ -6,6 +6,7 @@ import Button from "@/components/common/buttons/button";
 import { FileQuestion } from "lucide-react";
 import { FileChartColumnIncreasing } from "lucide-react";
 import { motion } from "framer-motion";
+import updateAssignmentAction from "@/proxy/assignments/update-assignment-action";
 
 type Assignment = {
   id: string;
@@ -22,8 +23,10 @@ type Assignment = {
 
 export default function updateAssignmentForm({
   assignment,
+  eventId,
 }: {
-  assignment: Assignment;
+  assignment: any;
+  eventId: any;
 }) {
   const today = new Date().toISOString().split("T")[0];
 
@@ -50,7 +53,7 @@ export default function updateAssignmentForm({
       if (index === newQuestions.length) {
         newQuestions.push({
           text: "",
-          questionType: "multiple-choice",
+          questionType: "MULTIPLE_CHOICE",
           options: ["", ""],
           correctAnswer: "",
         });
@@ -109,9 +112,29 @@ export default function updateAssignmentForm({
     }));
   };
 
-  const handleSaveActivity = () => {
-    console.log("Activity saved:", formData);
+  const handleRemoveQuestion = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      questions: prev.questions.filter((_, i) => i !== index),
+    }));
+    setShowQuestion(false);
+    setQuestionNum(0);
   };
+
+  async function handleSaveActivity() {
+    console.log("Activity saved:", formData);
+
+    const assignmentData = { ...formData };
+
+    const error = await updateAssignmentAction(
+      assignment.id,
+      eventId,
+      assignmentData
+    );
+    if (error !== undefined && error !== null) {
+      console.error("Error creating activity:", error);
+    }
+  }
 
   // Animation variants
   const containerVariants = {
@@ -186,7 +209,7 @@ export default function updateAssignmentForm({
                   type="date"
                   name="startDate"
                   min={today}
-                  value={formData.startDate}
+                  value={formData.startDate.split("T")[0]}
                   onChange={(e) => {
                     const newDate = e.target.value;
                     setEndDateMin(newDate);
@@ -211,7 +234,7 @@ export default function updateAssignmentForm({
                   type="date"
                   name="endDate"
                   min={endDateMin}
-                  value={formData.endDate}
+                  value={formData.endDate.split("T")[0]}
                   onChange={handleChange}
                   className="w-min cursor-pointer px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm"
                 />
@@ -304,6 +327,7 @@ export default function updateAssignmentForm({
             handleOptionChange={handleOptionChange}
             showQuestion={showQuestion}
             handleShowQuestion={() => setShowQuestion(false)}
+            handleRemoveQuestion={handleRemoveQuestion}
           />
         )}
       </form>

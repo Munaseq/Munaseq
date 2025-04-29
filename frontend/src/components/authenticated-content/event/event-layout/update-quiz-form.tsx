@@ -6,25 +6,18 @@ import Button from "@/components/common/buttons/button";
 import { FileQuestion } from "lucide-react";
 import { FileChartColumnIncreasing } from "lucide-react";
 import { motion } from "framer-motion";
+import updateQuizAction from "@/proxy/quizzes/update-quiz-action";
 
-type Quiz = {
-  id: string;
-  state: "NotSubmitted" | "Submitted" | "Finished";
-  endDate: string;
-  startDate: string;
-  timeLimit: number;
-  questions: {
-    text: string;
-    questionType: string;
-    options: string[];
-    correctAnswer: string;
-  }[];
-};
-
-export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
+export default function updateAssignmentForm({
+  quiz,
+  eventId,
+}: {
+  quiz: any;
+  eventId: string;
+}) {
   const today = new Date().toISOString().split("T")[0];
 
-  const [formData, setFormData] = useState<Quiz>(quiz);
+  const [formData, setFormData] = useState<any>(quiz);
 
   const [endDateMin, setEndDateMin] = useState(today);
   const [showQuestion, setShowQuestion] = useState(false);
@@ -34,20 +27,20 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleAddQuestion = (index: number) => {
     setShowQuestion(true);
     setQuestionNum(index);
 
-    setFormData((prev) => {
+    setFormData((prev: any) => {
       const newQuestions = [...prev.questions];
 
       if (index === newQuestions.length) {
         newQuestions.push({
           text: "",
-          questionType: "multiple-choice",
+          questionType: "MULTIPLE_CHOICE",
           options: ["", ""],
           correctAnswer: "",
         });
@@ -61,18 +54,18 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      questions: prev.questions.map((q, i) =>
+      questions: prev.questions.map((q: any, i: any) =>
         i === questionNum ? { ...q, [name]: value } : q
       ),
     }));
   };
 
   const handleAddOption = () => {
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      questions: prev.questions.map((q, i) =>
+      questions: prev.questions.map((q: any, i: any) =>
         i === questionNum ? { ...q, options: [...q.options, ""] } : q
       ),
     }));
@@ -82,13 +75,13 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
     optionIndex: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      questions: prev.questions.map((q, i) =>
+      questions: prev.questions.map((q: any, i: any) =>
         i === questionNum
           ? {
               ...q,
-              options: q.options.map((opt, idx) =>
+              options: q.options.map((opt: any, idx: any) =>
                 idx === optionIndex ? e.target.value : opt
               ),
             }
@@ -98,16 +91,32 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
   };
 
   const handleRemoveOption = () => {
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      questions: prev.questions.map((q, i) =>
+      questions: prev.questions.map((q: any, i: any) =>
         i === questionNum ? { ...q, options: q.options.slice(0, -1) } : q
       ),
     }));
   };
 
-  const handleSaveActivity = () => {
+  const handleRemoveQuestion = (index: number) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      questions: prev.questions.filter((_: any, i: any) => i !== index),
+    }));
+    setShowQuestion(false);
+    setQuestionNum(0);
+  };
+
+  const handleSaveActivity = async () => {
     console.log("Activity saved:", formData);
+
+    const quizData = { ...formData, timeLimit: parseInt(formData.timeLimit) };
+
+    const error = await updateQuizAction(quiz.id, eventId, quizData);
+    if (error !== undefined && error !== null) {
+      console.error("Error creating activity:", error);
+    }
   };
 
   // Animation variants
@@ -175,14 +184,14 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
             >
               <label
-                htmlFor="activityTimeLimit"
+                htmlFor="timeLimit"
                 className="block text-lg text-custom-gray"
               >
                 مدة الاختبار
               </label>
               <Input
                 type="number"
-                name="activityTimeLimit"
+                name="timeLimit"
                 value={formData.timeLimit}
                 onChange={handleChange}
                 className="w-20 cursor-pointer px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm"
@@ -203,11 +212,11 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
                   type="date"
                   name="startDate"
                   min={today}
-                  value={formData.startDate}
+                  value={formData.startDate.split("T")[0]}
                   onChange={(e) => {
                     const newDate = e.target.value;
                     setEndDateMin(newDate);
-                    setFormData((prev) => ({
+                    setFormData((prev: any) => ({
                       ...prev,
                       startDate: newDate,
                       endDate: newDate,
@@ -228,7 +237,7 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
                   type="date"
                   name="endDate"
                   min={endDateMin}
-                  value={formData.endDate}
+                  value={formData.endDate.split("T")[0]}
                   onChange={handleChange}
                   className="w-min cursor-pointer px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm"
                 />
@@ -254,7 +263,7 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
             </motion.h2>
 
             <div className="flex flex-wrap gap-4 mt-4">
-              {formData.questions.map((_, index) => (
+              {formData.questions.map((_: any, index: any) => (
                 <motion.div
                   key={index}
                   custom={index}
@@ -321,6 +330,7 @@ export default function updateAssignmentForm({ quiz }: { quiz: Quiz }) {
             handleOptionChange={handleOptionChange}
             showQuestion={showQuestion}
             handleShowQuestion={() => setShowQuestion(false)}
+            handleRemoveQuestion={handleRemoveQuestion}
           />
         )}
       </form>

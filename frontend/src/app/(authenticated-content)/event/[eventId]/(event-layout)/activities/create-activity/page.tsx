@@ -7,7 +7,9 @@ import Button from "@/components/common/buttons/button";
 import { FileQuestion } from "lucide-react";
 import { FileChartColumnIncreasing } from "lucide-react";
 import { motion } from "framer-motion";
+import createAssignmentAction from "@/proxy/assignments/create-assignment-action";
 import { set } from "date-fns";
+import createQuizAction from "@/proxy/quizzes/create-quiz-action";
 
 type Question = {
   text: string;
@@ -17,18 +19,23 @@ type Question = {
 };
 
 type Activity = {
-  activityType: string;
-  activityTimeLimit: number;
-  startDate: string;
-  endDate: string;
+  activityTitle: any;
+  activityType: any;
+  activityTimeLimit: any;
+  startDate: any;
+  endDate: any;
   questions: Question[];
 };
 
-export default function CreateActivityPage() {
+export default function CreateActivityPage(params: {
+  params: { eventId: string };
+}) {
+  const { eventId } = params.params;
   const today = new Date().toISOString().split("T")[0];
 
   const [formData, setFormData] = useState<Activity>({
-    activityType: "",
+    activityType: "Assignment",
+    activityTitle: "",
     activityTimeLimit: 0,
     startDate: today,
     endDate: today,
@@ -56,7 +63,7 @@ export default function CreateActivityPage() {
       if (index === newQuestions.length) {
         newQuestions.push({
           text: "",
-          questionType: "multiple-choice",
+          questionType: "MULTIPLE_CHOICE",
           options: ["", ""],
           correctAnswer: "",
         });
@@ -115,8 +122,47 @@ export default function CreateActivityPage() {
     }));
   };
 
-  const handleSaveActivity = () => {
+  const handleRemoveQuestion = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      questions: prev.questions.filter((_, i) => i !== index),
+    }));
+    setShowQuestion(false);
+    setQuestionNum(0);
+  };
+
+  const handleSaveActivity = async () => {
     console.log("Activity saved:", formData);
+
+    if (formData.activityType === "Assignment") {
+      const { activityTimeLimit, activityTitle, activityType, ...rest } =
+        formData;
+
+      const assignmentData = {
+        ...rest,
+        assignmentTitle: activityTitle,
+      };
+      const error = await createAssignmentAction(eventId, assignmentData);
+      if (error !== undefined && error !== null) {
+        console.error("Error creating activity:", error);
+      }
+    }
+
+    if (formData.activityType === "Quiz") {
+      const { activityTimeLimit, activityTitle, activityType, ...rest } =
+        formData;
+
+      const quizData = {
+        ...rest,
+        quizTitle: activityTitle,
+        timeLimit: parseInt(activityTimeLimit),
+      };
+
+      const error = await createQuizAction(eventId, quizData);
+      if (error !== undefined && error !== null) {
+        console.error("Error creating activity:", error);
+      }
+    }
   };
 
   // Animation variants
@@ -182,6 +228,20 @@ export default function CreateActivityPage() {
               variants={itemVariants}
             >
               <div className="flex gap-4 items-center">
+                <label
+                  htmlFor="activityTitle"
+                  className="block text-lg text-custom-gray"
+                >
+                  عنوان النشاط
+                </label>
+                <Input
+                  type="text"
+                  name="activityTitle"
+                  value={formData.activityTitle}
+                  onChange={handleChange}
+                  className="w-80 cursor-pointer px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm"
+                  placeholder="أدخل عنوان النشاط"
+                />
                 <label className="block text-lg text-custom-gray">
                   نوع النشاط
                 </label>
@@ -352,6 +412,7 @@ export default function CreateActivityPage() {
             handleOptionChange={handleOptionChange}
             showQuestion={showQuestion}
             handleShowQuestion={() => setShowQuestion(false)}
+            handleRemoveQuestion={handleRemoveQuestion}
           />
         )}
       </form>

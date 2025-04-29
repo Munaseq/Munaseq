@@ -49,55 +49,17 @@ type Answer = {
 };
 
 type Props = {
-  questions: any[];
-  assignmentId: string;
-  eventId: string;
+  result: any;
 };
 
-export default function TakeAssignment({
-  questions,
-  assignmentId,
-  eventId,
-}: Props) {
+export default function showAssignmentResult({ result }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answer[]>(
-    questions.map((q) => ({ questionTitle: q.text, answer: "" }))
-  );
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = result.questions[currentIndex];
 
-  const handleAnswerChange = (newAnswer: string) => {
-    console.log("new answer", newAnswer);
-    const updated = [...answers];
-    updated[currentIndex].answer = newAnswer;
-    setAnswers(updated);
-  };
-
-  async function handleSubmit(): Promise<void> {
-    console.log(
-      "Submitted answers:######################################x",
-      answers
-    );
-
-    const answersToSubmit = {
-      answers: answers,
-    };
-
-    const error = await submitAssignmentAction(
-      assignmentId,
-      eventId,
-      answersToSubmit
-    );
-    if (error !== undefined && error !== null) {
-      console.error("Error creating activity:", error);
-    }
-  }
-
-  const handleNextAndSubmit = () => {
-    if (currentIndex < questions.length - 1) {
+  const handleNext = () => {
+    if (currentIndex < result.questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
-    } else {
-      handleSubmit();
     }
   };
 
@@ -110,7 +72,7 @@ export default function TakeAssignment({
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap gap-4">
-        {questions.map((_, index) => (
+        {result.questions.map((_: any, index: any) => (
           <div
             key={index}
             className={`bg-white w-16 h-16 shadow-lg flex items-center justify-center cursor-pointer rounded-2xl hover:bg-custom-gradient transition-all hover:text-white ${
@@ -127,28 +89,10 @@ export default function TakeAssignment({
         السؤال {currentIndex + 1} : {currentQuestion.text}
       </div>
 
-      {currentQuestion.questionType === "MULTIPLE_CHOICE" ? (
+      {/* {currentQuestion.questionType === "MULTIPLE_CHOICE" ? (
         <div className="flex flex-col gap-4">
-          {currentQuestion.options?.map((option: any, index: any) => (
-            <label
-              key={index}
-              className={`border rounded-lg px-4 py-2 cursor-pointer ${
-                answers[currentIndex].answer === option
-                  ? "bg-custom-light-purple text-white"
-                  : "border-gray-300"
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${currentIndex}`}
-                value={option}
-                checked={answers[currentIndex].answer === option}
-                onChange={() => handleAnswerChange(option)}
-                className="hidden"
-              />
-              {MCS[index]}. {option}
-            </label>
-          ))}
+          {result.TakeQuiz.answers[currentIndex].answer}
+         
         </div>
       ) : (
         <Input
@@ -157,14 +101,31 @@ export default function TakeAssignment({
           placeholder="اكتب إجابتك هنا..."
           className="w-full focus:outline-none focus:ring-2 focus:ring-custom-light-purple focus:border-transparent transition-all shadow-sm placeholder:text-gray-400"
         />
-      )}
+      )} */}
+
+      <div className="flex flex-col gap-4">
+        <div className="bg-gray-100 border border-gray-300 rounded-xl p-4">
+          <p className="text-gray-700 font-semibold mb-1">إجابتك:</p>
+          <p className="text-black">
+            {result.TakeAssignment.answers[currentIndex].answer}
+          </p>
+        </div>
+
+        <div className="bg-green-100 border border-green-400 rounded-xl p-4">
+          <p className="text-green-700 font-semibold mb-1">الإجابة الصحيحة:</p>
+          <p className="text-black">{currentQuestion.correctAnswer}</p>
+        </div>
+      </div>
 
       <div className="flex justify-between">
         <Button onClick={handleBack} disabled={currentIndex === 0}>
           السابق
         </Button>
-        <Button onClick={handleNextAndSubmit}>
-          {currentIndex === questions.length - 1 ? "تسليم الواجب" : "التالي"}
+        <Button
+          onClick={handleNext}
+          disabled={currentIndex === result.questions.length - 1}
+        >
+          {"التالي"}
         </Button>
       </div>
     </div>
