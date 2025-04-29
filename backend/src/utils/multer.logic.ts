@@ -1,8 +1,10 @@
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import * as multerS3 from 'multer-s3';
 import { S3Client } from '@aws-sdk/client-s3';
+import * as AWS from 'aws-sdk';
 import * as dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
+import { Unit } from 'aws-sdk/clients/emr';
 dotenv.config();
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
@@ -99,6 +101,44 @@ export function multerMaterialtLogic() {
       }),
     },
   );
+}
+export function uploadCertificate(
+  pdfBytes: Uint8Array,
+  certifId: string,
+): Promise<string> {
+  // Configure AWS S3
+  const s3 = new AWS.S3({
+    region: process.env.BUCKET_REGION,
+    credentials: {
+      accessKeyId: process.env.ACCESS_KEY,
+      secretAccessKey: process.env.SECRET_ACCESS_KEY,
+    },
+  });
+
+  const fileName = `certificates/${certifId}.pdf`;
+  // Upload to S3
+  const params = {
+    Bucket: bucketName,
+    Key: fileName,
+    Body: pdfBytes, // The actual PDF data as Uint8Array
+    ContentType: 'application/pdf',
+    ACL: 'public-read', // You can adjust the ACL based on your requirements
+  }; // Perform the upload
+  let url;
+  // S3 ManagedUpload with callbacks is not supported in AWS SDK for JavaScript (v3).
+  // Please convert to 'await client.upload(params, options).promise()', and re-run aws-sdk-js-codemod.
+  return new Promise((resolve, reject) => {
+    s3.upload(params, (err, data) => {
+      if (err) {
+        reject(new Error('Failed to upload PDF to S3'));
+      } else {
+        // Extract the URL from the response
+        const fileUrl = data.Location;
+        console.log('File uploaded successfully. URL:', fileUrl);
+        resolve(fileUrl); // Resolve the promise with the file URL
+      }
+    });
+  });
 }
 // FileFieldsInterceptor(
 //   [

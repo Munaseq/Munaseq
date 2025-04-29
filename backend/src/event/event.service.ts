@@ -20,13 +20,14 @@ import {
 
 import { InvitationType, RequestType, RoleType } from '@prisma/client';
 import { PDFDocument, rgb } from 'pdf-lib';
-const fontKit = require('@pdf-lib/fontkit');
+
 import * as fs from 'fs';
 import * as path from 'path';
 import * as fontkit from '@pdf-lib/fontkit';
 import * as ArabicReshaper from 'arabic-reshaper';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
-
+import * as AWS from 'aws-sdk';
+import { uploadCertificate } from 'src/utils/multer.logic';
 @Injectable()
 export class EventService {
   constructor(private prisma: PrismaService) {}
@@ -2930,8 +2931,20 @@ export class EventService {
       const firstPage = pages[0];
       const { width, height } = firstPage.getSize();
       //retreive or create the certificate
-      let certificate = await this.prisma.certificate.findFirst({
+      let certificate: any = await this.prisma.certificate.findFirst({
         where: {
+          user_Id: userId,
+          event_Id: eventId,
+        },
+        select: {
+          certificateUrl: true,
+        },
+      });
+      if (certificate) {
+        return { certificateUrl: certificate.certificateUrl };
+      }
+      certificate = await this.prisma.certificate.create({
+        data: {
           user_Id: userId,
           event_Id: eventId,
         },
@@ -2959,50 +2972,25 @@ export class EventService {
         },
       });
       if (!certificate) {
-        certificate = await this.prisma.certificate.create({
-          data: {
-            user_Id: userId,
-            event_Id: eventId,
-          },
-          select: {
-            id: true,
-            Event: {
-              select: {
-                title: true,
-                eventCreator: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                  },
-                },
-                startDateTime: true,
-                endDateTime: true,
-              },
-            },
-            User: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        });
+        throw new BadRequestException(`Certificate Couldn't be created`);
       }
       //extract the data from the certificate
       const eventCreatorFirstName = certificate.Event.eventCreator.firstName;
       const eventCreatorLastName = certificate.Event.eventCreator.lastName;
       const eventCreatorName = ArabicReshaper.convertArabic(
-        `${eventCreatorLastName} ${eventCreatorFirstName}`,
+        `${eventCreatorFirstName} ${eventCreatorLastName}`,
       );
-      const eventTitle = ArabicReshaper(certificate.Event.title);
-      const participantFirstName = ArabicReshaper(certificate.User.firstName);
-      const participantLastName = ArabicReshaper(certificate.User.lastName);
+      const eventTitle = ArabicReshaper.convertArabic(certificate.Event.title);
+      const participantFirstName = certificate.User.firstName;
+
+      const participantLastName = certificate.User.lastName;
+
       const participantName = ArabicReshaper.convertArabic(
         `${participantFirstName} ${participantLastName}`,
       );
       //if the start date is equal to the end date, then we will show only the start date
-      const startDate = new Date(certificate.Event.startDateTime);
-      const endDate = new Date(certificate.Event.endDateTime);
+      const startDate = certificate.Event.startDateTime;
+      const endDate = certificate.Event.endDateTime;
       let completionDate: string;
       const startDateString = startDate.toLocaleDateString('en-CA', {
         year: 'numeric',
@@ -3014,10 +3002,10 @@ export class EventService {
         month: 'numeric',
         day: 'numeric',
       });
-      if (startDate === endDate) {
+      if (startDateString == endDateString) {
         completionDate = startDateString;
       } else {
-        completionDate = `${endDateString}   إلى   ${startDateString} من`;
+        completionDate = `${endDateString} - ${startDateString}`;
       }
 
       const certifId = certificate.id;
@@ -3066,7 +3054,7 @@ export class EventService {
           arabicFont.widthOfTextAtSize(certifLabel, 10) -
           arabicFont.widthOfTextAtSize(certifId, 10) -
           12,
-        y: 74,
+        y: 75,
         size: 10,
         font: arabicFont,
         color: rgb(84 / 255, 84 / 255, 84 / 255),
@@ -3074,10 +3062,20 @@ export class EventService {
 
       // Save the modified PDF
       const pdfBytes = await pdfDoc.save();
-      fs.writeFileSync(outputPath, pdfBytes);
-
+      const certificateUrl = await uploadCertificate(pdfBytes, certifId);
+      if (!certificateUrl) {
+        throw new BadRequestException(`Certificate Couldn't be uploaded`);
+      }
+      await this.prisma.certificate.update({
+        where: {
+          id: certifId,
+        },
+        data: {
+          certificateUrl,
+        },
+      });
       console.log(`Certificate generated successfully: ${outputPath}`);
-      return outputPath;
+      return { certificateUrl };
     } catch (error) {
       console.error('Failed to generate certificate:', error);
       throw error;

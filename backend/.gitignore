@@ -4,5 +4,3 @@ node_modules
 .env*
 images
 pdfs
-pdfassets/
-pdfassets
