@@ -46,6 +46,9 @@ model User {
   ReceivedInvitations Invitation[]     @relation("InvitationReceiver")
   SentRequests        Request[]        @relation("RequestSender") // New: Requests sent by the user
   Certificate         Certificate[]
+
+  Followers     Following[] @relation("follower")
+  FollowedUsers Following[] @relation("followedUser")
 }
 
 model Event {
@@ -218,7 +221,7 @@ model Chat {
 }
 
 // -------------------------------------------------------------------------------------
-// The Following Models Is Invitation And Request Related Models
+// The Following Models Are Invitation And Request Related Models
 // -------------------------------------------------------------------------------------
 model Invitation {
   id             String           @id @default(uuid())
@@ -249,7 +252,7 @@ model Request {
 }
 
 // -------------------------------------------------------------------------------------
-// The Following Models Is Invitation And Request Related Models
+// The Following Model Is Certificate 
 // -------------------------------------------------------------------------------------
 
 model Certificate {
@@ -261,6 +264,19 @@ model Certificate {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   certificateUrl String?
+}
+
+// -------------------------------------------------------------------------------------
+// The Following Model Is Following
+// -------------------------------------------------------------------------------------
+model Following {
+  id             String   @id @default(uuid())
+  followerId     String
+  followedUserId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Follower       User     @relation("followedUser", fields: [followerId], references: [id], onDelete: Cascade)
+  FollowedUser   User     @relation("follower", fields: [followedUserId], references: [id], onDelete: Cascade)
 }
 
 // -------------------------------------------------------------------------------------

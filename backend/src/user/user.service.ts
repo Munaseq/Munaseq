@@ -256,7 +256,6 @@ export class UserService {
         },
       });
     } catch (error) {
-      console.log(error);
       throw new HttpException(
         'Invalid Information Provided',
         HttpStatus.BAD_REQUEST,
@@ -704,5 +703,184 @@ export class UserService {
       orderBy: { updatedAt: 'desc' },
     });
     return requests;
+  }
+
+  //-----------------------------------------
+  //Following
+  //-----------------------------------------
+  async getFollowing(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        _count: { select: { FollowedUsers: true } },
+        FollowedUsers: {
+          select: {
+            FollowedUser: {
+              select: {
+                id: true,
+                username: true,
+                profilePictureUrl: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    //check if the user exist
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    const followingUsers = user.FollowedUsers.map(
+      (followedUser) => followedUser.FollowedUser,
+    );
+    return {
+      numberOfFollowingUsers: user._count.FollowedUsers,
+      followingUsers,
+    };
+  }
+  async getFollowers(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        _count: { select: { Followers: true } },
+        Followers: {
+          select: {
+            Follower: {
+              select: {
+                id: true,
+                username: true,
+                profilePictureUrl: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    //check if the user exist
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    const followersUsers = user.Followers.map((follower) => follower.Follower);
+    return {
+      numberOfFollowersUsers: user._count.Followers,
+      followersUsers,
+    };
+  }
+  async followUser(userId: string, followedUserId: string) {
+    if (followedUserId === ':userId') {
+      throw new BadRequestException('Please provide a userId to follow');
+    }
+    //check if the userId and followedUserId are the same
+    if (userId === followedUserId) {
+      throw new BadRequestException(
+        'You cannot follow yourself, please choose another user',
+      );
+    }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        FollowedUsers: {
+          where: {
+            followedUserId: followedUserId,
+          },
+        },
+      },
+    });
+
+    //check if the user exist
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    const isAlreadyFollowing = user.FollowedUsers[0];
+    if (isAlreadyFollowing) {
+      throw new BadRequestException('You are already following this user');
+    }
+    //follow the user by finding the followed user and connecting the user to the followed user
+    const followedUser = await this.prisma.user.findUnique({
+      where: {
+        id: followedUserId,
+      },
+    });
+
+    if (!followedUser) {
+      throw new BadRequestException("The followed user doesn't exist ");
+    }
+    await this.prisma.user.update({
+      where: {
+        id: followedUserId,
+      },
+      data: {
+        Followers: {
+          create: {
+            followerId: userId,
+          },
+        },
+      },
+    });
+    return {
+      message: 'You are now following the specified user',
+    };
+  }
+  async unfollowUser(userId: string, userIdToUnfollow: string) {
+    if (userIdToUnfollow === ':userId') {
+      throw new BadRequestException('Please provide a userId to unfollow');
+    }
+    //check if the userId and userIdToUnfollow are the same
+    if (userId === userIdToUnfollow) {
+      throw new BadRequestException(
+        'You cannot unfollow yourself, please choose another user',
+      );
+    }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        FollowedUsers: {
+          where: {
+            followedUserId: userIdToUnfollow,
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    //check if the user exist
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    const isAlreadyFollowing = user.FollowedUsers[0];
+
+    if (!isAlreadyFollowing) {
+      throw new BadRequestException('You are already not following this user');
+    }
+    //delete the following relation between the two users
+    await this.prisma.following.delete({
+      where: {
+        id: isAlreadyFollowing.id,
+      },
+    });
+
+    return {
+      message: 'You are now not following the specified user',
+    };
   }
 }

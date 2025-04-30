@@ -256,7 +256,7 @@ export class UserController {
     );
   }
   //-----------------------------------------
-  //Request endpoints
+  //Request endpoint
   //-----------------------------------------
 
   //Get all requests
@@ -268,6 +268,55 @@ export class UserController {
   })
   getRequest(@GetCurrentUserId() userId) {
     return this.userService.getRequest(userId);
+  }
+
+  //-----------------------------------------
+  //Following  endpoints
+  //-----------------------------------------
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('following')
+  @ApiOperation({
+    summary: 'Get all users that the current user is following.',
+  })
+  getFollowing(@GetCurrentUserId() userId: string) {
+    return this.userService.getFollowing(userId);
+  }
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('followers')
+  @ApiOperation({
+    summary: 'Get all users that are following the current user.',
+  })
+  getFollowers(@GetCurrentUserId() userId: string) {
+    return this.userService.getFollowers(userId);
+  }
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('follow/:userId')
+  @ApiOperation({
+    summary: 'Follow a user by their ID.',
+  })
+  @ApiParam({ name: 'userId', description: 'ID of the user to follow.' })
+  followUser(
+    @GetCurrentUserId() userId: string,
+    @Param('userId') followedUserId: string,
+  ) {
+    return this.userService.followUser(userId, followedUserId);
+  }
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Delete('unfollow/:userId')
+  @ApiOperation({
+    summary: 'Unfollow a user by their ID.',
+  })
+  @ApiParam({ name: 'userId', description: 'ID of the user to unfollow.' })
+  unfollowUser(
+    @GetCurrentUserId() userId: string,
+    @Param('userId') userIdToUnfollow: string,
+  ) {
+    return this.userService.unfollowUser(userId, userIdToUnfollow);
   }
 
   //-----------------------------------------
