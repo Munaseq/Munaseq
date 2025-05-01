@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
-import { multerUserLogic } from 'src/utils/multer.logic';
+import { multerUserLogic } from 'src/utils/aws.uploading';
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { userSignInDto, userSignUpDto } from './dtos';
 

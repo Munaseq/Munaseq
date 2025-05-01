@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -20,12 +21,6 @@ export class UserService {
   //test it, ecpecially update ALL events' ratings that have been rated by the user, also, update the creators' ratings as well
 
   async deleteUser(id: string) {
-    // it's not necessary,since the event model has Cascade option with the delete option
-    // await this.prisma.event.deleteMany({
-    //   where: {
-    //     eventCreatorId: id,
-    //   },
-    // });
     //Step 1: find the user and the needed data
     const user = await this.prisma.user.findUnique({
       where: { id },
@@ -434,16 +429,25 @@ export class UserService {
     const invitation = await this.prisma.invitation.findUnique({
       where: {
         id: invitationId,
+        receiver_id: userId,
       },
       include: {
         Event: {
           select: {
+            gender: true,
             id: true,
             isPublic: true,
             joinedUsers: true,
+            startDateTime: true,
+            endDateTime: true,
             moderators: true,
             presenters: true,
             eventCreatorId: true,
+          },
+        },
+        Receiver: {
+          select: {
+            gender: true,
           },
         },
       },
@@ -494,6 +498,16 @@ export class UserService {
         "The invitation's sender is no longer authorized to send this invitation",
       );
     }
+    const event = invitation.Event;
+    // Check gender compatibility
+    const isGenderCompatible =
+      invitation.Receiver.gender == event.gender || event.gender == 'BOTH';
+    if (!isGenderCompatible) {
+      throw new BadRequestException(
+        "User gender does not match the event's accepted gender",
+      );
+    }
+
     if (decision) {
       if (invitation.invitationType === 'ROLE_INVITATION') {
         //check if the sender is still authorized to send the invitation
@@ -553,6 +567,7 @@ export class UserService {
           } else {
             roleToRemove = 'moderators';
           }
+
           // remove the user from the previous role
           await this.prisma.event.update({
             where: {
@@ -566,6 +581,57 @@ export class UserService {
               },
             },
           });
+        } //retreieve all events that the user has any role in it, to check if there is any conflict
+        const conflictedEvents = await this.prisma.event.findMany({
+          where: {
+            //Both of the conditions should be satisfied
+            AND: [
+              {
+                //condition the ensure that the user is the event creator or he is one of the event's users
+                OR: [
+                  { eventCreatorId: userId },
+                  { joinedUsers: { some: { id: userId } } },
+                  { presenters: { some: { id: userId } } },
+                  { moderators: { some: { id: userId } } },
+                ],
+              },
+              {
+                //condition checks that there's no conflict between the new event and the existing events that the user is part of
+                OR: [
+                  {
+                    startDateTime: {
+                      lte: event.startDateTime,
+                    },
+                    endDateTime: {
+                      gte: event.startDateTime,
+                    },
+                  },
+                  {
+                    startDateTime: {
+                      lte: event.endDateTime,
+                    },
+                    endDateTime: {
+                      gte: event.endDateTime,
+                    },
+                  },
+                  ,
+                  {
+                    startDateTime: {
+                      gte: event.startDateTime,
+                    },
+                    endDateTime: {
+                      lte: event.endDateTime,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        if (conflictedEvents.length > 0) {
+          throw new ConflictException(
+            'The event you want to join conflicts with an existing event(s)',
+          );
         }
         // connect the user to the new role
         await this.prisma.event.update({

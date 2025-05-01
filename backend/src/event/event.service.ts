@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -26,12 +27,29 @@ import * as path from 'path';
 import * as fontkit from '@pdf-lib/fontkit';
 import * as ArabicReshaper from 'arabic-reshaper';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
-import * as AWS from 'aws-sdk';
-import { uploadCertificate } from 'src/utils/multer.logic';
+import { uploadCertificate } from '../utils/aws.uploading';
+import { checkAuthorization } from '../utils/helper.functions';
 @Injectable()
 export class EventService {
   constructor(private prisma: PrismaService) {}
-  //
+
+  // ----------------------------------------------------------------------
+  //THE FOLLOWING IS Helper Functions
+  //----------------------------------------------------------------------
+
+  // IMPORTANT NOTE, IF THE USER IS DELETED AND THE TOKEN IS STILL VALID, THEN ERROR MAIGHT BE PROPAGATED, SINCE WE DON'T CHECK IF THE USER EXIST IN THE DB, WE CAN DO IT, HOWEVER, IT MAY DECREASE THE PERFORMANCE AND MAY COST US TO DO DB CALLS CHARGES
+  async checkIfUserExist(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // IF YOU SEE THIS FUNCTION MAY OVERWEHLM THE DB BY CALLING IT FOR EACH TIME THE USERID IS PROVIDED, YOU CAN DELETE IT WHICH MAY CAUSE AN UN HANDLED ERROR IN THE BACKEND FOR EDGE CASES. You can simply delete it by selecting the function signature(name+param) then press cmd + f then replace it with empty
+  }
+
   // ----------------------------------------------------------------------
   //THE FOLLOWING IS CREATING EVENT LOGIC
   //----------------------------------------------------------------------
@@ -43,6 +61,66 @@ export class EventService {
   ) {
     if (!eventCreatorId) {
       throw new BadRequestException('Event creator ID is required');
+    }
+    if (createEventDto.startDateTime > createEventDto.endDateTime) {
+      throw new BadRequestException(
+        'The start date should be smaller than the end date',
+      );
+    }
+    //check if the user exist or not
+    await this.checkIfUserExist(eventCreatorId);
+
+    //retreieve all events that the user has any role in it, to check if there is any conflict
+    const conflictedEvents = await this.prisma.event.findMany({
+      where: {
+        //Both of the conditions should be satisfied
+        AND: [
+          {
+            //condition the ensure that the user is the event creator or he is one of the event's users
+            OR: [
+              { eventCreatorId },
+              { joinedUsers: { some: { id: eventCreatorId } } },
+              { presenters: { some: { id: eventCreatorId } } },
+              { moderators: { some: { id: eventCreatorId } } },
+            ],
+          },
+          {
+            //condition checks that there's no conflict between the new event and the existing events that the user is part of
+            OR: [
+              {
+                startDateTime: {
+                  lte: createEventDto.startDateTime,
+                },
+                endDateTime: {
+                  gte: createEventDto.startDateTime,
+                },
+              },
+              {
+                startDateTime: {
+                  lte: createEventDto.endDateTime,
+                },
+                endDateTime: {
+                  gte: createEventDto.endDateTime,
+                },
+              },
+
+              {
+                startDateTime: {
+                  gte: createEventDto.startDateTime,
+                },
+                endDateTime: {
+                  lte: createEventDto.endDateTime,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    if (conflictedEvents.length > 0) {
+      throw new ConflictException(
+        'The event conflicts with an existing event(s)',
+      );
     }
     const event = await this.prisma.event.create({
       data: {
@@ -84,15 +162,20 @@ export class EventService {
   //THE FOLLOWING IS FOR UPDATING/DELETING AN EVENT LOGIC
   //--------------------------------------------------
   async updateEvent(
+    //the problem is when there's
     userId: string,
     eventId: string,
     updateEventDto: UpdateEventDto,
     imageUrl?: any,
     removeImage?: boolean,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const eventIds = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
+        startDateTime: true,
+        endDateTime: true,
         eventCreatorId: true,
         moderators: { select: { id: true } },
       },
@@ -103,17 +186,99 @@ export class EventService {
         `Event not found with the following id: ${eventId}`,
       );
     }
+
+    if (updateEventDto?.endDateTime || updateEventDto?.startDateTime) {
+      //check if the both dates are provided, if so, then check if the start date is smaller than the end date
+      if (updateEventDto?.startDateTime > updateEventDto?.endDateTime) {
+        throw new BadRequestException(
+          'The start date should be smaller than the end date',
+        );
+      }
+      //check if the start date is provided, then ensure that the start date is smaller than the existing end date
+      if (
+        updateEventDto?.startDateTime &&
+        updateEventDto.startDateTime > eventIds.endDateTime
+      ) {
+        throw new BadRequestException(
+          "The start date can't be greater than the end date",
+        );
+      }
+      if (
+        updateEventDto?.endDateTime &&
+        updateEventDto.endDateTime < eventIds.startDateTime
+      ) {
+        throw new BadRequestException(
+          "The end date can't be smaller than the start date",
+        );
+      }
+    }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to update this event',
       );
     }
+    if (updateEventDto?.endDateTime || updateEventDto?.startDateTime) {
+      //retreieve all events that the user has any role in it, to check if there is any conflict
+      const conflictedEvents = await this.prisma.event.findMany({
+        where: {
+          //Both of the conditions should be satisfied
+          id: { not: eventId }, // Exclude the current event
+          AND: [
+            {
+              //condition the ensure that the user is the event creator or he is one of the event's users
+              OR: [
+                { eventCreatorId: userId },
+                { joinedUsers: { some: { id: userId } } },
+                { presenters: { some: { id: userId } } },
+                { moderators: { some: { id: userId } } },
+              ],
+            },
+            {
+              //condition checks that there's no conflict between the new event and the existing events that the user is part of
+              OR: [
+                {
+                  startDateTime: {
+                    lte: updateEventDto.startDateTime,
+                  },
+                  endDateTime: {
+                    gte: updateEventDto.startDateTime,
+                  },
+                },
+                {
+                  startDateTime: {
+                    lte: updateEventDto.endDateTime,
+                  },
+                  endDateTime: {
+                    gte: updateEventDto.endDateTime,
+                  },
+                },
+                {
+                  startDateTime: {
+                    gte: updateEventDto.startDateTime,
+                  },
+                  endDateTime: {
+                    lte: updateEventDto.endDateTime,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      });
 
+      if (conflictedEvents.length > 0) {
+        throw new ConflictException(
+          'The event conflicts with an existing event(s)',
+        );
+      }
+    }
     if (imageUrl || removeImage) {
       return this.prisma.event.update({
         where: { id: eventId },
@@ -143,6 +308,9 @@ export class EventService {
   }
 
   async delete(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
@@ -250,12 +418,18 @@ export class EventService {
       ...(highestRated && { orderBy: { rating: 'desc' } }),
     });
   }
-  findAllCurrentUserEvents(
+  async findAllCurrentUserEvents(
     eventCreatorId: string,
     title?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
   ) {
+    if (!eventCreatorId) {
+      throw new BadRequestException('Event creator ID is required');
+    }
+    //check if the user exist or not
+    await this.checkIfUserExist(eventCreatorId);
+
     const skipedRecords = (pageNumber - 1) * pageSize;
     if (title) {
       return this.prisma.event.findMany({
@@ -335,12 +509,15 @@ export class EventService {
     }
   }
   //Returns the joined events for certain user
-  findJoinedEvents(
-    userId,
+  async findJoinedEvents(
+    userId: string,
     title?: string, //
     pageNumber: number = 1,
     pageSize: number = 5,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+
     const skipedRecords = (pageNumber - 1) * pageSize;
     if (title) {
       return this.prisma.event.findMany({
@@ -526,6 +703,9 @@ export class EventService {
   //THE FOLLOWING IS FOR SHOWING/ADDING/DELETING MATERIAL LOGIC
   //--------------------------------------------------
   async getMaterials(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+
     //the following logic is to ensure that the material will not be shown  unless the user is authorized to do that
 
     //retreive eventCreator, moderators, and presenters ids
@@ -545,11 +725,13 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId) ||
-      eventIds.joinedUsers.some((joinedUsers) => joinedUsers.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+      eventIds.presenters,
+      eventIds.joinedUsers,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -577,6 +759,9 @@ export class EventService {
     userId: string,
     materials: { materialUrl: string }[],
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+
     //the following logic is to ensure that the material will not be added to the event unless the user is authorized to do that
 
     //retreive eventCreator, moderators, and presenters ids
@@ -592,10 +777,12 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+      eventIds.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -626,7 +813,9 @@ export class EventService {
     });
   }
 
-  async deleteMaterial(userId, materialId) {
+  async deleteMaterial(userId: string, materialId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //the following logic is to ensure that the material will not be deleted from an event unless the user is authorized to do that
 
     //retreive eventCreator, moderators, and presenters ids
@@ -650,10 +839,12 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+      eventIds.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -688,6 +879,9 @@ export class EventService {
   //--------------------------------------------------
 
   async getQuizzes(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+
     //the following logic is to ensure that the ass will not be shown  unless the user is authorized to do that
 
     //retreive eventCreator, moderators, and presenters ids
@@ -711,10 +905,12 @@ export class EventService {
       (joinedUser) => joinedUser.id === userId,
     );
     const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId) ||
-      isAttendee;
+      checkAuthorization(
+        userId,
+        eventIds.eventCreatorId,
+        eventIds.moderators,
+        eventIds.presenters,
+      ) || isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -789,6 +985,8 @@ export class EventService {
     };
   }
   async showQuiz(userId: string, quizId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const event = await this.prisma.event.findFirst({
       where: {
         Quizzes: {
@@ -897,6 +1095,8 @@ export class EventService {
   }
 
   async addQuizToEvent(userId: string, eventId: string, body: CreateQuizDto) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //retreive eventCreator, moderators, and presenters ids
     const eventIds = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -911,10 +1111,12 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+      eventIds.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -970,6 +1172,8 @@ export class EventService {
   }
 
   async updateQuiz(userId: string, quizId: string, body: UpdateQuizDto) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //retreive eventCreator, moderators, ,presenters, and event ids, also retrieve the ids of the quiz's questions
     const event = await this.prisma.event.findFirst({
       //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
@@ -998,10 +1202,12 @@ export class EventService {
       throw new NotFoundException('quiz or event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      event.eventCreatorId === userId ||
-      event.presenters.some((presenter) => presenter.id === userId) ||
-      event.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1136,7 +1342,8 @@ export class EventService {
     //-----------------------------------------------------------------------
     // IMPORTANT THIS METHOD IS INTENDED TO SAVE QUIZ ANSWERS AFTER STARTING THE QUIZ IN ORDER TO ENSURE THAT THE USER CAN'T SAVE/SUBMIT THE QUIZ UNLESS HE STARTED IT , BUT, MAHMOUD SAID THAT WE WILL NOT DO THE BEST PRACTICE, RATHER WE WILL DO THE EASIER WAY DUE TO TIME CONSTRAINTS
     //-----------------------------------------------------------------------
-
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     // Check if answers is an array
     if (!Array.isArray(answers)) {
       throw new BadRequestException('Answers must be an array');
@@ -1242,6 +1449,8 @@ export class EventService {
     eventId: string,
     quizId: string,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     // Step 1: Check if the user is authorized to view the results (event creator, presenter, or moderator)
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -1335,6 +1544,8 @@ export class EventService {
   }
 
   async deleteQuiz(userId: string, quizId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     // Step 1: Retrieve eventCreator, moderators, presenters, and event IDs
     const event = await this.prisma.event.findFirst({
       where: {
@@ -1355,10 +1566,12 @@ export class EventService {
       throw new NotFoundException('quiz not found');
     }
     // Step 2: Check if the user is authorized to delete the quiz
-    const isAuthorized =
-      event.eventCreatorId === userId ||
-      event.presenters.some((presenter) => presenter.id === userId) ||
-      event.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1381,6 +1594,8 @@ export class EventService {
   //--------------------------------------------------
 
   async getAssignments(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //the following logic is to ensure that the ass will not be shown  unless the user is authorized to do that
 
     //retreive eventCreator, moderators, and presenters ids
@@ -1404,10 +1619,12 @@ export class EventService {
       (joinedUser) => joinedUser.id === userId,
     );
     const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId) ||
-      isAttendee;
+      checkAuthorization(
+        userId,
+        eventIds.eventCreatorId,
+        eventIds.moderators,
+        eventIds.presenters,
+      ) || isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1481,6 +1698,8 @@ export class EventService {
     };
   }
   async addAssignment(eventId: string, userId: string, body: CreateAssignment) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //retreive eventCreator, moderators, and presenters ids
     const eventIds = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -1495,10 +1714,12 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+      eventIds.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1554,6 +1775,8 @@ export class EventService {
 
   //Show the assignment and the saved answers if any
   async showAssignment(userId: string, assignmentId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const event = await this.prisma.event.findFirst({
       where: {
         Assignments: {
@@ -1606,10 +1829,12 @@ export class EventService {
       (joinedUsers) => joinedUsers.id === userId,
     );
     const isAuthorized =
-      event.eventCreatorId === userId ||
-      event.presenters.some((presenter) => presenter.id === userId) ||
-      event.moderators.some((moderator) => moderator.id === userId) ||
-      isAttendee;
+      checkAuthorization(
+        userId,
+        event.eventCreatorId,
+        event.moderators,
+        event.presenters,
+      ) || isAttendee;
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1669,6 +1894,8 @@ export class EventService {
     answers: Answer[],
     typeOfSubmission: TypeOfSubmisson,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //retreive joinedUsers and the assignment allowed period as well as the taken assignment by the user
     const event = await this.prisma.event.findFirst({
       where: {
@@ -1751,6 +1978,8 @@ export class EventService {
     userId: string,
     body: UpdateAssignmentDTO,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //retreive eventCreator, moderators, ,presenters, and event ids, also retrieve the ids of the assignment's questions
     const event = await this.prisma.event.findFirst({
       //findUnique requires a direct unique attribute for event model, in this case the unique attr. isn't direct
@@ -1779,10 +2008,12 @@ export class EventService {
       throw new NotFoundException('assignment or event not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      event.eventCreatorId === userId ||
-      event.presenters.some((presenter) => presenter.id === userId) ||
-      event.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1848,6 +2079,8 @@ export class EventService {
     return updatedAssignment ?? []; //to remove the unnecessary structure from the response
   }
   async deleteAssignment(assignmentId: string, userId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //the following logic is to ensure that the assignment will not be deleted unless the user is authorized to do that
 
     //retreive eventCreator, moderators, ,presenters, and event ids
@@ -1872,10 +2105,12 @@ export class EventService {
       throw new NotFoundException('assignment not found');
     }
     // Check if the userId matches any of the roles
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+      eventIds.presenters,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
@@ -1909,6 +2144,8 @@ export class EventService {
   //THE FOLLOWING IS FOR JOINNING/LEAVING AN EVENT LOGIC
   //--------------------------------------------------
   async joinEvent(userId: string, joinEventDto: JoinEventDto) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const { eventId } = joinEventDto;
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -1924,10 +2161,13 @@ export class EventService {
     }
 
     //To ensure that the user cannot join if he creator, moderator, or presenter of the event
-    const isAssigned =
-      event.eventCreatorId === userId ||
-      event.presenters.some((presenter) => presenter.id === userId) ||
-      event.moderators.some((moderator) => moderator.id === userId);
+    const isAssigned = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+    );
+
     if (isAssigned) {
       throw new BadRequestException(
         'User is assigned as eventCreator, moderator, or presenter',
@@ -1939,10 +2179,6 @@ export class EventService {
       where: { id: userId },
       select: { gender: true },
     });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
 
     // Check gender compatibility
     const isGenderCompatible =
@@ -1965,11 +2201,58 @@ export class EventService {
         'Event is private, you cannot join it directly, instead you should request to join it',
       );
     }
-    if (event.seatCapacity !== null && event.seatCapacity > 0) {
-      const joinedCount = event.joinedUsers.length;
-      if (joinedCount >= event.seatCapacity) {
-        throw new BadRequestException('Event has reached its seat capacity');
-      }
+
+    //retreieve all events that the user has any role in it, to check if there is any conflict
+    const conflictedEvents = await this.prisma.event.findMany({
+      where: {
+        //Both of the conditions should be satisfied
+        AND: [
+          {
+            //condition the ensure that the user is the event creator or he is one of the event's users
+            OR: [
+              { eventCreatorId: userId },
+              { joinedUsers: { some: { id: userId } } },
+              { presenters: { some: { id: userId } } },
+              { moderators: { some: { id: userId } } },
+            ],
+          },
+          {
+            //condition checks that there's no conflict between the new event and the existing events that the user is part of
+            OR: [
+              {
+                startDateTime: {
+                  lte: event.startDateTime,
+                },
+                endDateTime: {
+                  gte: event.startDateTime,
+                },
+              },
+              {
+                startDateTime: {
+                  lte: event.endDateTime,
+                },
+                endDateTime: {
+                  gte: event.endDateTime,
+                },
+              },
+
+              {
+                startDateTime: {
+                  gte: event.startDateTime,
+                },
+                endDateTime: {
+                  lte: event.endDateTime,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    if (conflictedEvents.length > 0) {
+      throw new ConflictException(
+        'The event conflicts with an existing event(s)',
+      );
     }
 
     //Add the user to joined users as well as the EventChat
@@ -1985,6 +2268,8 @@ export class EventService {
   }
 
   async leaveEvent(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       include: { joinedUsers: true, moderators: true, presenters: true },
@@ -2024,6 +2309,8 @@ export class EventService {
   //THE FOLLOWING IS FOR RATING AN EVENT LOGIC
   //--------------------------------------------------
   async rateEvent(userId: string, eventId: string, rating: number) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //the following logic is to ensure that the rating will not be add to event unless that the user is authorized to do that
 
     //retreive eventCreator, moderators, ,presenters, and joinedUsers for the given eventId
@@ -2219,12 +2506,17 @@ export class EventService {
     assignedUserId: string,
     role: string,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const eventIds = await this.prisma.event.findUnique({
       where: {
         id: eventId,
       },
       select: {
         eventCreatorId: true,
+        gender: true,
+        startDateTime: true,
+        endDateTime: true,
         moderators: {
           select: {
             id: true,
@@ -2237,13 +2529,81 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
 
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.moderators.every((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to add materials to this event',
+      );
+    }
+    // Fetch the user to get their gender
+    const user = await this.prisma.user.findUnique({
+      where: { id: assignedUserId },
+      select: { gender: true },
+    });
+
+    // Check gender compatibility
+    const isGenderCompatible =
+      user.gender == eventIds.gender || eventIds.gender == 'BOTH';
+    if (!isGenderCompatible) {
+      throw new BadRequestException(
+        "User gender does not match the event's accepted gender",
+      );
+    }
+    //retreieve all events that the user has any role in it, to check if there is any conflict
+    const conflictedEvents = await this.prisma.event.findMany({
+      where: {
+        //Both of the conditions should be satisfied
+        AND: [
+          {
+            //condition the ensure that the user is the event creator or he is one of the event's users
+            OR: [
+              { eventCreatorId: assignedUserId },
+              { joinedUsers: { some: { id: assignedUserId } } },
+              { presenters: { some: { id: assignedUserId } } },
+              { moderators: { some: { id: assignedUserId } } },
+            ],
+          },
+          {
+            //condition checks that there's no conflict between the new event and the existing events that the user is part of
+            OR: [
+              {
+                startDateTime: {
+                  lte: eventIds.startDateTime,
+                },
+                endDateTime: {
+                  gte: eventIds.startDateTime,
+                },
+              },
+              {
+                startDateTime: {
+                  lte: eventIds.endDateTime,
+                },
+                endDateTime: {
+                  gte: eventIds.endDateTime,
+                },
+              },
+
+              {
+                startDateTime: {
+                  gte: eventIds.startDateTime,
+                },
+                endDateTime: {
+                  lte: eventIds.endDateTime,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    if (conflictedEvents.length > 0) {
+      throw new ConflictException(
+        'The event conflicts with an existing event(s)',
       );
     }
     return this.prisma.event.update({
@@ -2279,6 +2639,8 @@ export class EventService {
     assignedUserId: string,
     role: string,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const eventIds = await this.prisma.event.findUnique({
       where: {
         id: eventId,
@@ -2298,18 +2660,22 @@ export class EventService {
       throw new NotFoundException('Event not found');
     }
 
-    const isAuthorized =
-      eventIds.eventCreatorId === userId ||
-      eventIds.moderators.every((moderator) => moderator.id === userId);
+    const isAuthorized = checkAuthorization(
+      userId,
+      eventIds.eventCreatorId,
+      eventIds.moderators,
+    );
 
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to add materials to this event',
       );
     }
-    const isAssigned =
-      eventIds.presenters.some((presenter) => presenter.id === userId) ||
-      eventIds.moderators.some((moderator) => moderator.id === userId);
+    const isAssigned = checkAuthorization(
+      userId,
+      eventIds.presenters,
+      eventIds.moderators,
+    );
     if (!isAssigned) {
       throw new BadRequestException("The user isn't assigned");
     }
@@ -2349,6 +2715,8 @@ export class EventService {
     invitationType: InvitationType,
     roleType?: RoleType,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     // Check if the user is authorized to send invitations
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
@@ -2385,6 +2753,7 @@ export class EventService {
         'You do not have permission to send invitations for this event because you are not related to it',
       );
     }
+
     //ensures that the there's no existing invitation with the same details in pending status
     const previousInvitation = await this.prisma.invitation.findFirst({
       where: {
@@ -2402,19 +2771,30 @@ export class EventService {
     //check if the receiver is existing user or not
     const receiver = await this.prisma.user.findUnique({
       where: { id: receiverId },
-      select: { id: true },
+      select: { id: true, gender: true },
     });
     if (!receiver) {
       throw new NotFoundException('Receiver not found');
+    }
+    // Check gender compatibility
+    const isGenderCompatible =
+      receiver.gender == event.gender || event.gender == 'BOTH';
+    if (!isGenderCompatible) {
+      throw new BadRequestException(
+        "Receiver gender does not match the event's accepted gender",
+      );
     }
     //Check if the invitation is for assigning a role
     if (invitationType === 'ROLE_INVITATION') {
       if (!roleType) {
         throw new BadRequestException('Role type is required');
       }
-      const isAuthoiorized =
-        event.eventCreatorId === userId ||
-        event.moderators.some((moderator) => moderator.id === userId);
+      const isAuthoiorized = checkAuthorization(
+        userId,
+        event.eventCreatorId,
+        event.moderators,
+      );
+
       if (!isAuthoiorized) {
         throw new ForbiddenException(
           'You do not have permission to assign this role',
@@ -2448,10 +2828,13 @@ export class EventService {
       //Innvitation for event
       //check if the event is private, if so, then only the assinged users can send invites
       if (!event.isPublic) {
-        const isAuthorized =
-          event.eventCreatorId === userId ||
-          event.presenters.some((presenter) => presenter.id === userId) ||
-          event.moderators.some((moderator) => moderator.id === userId);
+        const isAuthorized = checkAuthorization(
+          userId,
+          event.eventCreatorId,
+          event.moderators,
+          event.presenters,
+        );
+
         if (!isAuthorized) {
           throw new ForbiddenException(
             'You do not have permission to send invitations for this event',
@@ -2459,11 +2842,14 @@ export class EventService {
         }
       }
       // Check if the receiver is already a participant
-      const isAlreadyParticipant =
-        event.eventCreatorId === receiverId ||
-        event.presenters.some((presenter) => presenter.id === receiverId) ||
-        event.moderators.some((moderator) => moderator.id === receiverId) ||
-        event.joinedUsers.some((joinedUser) => joinedUser.id === receiverId);
+      const isAlreadyParticipant = checkAuthorization(
+        receiverId,
+        event.eventCreatorId,
+        event.moderators,
+        event.presenters,
+        event.joinedUsers,
+      );
+
       if (isAlreadyParticipant) {
         throw new BadRequestException('User is already a participant');
       }
@@ -2488,10 +2874,13 @@ export class EventService {
     requestType: RequestType,
     roleType?: RoleType,
   ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
+        gender: true,
         joinedEvents: { select: { id: true } },
         createdEvents: { select: { id: true } },
         moderatedEvents: { select: { id: true } },
@@ -2502,6 +2891,7 @@ export class EventService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
     //check if the user is already joined the event
     const isAlreadyJoined = user.joinedEvents.some(
       (joinedEvent) => joinedEvent.id === eventId,
@@ -2520,7 +2910,10 @@ export class EventService {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
+        gender: true,
         joinedUsers: { select: { id: true } },
+        startDateTime: true,
+        endDateTime: true,
         eventCreatorId: true,
         presenters: { select: { id: true } },
         moderators: { select: { id: true } },
@@ -2548,6 +2941,15 @@ export class EventService {
     if (isEventCreator) {
       throw new BadRequestException('User is already an event creator');
     }
+    // Check gender compatibility
+    const isGenderCompatible =
+      user.gender == event.gender || event.gender == 'BOTH';
+    if (!isGenderCompatible) {
+      throw new BadRequestException(
+        "User gender does not match the event's accepted gender",
+      );
+    }
+
     if (requestType === 'EVENT_REQUEST') {
       //check if the user is already joined
       if (isAlreadyJoined) {
@@ -2557,6 +2959,58 @@ export class EventService {
       if (isAlreadyModerator || isAlreadyPresenter) {
         throw new BadRequestException(
           'User is already a moderator or presenter',
+        );
+      }
+      //retreieve all events that the user has any role in it, to check if there is any conflict
+      const conflictedEvents = await this.prisma.event.findMany({
+        where: {
+          //Both of the conditions should be satisfied
+          AND: [
+            {
+              //condition the ensure that the user is the event creator or he is one of the event's users
+              OR: [
+                { eventCreatorId: userId },
+                { joinedUsers: { some: { id: userId } } },
+                { presenters: { some: { id: userId } } },
+                { moderators: { some: { id: userId } } },
+              ],
+            },
+            {
+              //condition checks that there's no conflict between the new event and the existing events that the user is part of
+              OR: [
+                {
+                  startDateTime: {
+                    lte: event.startDateTime,
+                  },
+                  endDateTime: {
+                    gte: event.startDateTime,
+                  },
+                },
+                {
+                  startDateTime: {
+                    lte: event.endDateTime,
+                  },
+                  endDateTime: {
+                    gte: event.endDateTime,
+                  },
+                },
+                ,
+                {
+                  startDateTime: {
+                    gte: event.startDateTime,
+                  },
+                  endDateTime: {
+                    lte: event.endDateTime,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      });
+      if (conflictedEvents.length > 0) {
+        throw new ConflictException(
+          'The event you want to join conflicts with an existing event(s)',
         );
       }
 
@@ -2584,6 +3038,58 @@ export class EventService {
           `User is already assigned to ${roleType} role`,
         );
       }
+      //retreieve all events that the user has any role in it, to check if there is any conflict
+      const conflictedEvents = await this.prisma.event.findMany({
+        where: {
+          //Both of the conditions should be satisfied
+          AND: [
+            {
+              //condition the ensure that the user is the event creator or he is one of the event's users
+              OR: [
+                { eventCreatorId: userId },
+                { joinedUsers: { some: { id: userId } } },
+                { presenters: { some: { id: userId } } },
+                { moderators: { some: { id: userId } } },
+              ],
+            },
+            {
+              //condition checks that there's no conflict between the new event and the existing events that the user is part of
+              OR: [
+                {
+                  startDateTime: {
+                    lte: event.startDateTime,
+                  },
+                  endDateTime: {
+                    gte: event.startDateTime,
+                  },
+                },
+                {
+                  startDateTime: {
+                    lte: event.endDateTime,
+                  },
+                  endDateTime: {
+                    gte: event.endDateTime,
+                  },
+                },
+                ,
+                {
+                  startDateTime: {
+                    gte: event.startDateTime,
+                  },
+                  endDateTime: {
+                    lte: event.endDateTime,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      });
+      if (conflictedEvents.length > 0) {
+        throw new ConflictException(
+          'The event you want to join conflicts with an existing event(s)',
+        );
+      }
       return await this.prisma.request.create({
         data: {
           sender_id: userId,
@@ -2596,6 +3102,8 @@ export class EventService {
   }
   //see the logic of updating status once request is made to invitation's endpoint
   async getRequests(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
@@ -2634,9 +3142,8 @@ export class EventService {
       (presenter) => presenter.id === userId,
     );
     const isAuthorized =
-      event.eventCreatorId === userId ||
-      isPresenter ||
-      event.moderators.some((moderator) => moderator.id === userId);
+      checkAuthorization(userId, event.eventCreatorId, event.moderators) ||
+      isPresenter;
     if (!isAuthorized) {
       throw new BadRequestException(
         'User is not authorized to view requests for this event',
@@ -2654,6 +3161,8 @@ export class EventService {
     return requests;
   }
   async respondToRequest(userId: string, requestId: string, decision: boolean) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     // Check if the user is authorized to respond to the request
     const request = await this.prisma.request.findUnique({
       where: { id: requestId },
@@ -2662,11 +3171,15 @@ export class EventService {
         Sender: {
           select: {
             id: true,
+            gender: true,
           },
         },
         Event: {
           select: {
             isPublic: true,
+            startDateTime: true,
+            endDateTime: true,
+            gender: true,
             eventCreatorId: true,
             moderators: { select: { id: true } },
             presenters: { select: { id: true } },
@@ -2684,7 +3197,15 @@ export class EventService {
     if (request.status !== 'PENDING') {
       throw new BadRequestException('This request has already been responded');
     }
-
+    // Check gender compatibility
+    const isGenderCompatible =
+      request.Sender.gender == request.Event.gender ||
+      request.Event.gender == 'BOTH';
+    if (!isGenderCompatible) {
+      throw new BadRequestException(
+        "User gender does not match the event's accepted gender",
+      );
+    }
     // Check if the sender of the request is the same as the userId  -> it's helpful when the user is moderator and you don't want the moderator to change his role by requesting and responding to his request. I COMMENTTED IT ,LATER WE'LL DISCUSS IT
     // if (request.Sender.id !== userId) {
     //   throw new BadRequestException(
@@ -2705,14 +3226,18 @@ export class EventService {
     if (decision) {
       if (request.requestType === 'ROLE_REQUEST') {
         // Check if the userId matches any of the roles
-        const isAuthorized =
-          request.Event.eventCreatorId === userId ||
-          request.Event.moderators.some((moderator) => moderator.id === userId);
+        const isAuthorized = checkAuthorization(
+          userId,
+          request.Event.eventCreatorId,
+          request.Event.moderators,
+        );
+
         if (!isAuthorized) {
           throw new BadRequestException(
             'User is not authorized to respond to this request',
           );
         }
+
         const role =
           request.roleType === 'MODERATOR' ? 'moderators' : 'presenters';
         //check if the user is already in the desired role
@@ -2762,6 +3287,57 @@ export class EventService {
             },
           });
         }
+        const conflictedEvents = await this.prisma.event.findMany({
+          where: {
+            //Both of the conditions should be satisfied
+            AND: [
+              {
+                //condition the ensure that the user is the event creator or he is one of the event's users
+                OR: [
+                  { eventCreatorId: request.sender_id },
+                  { joinedUsers: { some: { id: request.sender_id } } },
+                  { presenters: { some: { id: request.sender_id } } },
+                  { moderators: { some: { id: request.sender_id } } },
+                ],
+              },
+              {
+                //condition checks that there's no conflict between the new event and the existing events that the user is part of
+                OR: [
+                  {
+                    startDateTime: {
+                      lte: request.Event.startDateTime,
+                    },
+                    endDateTime: {
+                      gte: request.Event.startDateTime,
+                    },
+                  },
+                  {
+                    startDateTime: {
+                      lte: request.Event.endDateTime,
+                    },
+                    endDateTime: {
+                      gte: request.Event.endDateTime,
+                    },
+                  },
+                  ,
+                  {
+                    startDateTime: {
+                      gte: request.Event.startDateTime,
+                    },
+                    endDateTime: {
+                      lte: request.Event.endDateTime,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        if (conflictedEvents.length > 0) {
+          throw new ConflictException(
+            'The event the sender wants to join conflicts with an existing event(s) he currently has a role in it',
+          );
+        }
         // connect the user to the new role
         await this.prisma.event.update({
           where: {
@@ -2789,17 +3365,19 @@ export class EventService {
       } else if (request.requestType === 'EVENT_REQUEST') {
         //if the event is private then, only the authorized roles can response
         if (!request.Event.isPublic) {
-          const isAuthorized =
-            request.Event.eventCreatorId === userId ||
-            request.Event.moderators.some(
-              (moderator) => moderator.id === userId,
-            );
+          const isAuthorized = checkAuthorization(
+            userId,
+            request.Event.eventCreatorId,
+            request.Event.moderators,
+          );
+
           if (!isAuthorized) {
             throw new BadRequestException(
               "You're not authorized to respond since the event is private and you aren't a moderator or eventCreator",
             );
           }
         }
+
         //If the request is to joinning the event and the sender is already joined the event despite the role he assigned to, the system will mark the request as Canceled and will throw an Error
         if (
           isSenderIsModerator ||
@@ -2814,6 +3392,57 @@ export class EventService {
           });
           throw new BadRequestException(
             'The sender is Already joined or play a role the event ',
+          );
+        }
+        const conflictedEvents = await this.prisma.event.findMany({
+          where: {
+            //Both of the conditions should be satisfied
+            AND: [
+              {
+                //condition the ensure that the user is the event creator or he is one of the event's users
+                OR: [
+                  { eventCreatorId: request.sender_id },
+                  { joinedUsers: { some: { id: request.sender_id } } },
+                  { presenters: { some: { id: request.sender_id } } },
+                  { moderators: { some: { id: request.sender_id } } },
+                ],
+              },
+              {
+                //condition checks that there's no conflict between the new event and the existing events that the user is part of
+                OR: [
+                  {
+                    startDateTime: {
+                      lte: request.Event.startDateTime,
+                    },
+                    endDateTime: {
+                      gte: request.Event.startDateTime,
+                    },
+                  },
+                  {
+                    startDateTime: {
+                      lte: request.Event.endDateTime,
+                    },
+                    endDateTime: {
+                      gte: request.Event.endDateTime,
+                    },
+                  },
+                  ,
+                  {
+                    startDateTime: {
+                      gte: request.Event.startDateTime,
+                    },
+                    endDateTime: {
+                      lte: request.Event.endDateTime,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        if (conflictedEvents.length > 0) {
+          throw new ConflictException(
+            'The event the sender wants to join conflicts with an existing event(s) he currently has a role in it',
           );
         }
         await this.prisma.event.update({
@@ -2903,6 +3532,8 @@ export class EventService {
   // Generate Arabic PDF
 
   async getCertificate(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
     //check if the user is authorized to get the certificate
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },

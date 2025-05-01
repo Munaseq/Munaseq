@@ -46,7 +46,7 @@ import {
   RespondRequestDto,
 } from './dtos';
 
-import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
+import { multerEventLogic, multerMaterialtLogic } from '../utils/aws.uploading';
 import { Gender } from '@prisma/client';
 
 @ApiTags('event')

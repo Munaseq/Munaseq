@@ -31,7 +31,7 @@ import {
   SeacrhUser,
   userChangePasswordDto,
 } from './dtos';
-import { multerUserLogic } from 'src/utils/multer.logic';
+import { multerUserLogic } from '../utils/aws.uploading';
 
 @ApiTags('user')
 @Controller('user')
