@@ -176,6 +176,8 @@ export class EventService {
       select: {
         startDateTime: true,
         endDateTime: true,
+        seatCapacity: true,
+        _count: { select: { joinedUsers: true } },
         eventCreatorId: true,
         moderators: { select: { id: true } },
       },
@@ -224,6 +226,15 @@ export class EventService {
         'User is not authorized to update this event',
       );
     }
+    //check if the seat capacity is provided, then ensure that the seat capacity is greater than the number of joined users
+    if (updateEventDto?.seatCapacity) {
+      if (updateEventDto.seatCapacity < eventIds._count.joinedUsers) {
+        throw new BadRequestException(
+          'The seat capacity should be greater than the number of joined users',
+        );
+      }
+    }
+
     if (updateEventDto?.endDateTime || updateEventDto?.startDateTime) {
       //retreieve all events that the user has any role in it, to check if there is any conflict
       const conflictedEvents = await this.prisma.event.findMany({
@@ -279,6 +290,7 @@ export class EventService {
         );
       }
     }
+
     if (imageUrl || removeImage) {
       return this.prisma.event.update({
         where: { id: eventId },
@@ -2201,6 +2213,13 @@ export class EventService {
         'Event is private, you cannot join it directly, instead you should request to join it',
       );
     }
+    //Check if the event has a seat capacity and if the user can join it
+    if (event.seatCapacity !== null && event.seatCapacity > 0) {
+      const joinedCount = event.joinedUsers.length;
+      if (joinedCount >= event.seatCapacity) {
+        throw new BadRequestException('Event has reached its seat capacity');
+      }
+    }
 
     //retreieve all events that the user has any role in it, to check if there is any conflict
     const conflictedEvents = await this.prisma.event.findMany({
@@ -2814,6 +2833,7 @@ export class EventService {
           `User is already assigned to ${roleType} role`,
         );
       }
+
       // Create the invitation
       return await this.prisma.invitation.create({
         data: {
@@ -2853,7 +2873,13 @@ export class EventService {
       if (isAlreadyParticipant) {
         throw new BadRequestException('User is already a participant');
       }
-
+      //check if the capacity is reached
+      if (event.seatCapacity !== null && event.seatCapacity > 0) {
+        const joinedCount = event.joinedUsers.length;
+        if (joinedCount >= event.seatCapacity) {
+          throw new BadRequestException('Event has reached its seat capacity');
+        }
+      }
       // Create the invitation
       return await this.prisma.invitation.create({
         data: {
@@ -2914,6 +2940,8 @@ export class EventService {
         joinedUsers: { select: { id: true } },
         startDateTime: true,
         endDateTime: true,
+        seatCapacity: true,
+
         eventCreatorId: true,
         presenters: { select: { id: true } },
         moderators: { select: { id: true } },
@@ -3013,7 +3041,13 @@ export class EventService {
           'The event you want to join conflicts with an existing event(s)',
         );
       }
-
+      //check if the capacity is reached
+      if (event.seatCapacity !== null && event.seatCapacity > 0) {
+        const joinedCount = event.joinedUsers.length;
+        if (joinedCount >= event.seatCapacity) {
+          throw new BadRequestException('Event has reached its seat capacity');
+        }
+      }
       //create the request
       return await this.prisma.request.create({
         data: {
@@ -3179,6 +3213,7 @@ export class EventService {
             isPublic: true,
             startDateTime: true,
             endDateTime: true,
+            seatCapacity: true,
             gender: true,
             eventCreatorId: true,
             moderators: { select: { id: true } },
@@ -3393,6 +3428,15 @@ export class EventService {
           throw new BadRequestException(
             'The sender is Already joined or play a role the event ',
           );
+        }
+        //check if the capacity is reached
+        if (request.Event.seatCapacity !== null && request.Event.seatCapacity > 0) {
+          const joinedCount = request.Event.joinedUsers.length;
+          if (joinedCount >= request.Event.seatCapacity) {
+            throw new BadRequestException(
+              'Event has reached its seat capacity',
+            );
+          }
         }
         const conflictedEvents = await this.prisma.event.findMany({
           where: {

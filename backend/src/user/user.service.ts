@@ -438,6 +438,7 @@ export class UserService {
             id: true,
             isPublic: true,
             joinedUsers: true,
+            seatCapacity: true,
             startDateTime: true,
             endDateTime: true,
             moderators: true,
@@ -697,7 +698,67 @@ export class UserService {
             `You are already in the event, and the invitation has been canceled`,
           );
         }
-
+        //check if the capacity is reached
+        if (event.seatCapacity !== null && event.seatCapacity > 0) {
+          const joinedCount = event.joinedUsers.length;
+          if (joinedCount >= event.seatCapacity) {
+            throw new BadRequestException(
+              'Event has reached its seat capacity',
+            );
+          }
+        }
+        //retreieve all events that the user has any role in it, to check if there is any conflict
+        const conflictedEvents = await this.prisma.event.findMany({
+          where: {
+            //Both of the conditions should be satisfied
+            AND: [
+              {
+                //condition the ensure that the user is the event creator or he is one of the event's users
+                OR: [
+                  { eventCreatorId: userId },
+                  { joinedUsers: { some: { id: userId } } },
+                  { presenters: { some: { id: userId } } },
+                  { moderators: { some: { id: userId } } },
+                ],
+              },
+              {
+                //condition checks that there's no conflict between the new event and the existing events that the user is part of
+                OR: [
+                  {
+                    startDateTime: {
+                      lte: event.startDateTime,
+                    },
+                    endDateTime: {
+                      gte: event.startDateTime,
+                    },
+                  },
+                  {
+                    startDateTime: {
+                      lte: event.endDateTime,
+                    },
+                    endDateTime: {
+                      gte: event.endDateTime,
+                    },
+                  },
+                  ,
+                  {
+                    startDateTime: {
+                      gte: event.startDateTime,
+                    },
+                    endDateTime: {
+                      lte: event.endDateTime,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        if (conflictedEvents.length > 0) {
+          throw new ConflictException(
+            'The event you want to join conflicts with an existing event(s)',
+          );
+        }
         await this.prisma.event.update({
           where: {
             id: invitation.event_id,
