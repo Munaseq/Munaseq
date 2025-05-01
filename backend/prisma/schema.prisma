@@ -47,8 +47,9 @@ model User {
   SentRequests        Request[]        @relation("RequestSender") // New: Requests sent by the user
   Certificate         Certificate[]
 
-  Followers     Following[] @relation("follower")
-  FollowedUsers Following[] @relation("followedUser")
+  Followers     Following[]   @relation("follower")
+  FollowedUsers Following[]   @relation("followedUser")
+  Announcments  Announcment[]
 }
 
 model Event {
@@ -79,10 +80,11 @@ model Event {
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
 
-  EventChat   Chat?         @relation("EventChat") // one to one relationship
-  Invitations Invitation[]  @relation("InvitationEvent") // one to many relationship
-  Requests    Request[]     @relation("RequestedEvent") // one to many relationship
-  Certificate Certificate[]
+  EventChat    Chat?         @relation("EventChat") // one to one relationship
+  Invitations  Invitation[]  @relation("InvitationEvent") // one to many relationship
+  Requests     Request[]     @relation("RequestedEvent") // one to many relationship
+  Certificate  Certificate[]
+  Announcments Announcment[]
 }
 
 model QuizQuestion {
@@ -277,6 +279,19 @@ model Following {
   updatedAt      DateTime @updatedAt
   Follower       User     @relation("followedUser", fields: [followerId], references: [id], onDelete: Cascade)
   FollowedUser   User     @relation("follower", fields: [followedUserId], references: [id], onDelete: Cascade)
+}
+
+//-----------------------------------------
+//Announcment model
+//----------------------------------------
+model Announcment {
+  id        String   @id @default(uuid())
+  text      String
+  userId    String
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String?
+  Event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 // -------------------------------------------------------------------------------------

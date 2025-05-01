@@ -199,8 +199,6 @@ export class EventController {
     return this.eventService.findAllUsersOfEvent(eventId);
   }
 
-  // exec 2
-  // Returns all users that attend a certain event
   @Get('attendees/:eventId')
   @ApiOperation({ summary: 'Get all attendees of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -847,8 +845,14 @@ export class EventController {
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.getRequests(userId, eventId);
+    return this.eventService.getRequests(userId, eventId); 
   }
+
+    //-----------------------------------------
+  //Announcment endpoint
+  //-----------------------------------------
+
+  
   //-----------------------------------------
   // Event Certificate endpoint
   //-----------------------------------------

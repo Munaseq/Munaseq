@@ -26,6 +26,7 @@ import {
 import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorator';
 import { AuthGuard } from '../auth/auth.guard';
 import {
+  CreateAnnouncementDto,
   EditUserInfoDto,
   RespondInvitationDto,
   SeacrhUser,
@@ -318,7 +319,35 @@ export class UserController {
   ) {
     return this.userService.unfollowUser(userId, userIdToUnfollow);
   }
+  //-----------------------------------------
+  //Announcment endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('followers/announcement')
+  @ApiOperation({
+    summary: 'Create an announcement for the followers of currently  user.',
+  })
+  @ApiBody({
+    description: 'Payload for creating an announcement.',
+    type: CreateAnnouncementDto,
+  })
+  createFollowersAnnouncement(
+    @GetCurrentUserId() userId: string,
+    @Body() body: CreateAnnouncementDto,
+  ) {
+    return this.userService.createFollowersAnnouncement(userId, body);
+  }
 
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('followingUsers/announcement')
+  @ApiOperation({
+    summary: 'Get all announcements for the followed users of currently user.',
+  })
+  getFollowedUsersAnnouncement(@GetCurrentUserId() userId: string) {
+    return this.userService.getFollowedUsersAnnouncement(userId);
+  }
   //-----------------------------------------
   //User stuff endpoint
   //-----------------------------------------

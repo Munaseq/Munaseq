@@ -13,7 +13,11 @@ import * as argon2 from 'argon2';
 
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-import { EditUserInfoDto, userChangePasswordDto } from './dtos';
+import {
+  CreateAnnouncementDto,
+  EditUserInfoDto,
+  userChangePasswordDto,
+} from './dtos';
 
 @Injectable()
 export class UserService {
@@ -1009,5 +1013,89 @@ export class UserService {
     return {
       message: 'You are now not following the specified user',
     };
+  }
+  //-----------------------------------------
+  //Announcment endpoint
+  //----------------------------------------
+  async createFollowersAnnouncement(
+    userId: string,
+    body: CreateAnnouncementDto,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    return this.prisma.announcment.create({
+      data: {
+        ...body,
+        userId,
+      },
+    });
+  }
+
+  async getFollowedUsersAnnouncement(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        FollowedUsers: {
+          select: {
+            followedUserId: true,
+          },
+        },
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("The user doesn't exist ");
+    }
+    const followedUsersIds = user.FollowedUsers.map(
+      (followedUser) => followedUser.followedUserId,
+    );
+    console.log(followedUsersIds);
+    const announcement = await this.prisma.announcment.findMany({
+      where: {
+        userId: { in: followedUsersIds },
+      },
+      select: {
+        id: true,
+        text: true,
+        createdAt: true,
+        User: {
+          select: {
+            id: true,
+            username: true,
+            profilePictureUrl: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (announcement.length === 0) {
+      throw new NotFoundException('No announcements found');
+    }
+    //convert the data structure to meet mahmoud desires
+    const formmatedAnnouncement = announcement.map((announcment) => {
+      return {
+        id: announcment.id,
+        user: {
+          id: announcment.User.id,
+          text: announcment.text,
+          createdAt: announcment.createdAt,
+          username: announcment.User.username,
+          profilePictureUrl: announcment.User.profilePictureUrl,
+          firstName: announcment.User.firstName,
+          lastName: announcment.User.lastName,
+        },
+      };
+    });
+    return formmatedAnnouncement;
   }
 }
