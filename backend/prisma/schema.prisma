@@ -47,9 +47,9 @@ model User {
   SentRequests        Request[]        @relation("RequestSender") // New: Requests sent by the user
   Certificate         Certificate[]
 
-  Followers     Following[]   @relation("follower")
-  FollowedUsers Following[]   @relation("followedUser")
-  Announcments  Announcment[]
+  Followers     Following[]    @relation("follower")
+  FollowedUsers Following[]    @relation("followedUser")
+  Announcments  Announcement[]
 }
 
 model Event {
@@ -80,11 +80,11 @@ model Event {
   GivenFeedbacks GiveFeedback[]
   Materials      Material[]
 
-  EventChat    Chat?         @relation("EventChat") // one to one relationship
-  Invitations  Invitation[]  @relation("InvitationEvent") // one to many relationship
-  Requests     Request[]     @relation("RequestedEvent") // one to many relationship
+  EventChat    Chat?          @relation("EventChat") // one to one relationship
+  Invitations  Invitation[]   @relation("InvitationEvent") // one to many relationship
+  Requests     Request[]      @relation("RequestedEvent") // one to many relationship
   Certificate  Certificate[]
-  Announcments Announcment[]
+  Announcments Announcement[]
 }
 
 model QuizQuestion {
@@ -284,7 +284,7 @@ model Following {
 //-----------------------------------------
 //Announcment model
 //----------------------------------------
-model Announcment {
+model Announcement {
   id        String   @id @default(uuid())
   text      String
   userId    String

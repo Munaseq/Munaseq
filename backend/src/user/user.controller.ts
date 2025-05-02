@@ -348,6 +348,7 @@ export class UserController {
   getFollowedUsersAnnouncement(@GetCurrentUserId() userId: string) {
     return this.userService.getFollowedUsersAnnouncement(userId);
   }
+
   //-----------------------------------------
   //User stuff endpoint
   //-----------------------------------------

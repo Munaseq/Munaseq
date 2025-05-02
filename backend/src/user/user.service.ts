@@ -1029,7 +1029,7 @@ export class UserService {
     if (!user) {
       throw new BadRequestException("The user doesn't exist ");
     }
-    return this.prisma.announcment.create({
+    return this.prisma.announcement.create({
       data: {
         ...body,
         userId,
@@ -1057,7 +1057,7 @@ export class UserService {
       (followedUser) => followedUser.followedUserId,
     );
     console.log(followedUsersIds);
-    const announcement = await this.prisma.announcment.findMany({
+    const announcement = await this.prisma.announcement.findMany({
       where: {
         userId: { in: followedUsersIds },
       },
@@ -1082,17 +1082,17 @@ export class UserService {
       throw new NotFoundException('No announcements found');
     }
     //convert the data structure to meet mahmoud desires
-    const formmatedAnnouncement = announcement.map((announcment) => {
+    const formmatedAnnouncement = announcement.map((announcement) => {
       return {
-        id: announcment.id,
+        id: announcement.id,
         user: {
-          id: announcment.User.id,
-          text: announcment.text,
-          createdAt: announcment.createdAt,
-          username: announcment.User.username,
-          profilePictureUrl: announcment.User.profilePictureUrl,
-          firstName: announcment.User.firstName,
-          lastName: announcment.User.lastName,
+          id: announcement.User.id,
+          text: announcement.text,
+          createdAt: announcement.createdAt,
+          username: announcement.User.username,
+          profilePictureUrl: announcement.User.profilePictureUrl,
+          firstName: announcement.User.firstName,
+          lastName: announcement.User.lastName,
         },
       };
     });

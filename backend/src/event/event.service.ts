@@ -3430,7 +3430,10 @@ export class EventService {
           );
         }
         //check if the capacity is reached
-        if (request.Event.seatCapacity !== null && request.Event.seatCapacity > 0) {
+        if (
+          request.Event.seatCapacity !== null &&
+          request.Event.seatCapacity > 0
+        ) {
           const joinedCount = request.Event.joinedUsers.length;
           if (joinedCount >= request.Event.seatCapacity) {
             throw new BadRequestException(
@@ -3530,8 +3533,122 @@ export class EventService {
     };
   }
   //-----------------------------------------
+  // Announcement endpoints
+  //-----------------------------------------
+
+  async sendAnnouncement(userId: string, eventId: string, text: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        eventCreatorId: true,
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+      },
+    });
+    //check if the event exist or not
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    //check if the user is authorized to send the announcements
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+    );
+    if (!isAuthorized) {
+      throw new BadRequestException(
+        'User is not authorized to send announcements for this event',
+      );
+    }
+    //create the announcement
+    const announcements = await this.prisma.announcement.create({
+      data: {
+        text,
+        userId,
+        eventId,
+      },
+    });
+    return announcements;
+  }
+
+  async getAnnouncements(userId: string, eventId: string) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        eventCreatorId: true,
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+        joinedUsers: { select: { id: true } },
+      },
+    });
+    //check if the event exist or not
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    //check if the user is authorized to get the announcements
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+      event.joinedUsers,
+    );
+    if (!isAuthorized) {
+      throw new BadRequestException(
+        'User is not authorized to get announcements for this event',
+      );
+    }
+    //get the announcements
+    const announcements = await this.prisma.announcement.findMany({
+      where: {
+        eventId,
+      },
+      select: {
+        id: true,
+        text: true,
+        createdAt: true,
+        User: {
+          select: {
+            id: true,
+            username: true,
+            profilePictureUrl: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (announcements.length === 0) {
+      throw new NotFoundException('No announcements found');
+    }
+    //convert the data structure to meet mahmoud desires
+    const formmatedAnnouncement = announcements.map((announcement) => {
+      return {
+        id: announcement.id,
+        user: {
+          id: announcement.User.id,
+          text: announcement.text,
+          createdAt: announcement.createdAt,
+          username: announcement.User.username,
+          profilePictureUrl: announcement.User.profilePictureUrl,
+          firstName: announcement.User.firstName,
+          lastName: announcement.User.lastName,
+        },
+      };
+    });
+    return formmatedAnnouncement;
+  }
+  //-----------------------------------------
   // Certificate endpoint
   //-----------------------------------------
+
   // async generateCertificate(userId: string) {
   //   const pdfDoc = await PDFDocument.create();
 

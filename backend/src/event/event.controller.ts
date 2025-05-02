@@ -48,6 +48,7 @@ import {
 
 import { multerEventLogic, multerMaterialtLogic } from '../utils/aws.uploading';
 import { Gender } from '@prisma/client';
+import { CreateAnnouncementDto } from '../user/dtos/create-announcement.dto';
 
 @ApiTags('event')
 @Controller('event')
@@ -845,14 +846,44 @@ export class EventController {
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.getRequests(userId, eventId); 
+    return this.eventService.getRequests(userId, eventId);
   }
 
-    //-----------------------------------------
+  //-----------------------------------------
   //Announcment endpoint
   //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('announcement/:eventId')
+  @ApiOperation({
+    summary: 'Get all announcements for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  getAnnouncements(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.getAnnouncements(userId, eventId);
+  }
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('announcement/:eventId')
+  @ApiOperation({
+    summary: 'Create an announcement for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for creating an announcement',
+    type: CreateAnnouncementDto,
+  })
+  sendAnnouncement(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: CreateAnnouncementDto,
+  ) {
+    return this.eventService.sendAnnouncement(userId, eventId, body.text);
+  }
 
-  
   //-----------------------------------------
   // Event Certificate endpoint
   //-----------------------------------------
