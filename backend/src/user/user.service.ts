@@ -1054,7 +1054,7 @@ export class UserService {
     const followedUsersIds = user.FollowedUsers.map(
       (followedUser) => followedUser.followedUserId,
     );
-    console.log(followedUsersIds);
+
     const announcement = await this.prisma.announcement.findMany({
       where: {
         userId: { in: [...followedUsersIds, userId] },

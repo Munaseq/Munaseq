@@ -44,6 +44,7 @@ import {
   SubmitQuizDto,
   SendRequestDTO,
   RespondRequestDto,
+  UpdateChatAllowanceDto,
 } from './dtos';
 
 import { multerEventLogic, multerMaterialtLogic } from '../utils/aws.uploading';
@@ -900,6 +901,33 @@ export class EventController {
     @Param('eventId') eventId: string,
   ) {
     return this.eventService.getCertificate(userId, eventId);
+  }
+
+  //-----------------------------------------
+  // Event Chat endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Patch('chat/:eventId')
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for changing chat allowance',
+    type: UpdateChatAllowanceDto,
+  })
+  @ApiOperation({
+    summary:
+      'Change the chat allowance for attendees to send a chat (the default is true). The authorized user must be an event creator, moderator, or presenter.',
+  })
+  changeChatAllowance(
+    @GetCurrentUserId() userId: string,
+    @Param('eventId') eventId: string,
+    @Body() body: { isAttendeesAllowed: boolean },
+  ) {
+    return this.eventService.changeChatAllowance(
+      userId,
+      eventId,
+      body.isAttendeesAllowed,
+    );
   }
   //-----------------------------------------
   // Deleting Event's endpoint
