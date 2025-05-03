@@ -68,7 +68,7 @@ export default async function EventLayout({
                         isEventCreator={isEventCreator}
                     />
 
-                    <EventQRDialog eventId={params.eventId} />
+                    <EventQRDialog />
                 </div>
 
                 <div className="absolute z-20 text-white bottom-0 right-0 grid p-4 pb-2">
@@ -91,7 +91,7 @@ export default async function EventLayout({
                     <div>
                         <div className="gap-8 sm:flex hidden text-xl ">
                             <Link
-                                href={`/event/${params.eventId}/about`}
+                                href="./about"
                                 className="relative text-nowrap"
                             >
                                 حول
@@ -101,7 +101,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href={`/event/${params.eventId}/content`}
+                                href="./content"
                                 className="relative text-nowrap"
                             >
                                 المحتوى{" "}
@@ -111,7 +111,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href={`/event/${params.eventId}/activities`}
+                                href="./activities"
                                 className="relative text-nowrap"
                             >
                                 الأنشطة{" "}
@@ -121,7 +121,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href={`/event/${params.eventId}/members`}
+                                href="./members"
                                 className="relative text-nowrap"
                             >
                                 الأعضاء{" "}
@@ -131,13 +131,23 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href={`/event/${params.eventId}/rate`}
+                                href="./rate"
                                 className="relative text-nowrap"
                             >
                                 التقييم{" "}
                                 <TabIndicator
                                     layoutId="active-event-tab"
                                     tab="/rate"
+                                />
+                            </Link>
+                            <Link
+                                href="./announcement"
+                                className="relative text-nowrap"
+                            >
+                                الاخبار{" "}
+                                <TabIndicator
+                                    layoutId="active-event-tab"
+                                    tab="/announcement"
                                 />
                             </Link>
                         </div>

@@ -3645,6 +3645,58 @@ export class EventService {
     return formmatedAnnouncement;
   }
   //-----------------------------------------
+  // Chat endpoint
+  //-----------------------------------------
+  async changeChatAllowance(
+    userId: string,
+    eventId: string,
+    isAttendeesAllowed: boolean,
+  ) {
+    //check if the user exist or not
+    await this.checkIfUserExist(userId);
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        eventCreatorId: true,
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+      },
+    });
+    //check if the event exist or not
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    //check if the user is authorized to change the chat allowance
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreatorId,
+      event.moderators,
+      event.presenters,
+    );
+    if (!isAuthorized) {
+      throw new BadRequestException(
+        'User is not authorized to change chat allowance for this event',
+      );
+    }
+    await this.prisma.event.update({
+      where: {
+        id: eventId,
+      },
+      data: {
+        EventChat: {
+          update: {
+            data: { isAttendeesAllowed },
+          },
+        },
+      },
+    });
+    return {
+      message: `Chat allowance has been changed to ${isAttendeesAllowed}`,
+      isAttendeesAllowed,
+    };
+  }
+
+  //-----------------------------------------
   // Certificate endpoint
   //-----------------------------------------
 

@@ -24,7 +24,6 @@ enum ClientEvents {
   NewChat = 'NewChat', // to join certain chat
   Chats = 'Chats', // retrieve all chats once connected to the server, and
   Message = 'Message', // to retrieve a message
-  server = 'server', // to listen to server messages -> it recommend that it appears as notification (similar to event creation notification)
   Error = 'Error', // to listen to errors
 }
 enum ChatCategory {
@@ -172,7 +171,6 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
           },
           Messages: {
             take: 1,
-
             select: {
               content: true,
               createdAt: true,
@@ -191,37 +189,40 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         orderBy: { updatedAt: 'desc' },
       });
 
+      let chats: { directChats: {}[]; eventChats: {}[] } = {
+        directChats: [],
+        eventChats: [],
+      };
       //check if there's a stored chats
       if (directChats.length > 0 || EventChats.length > 0) {
-        let chats: { directChats: {}[]; eventChats: {}[] } = {
-          directChats: [],
-          eventChats: [],
-        };
         //group chats and direct chats are separated, because the direct chats are more important (similar to discord's approach )
 
         //If so, send the chats to the client and register him with every online chats
 
-        client.emit(ClientEvents.Chats, chats);
-        directChats.map((chat) => {
+        directChats.forEach((chat) => {
           const chatOnlineUsers = this.onlineChats.get(chat.id); //return the users of chat if the chat online, else, it will return undefined. NOTE that it's guranteed that every online chat has at least one online user(AKA client)
           if (chatOnlineUsers) {
             chatOnlineUsers.push(client.id); //add the user to the online clients of this chat
             client.join(chat.id);
           }
+
+          if (chat.Messages.length > 0) {
+            chats.directChats.push(chat);
+          }
         });
-        EventChats.map((chat) => {
+        EventChats.forEach((chat) => {
           const chatOnlineUsers = this.onlineChats.get(chat.id);
           if (chatOnlineUsers) {
             chatOnlineUsers.push(client.id);
             client.join(chat.id);
-            client.emit(
-              ClientEvents.Chats,
-              `You've joined the chat ${chat.id}`, //REMOVE it
-            );
+          }
+          if (chat.Messages.length > 0) {
+            chats.eventChats.push(chat);
           }
         });
+        client.emit(ClientEvents.Chats, chats);
       } else {
-        client.emit(ClientEvents.server, "You haven't any chat yet..");
+        client.emit(ClientEvents.Chats, chats);
       }
     } catch (err) {
       this.handleErrors(client, err, true);
@@ -240,7 +241,6 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         if (onlineChatClientIds.length === 1) {
           //if so, deregister the whole chat
           this.onlineChats.delete(chatId);
-          client.emit(ClientEvents.server, `the chat ${chatId} deleted`); //REMOVE IT
         } else {
           onlineChatClientIds.splice(userIndex, 1); //else, deregister the user from the chat users
         }
@@ -342,6 +342,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         });
       } else {
         client.emit(ClientEvents.NewChat, { chatId: room.id });
+        return;
       }
       //add the chat to online chats' map
 
@@ -395,7 +396,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
       const onlineClientsArray = this.onlineChats.get(chatId);
       if (!onlineClientsArray || !onlineClientsArray.includes(client.id)) {
         throw new BadRequestException(
-          "The room isn't online or the sender isn't associated with it  ",
+          "The chat isn't online or the sender isn't associated with the chat",
         );
       }
       //check if the messaging feature is allowed or not for the attendees
@@ -403,6 +404,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         const chat = await this.prisma.chat.findUnique({
           where: {
             id: chatId,
+            category,
           },
           select: {
             category: true,
@@ -416,6 +418,11 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
             },
           },
         });
+        if (!chat) {
+          throw new NotFoundException(
+            "The chat does not exist, check if you've provided the correct chatId or category",
+          );
+        }
         //check if the attendees isn't allowed
         if (!chat.isAttendeesAllowed) {
           //if the attendees isn't allowed then check if the sender is assigned
@@ -436,7 +443,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         }
       }
       // create a message, // This approach of creating through updating is beneficial because it will update "updateAt" attribute every time we create a new message; this is helpful when sorting the chats based on the latest chat that received a message
-      await this.prisma.chat.update({
+      const updatedChat = await this.prisma.chat.update({
         where: {
           id: chatId,
         },
@@ -448,18 +455,39 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
             },
           },
         },
+        select: {
+          Messages: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 1,
+            select: {
+              content: true,
+              Sender: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profilePictureUrl: true,
+                  username: true,
+                },
+              },
+              createdAt: true,
+            },
+          },
+        },
       });
+      const newMessage = updatedChat.Messages[0];
 
       //emitting the message to the chat, the sender will also receive it (front end will check the chatId and senderId to arrange the message bubble to the right place )
       this.server.to(chatId).emit(ClientEvents.Message, {
         chatId,
-        senderId,
-        content: message,
+        message: newMessage,
       });
 
       //check if the client has joined this room
     } catch (err) {
-      client.emit(ClientEvents.Error, err.message);
+      this.handleErrors(client, err);
     }
   }
   //If the chat is online, then no need to register the online users because the will be registered once the chat is selected(means the chat goes from offline to onlie)
@@ -497,13 +525,25 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
             },
           },
           Messages: {
-            select: { content: true, sender_id: true, createdAt: true }, //you could also provide the full sender info. (e.g. image, name, etc..) to put it in every message (see suggested Figma design)
+            select: {
+              content: true,
+              Sender: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profilePictureUrl: true,
+                  username: true,
+                },
+              },
+              createdAt: true,
+            }, //you could also provide the full sender info. (e.g. image, name, etc..) to put it in every message (see suggested Figma design)
             orderBy: { createdAt: 'desc' }, //latest message first
           },
         },
       });
       if (!chat) {
-        throw new NotFoundException("The chat doesn't exist");
+        throw new NotFoundException("The chat doesn't exist, create a new one");
       }
       const isChatOnline = this.onlineChats.get(chatId);
       if (!isChatOnline) {
@@ -525,7 +565,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
       }
       client.emit(ClientEvents.Chat, chat);
     } catch (err) {
-      client.emit(ClientEvents.Error, err.message);
+      this.handleErrors(client, err);
     }
   }
 
