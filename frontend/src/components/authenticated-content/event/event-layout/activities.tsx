@@ -431,10 +431,10 @@ export default function Activities({
                   href={`/event/${eventId}/activities/${activityType}/${selectedActivity.id}/submit-${activityType}`}
                 >
                   <Button
-                    disabled={selectedActivity.endDate.split("T")[0] <= today}
+                    disabled={selectedActivity.endDate.split("T")[0] < today}
                     gradient
                     className={
-                      selectedActivity.endDate.split("T")[0] <= today ||
+                      selectedActivity.endDate.split("T")[0] < today ||
                       selectedActivity.startDate.split("T")[0] > today ||
                       (activityType === "assignment" &&
                         selectedActivity.takeAssignmentStatus ===
