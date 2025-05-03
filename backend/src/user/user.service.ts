@@ -619,7 +619,6 @@ export class UserService {
                       gte: event.endDateTime,
                     },
                   },
-                  ,
                   {
                     startDateTime: {
                       gte: event.startDateTime,
@@ -744,7 +743,6 @@ export class UserService {
                       gte: event.endDateTime,
                     },
                   },
-                  ,
                   {
                     startDateTime: {
                       gte: event.startDateTime,

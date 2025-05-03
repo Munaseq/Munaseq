@@ -103,7 +103,6 @@ export class EventService {
                   gte: createEventDto.endDateTime,
                 },
               },
-
               {
                 startDateTime: {
                   gte: createEventDto.startDateTime,
@@ -3022,7 +3021,7 @@ export class EventService {
                     gte: event.endDateTime,
                   },
                 },
-                ,
+
                 {
                   startDateTime: {
                     gte: event.startDateTime,
@@ -3105,7 +3104,7 @@ export class EventService {
                     gte: event.endDateTime,
                   },
                 },
-                ,
+
                 {
                   startDateTime: {
                     gte: event.startDateTime,
@@ -3354,7 +3353,7 @@ export class EventService {
                       gte: request.Event.endDateTime,
                     },
                   },
-                  ,
+
                   {
                     startDateTime: {
                       gte: request.Event.startDateTime,
@@ -3473,7 +3472,7 @@ export class EventService {
                       gte: request.Event.endDateTime,
                     },
                   },
-                  ,
+
                   {
                     startDateTime: {
                       gte: request.Event.startDateTime,
