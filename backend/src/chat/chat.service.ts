@@ -22,8 +22,7 @@ import { Server, Socket } from 'socket.io';
 enum ClientEvents {
   Chat = 'Chat', // retrieve a chat with its messages and users
   NewChat = 'NewChat', // to join certain chat
-  JoinedChats = 'JoinedChats', // to view the joined rooms, means the current sockets' rooms
-  Chats = 'Chats', // retrieve all chats in db
+  Chats = 'Chats', // retrieve all chats once connected to the server, and
   Message = 'Message', // to retrieve a message
   server = 'server', // to listen to server messages -> it recommend that it appears as notification (similar to event creation notification)
   Error = 'Error', // to listen to errors
@@ -121,7 +120,22 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
             },
           },
 
-          Messages: { take: 1, orderBy: { createdAt: 'desc' } },
+          Messages: {
+            take: 1,
+            select: {
+              content: true,
+              createdAt: true,
+              Sender: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  username: true,
+                  profilePictureUrl: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
         }, //Retrieve the last message (same as whatsapp)
         orderBy: { updatedAt: 'desc' },
       });
@@ -156,38 +170,46 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
               },
             },
           },
+          Messages: {
+            take: 1,
 
-          Messages: { take: 1, orderBy: { createdAt: 'desc' } },
+            select: {
+              content: true,
+              createdAt: true,
+              Sender: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  username: true,
+                  profilePictureUrl: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
         },
         orderBy: { updatedAt: 'desc' },
       });
-      //greeting message ---> REMOVE IT
-      client.emit(
-        ClientEvents.server,
-        `Hello , you're connected successfully `,
-      );
-      const chats = {
-        //group chats and direct chats are separated, because the direct chats are more important (similar to discord's approach )
-        directChats,
-        EventChats,
-      };
+
       //check if there's a stored chats
-      if (chats.directChats.length > 0 || chats.EventChats.length > 0) {
+      if (directChats.length > 0 || EventChats.length > 0) {
+        let chats: { directChats: {}[]; eventChats: {}[] } = {
+          directChats: [],
+          eventChats: [],
+        };
+        //group chats and direct chats are separated, because the direct chats are more important (similar to discord's approach )
+
         //If so, send the chats to the client and register him with every online chats
 
         client.emit(ClientEvents.Chats, chats);
-        chats.directChats.map((chat) => {
+        directChats.map((chat) => {
           const chatOnlineUsers = this.onlineChats.get(chat.id); //return the users of chat if the chat online, else, it will return undefined. NOTE that it's guranteed that every online chat has at least one online user(AKA client)
           if (chatOnlineUsers) {
             chatOnlineUsers.push(client.id); //add the user to the online clients of this chat
             client.join(chat.id);
-            client.emit(
-              ClientEvents.Chats,
-              `You've joined the chat ${chat.id}`, //REMOVE it
-            );
           }
         });
-        chats.EventChats.map((chat) => {
+        EventChats.map((chat) => {
           const chatOnlineUsers = this.onlineChats.get(chat.id);
           if (chatOnlineUsers) {
             chatOnlineUsers.push(client.id);
@@ -245,10 +267,15 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       //Extracting the senderId
       const senderId = this.onlineClientsCTU.get(client.id);
+      if (!receiverId || senderId === receiverId) {
+        throw new NotFoundException(
+          'Please ensure that you provide a receiverId or correct receiverId',
+        );
+      }
       let receiver = await this.prisma.user.findUnique({
         where: { id: receiverId },
       });
-      if (!receiverId || senderId === receiverId || !receiver?.id) {
+      if (!receiver) {
         throw new NotFoundException(
           'Please ensure that you provide a correct receiverId',
         );
@@ -314,9 +341,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
           },
         });
       } else {
-        throw new BadRequestException(
-          'You already have a room with the respective receiver Or the rece',
-        );
+        client.emit(ClientEvents.NewChat, { chatId: room.id });
       }
       //add the chat to online chats' map
 
@@ -332,10 +357,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
       //joining the sender to the direct chat (i.e. room)
       client.join(room.id);
       //Telling the user that you've joined successfully -> REMOVE IT
-      client.emit(
-        ClientEvents.server,
-        `You've joined the room with the id: "${room.id}" successfully`,
-      );
+      client.emit(ClientEvents.NewChat, { chatId: room.id });
       //check if the receiver is online
       const receiverClientId = this.onlineClientsUTC.get(receiverId);
       if (receiverClientId) {
@@ -343,10 +365,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         const receiverClient =
           this.server.sockets.sockets.get(receiverClientId);
         receiverClient.join(room.id);
-        receiverClient.emit(
-          ClientEvents.server,
-          `You've joined the room with the id: "${room.id}" successfully`,
-        );
+        receiverClient.emit(ClientEvents.NewChat, { chatId: room.id });
         onlineClientsArray.push(client.id, receiverClientId);
       } else {
         //only join the sender to the room
@@ -432,7 +451,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       //emitting the message to the chat, the sender will also receive it (front end will check the chatId and senderId to arrange the message bubble to the right place )
-      this.server.to(chatId).emit('Message', {
+      this.server.to(chatId).emit(ClientEvents.Message, {
         chatId,
         senderId,
         content: message,
@@ -503,10 +522,6 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
             currSocket.join(chatId);
           }
         });
-        this.server.emit(
-          ClientEvents.server,
-          `You now have joined the chat with the id: ${chatId}`,
-        );
       }
       client.emit(ClientEvents.Chat, chat);
     } catch (err) {

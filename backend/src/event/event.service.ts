@@ -3625,7 +3625,7 @@ export class EventService {
       orderBy: { createdAt: 'desc' },
     });
     if (announcements.length === 0) {
-      throw new NotFoundException('No announcements found');
+      return [];
     }
     //convert the data structure to meet mahmoud desires
     const formmatedAnnouncement = announcements.map((announcement) => {

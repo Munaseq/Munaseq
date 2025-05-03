@@ -1077,7 +1077,7 @@ export class UserService {
     });
 
     if (announcement.length === 0) {
-      throw new NotFoundException('No announcements found');
+      return [];
     }
     //convert the data structure to meet mahmoud desires
     const formmatedAnnouncement = announcement.map((announcement) => {
