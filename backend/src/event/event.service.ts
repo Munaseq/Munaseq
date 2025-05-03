@@ -747,7 +747,7 @@ export class EventService {
 
     if (!isAuthorized) {
       throw new BadRequestException(
-        'User is not authorized to delete materials to this event',
+        'User is not authorized to view materials to this event',
       );
     }
     const result = await this.prisma.event.findUnique({

@@ -20,7 +20,7 @@ import { Server, Socket } from 'socket.io';
 
 //This an enum of the listened events by the user
 enum ClientEvents {
-  Chat = 'Chat',
+  Chat = 'Chat',// retrieve a chat with its messages and users
   NewChat = 'NewChat', // to join certain chat
   JoinedChats = 'JoinedChats', // to view the joined rooms, means the current sockets' rooms
   Chats = 'Chats', // retrieve all chats in db
