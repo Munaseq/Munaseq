@@ -16,7 +16,7 @@ import { Button } from "@/components/common/shadcn-ui/button";
 import ButtonCustom from "@/components/common/buttons/button";
 import SearchUser from "../search-user";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import { useRolesContext } from "@/store/rolesContext";
+import { useRolesContext } from "@/store/roles-context";
 import { Role, RoleDataDto } from "@/dtos/roles-data.dto";
 
 export default function LinkUserModal({

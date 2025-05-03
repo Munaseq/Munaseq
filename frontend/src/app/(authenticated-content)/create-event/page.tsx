@@ -1,5 +1,5 @@
 import { PlusCircle } from "lucide-react";
-import { RolesProvider } from "@/store/rolesContext";
+import { RolesProvider } from "@/store/roles-context";
 import CreateEventForm from "@/components/authenticated-content/create-event/create-event-form";
 import Title from "@/components/common/text/title";
 import { Metadata } from "next";

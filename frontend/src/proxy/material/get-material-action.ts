@@ -19,7 +19,14 @@ export default async function getMaterialsAction(eventId: string) {
             }
         );
 
+        if (!materials.ok) {
+            const data = await materials.json();
+            console.log(data);
+            throw new Error("Failed to fetch materials");
+        }
+
         const data = await materials.json();
+        console.log(data);
 
         return data.Materials;
     } catch (error: any) {

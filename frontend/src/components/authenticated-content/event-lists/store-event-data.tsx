@@ -1,6 +1,6 @@
 "use client";
 
-import { useEventContext } from "@/store/eventContext";
+import { useEventContext } from "@/store/event-context";
 import { useEffect } from "react";
 
 export default function StoreEventData({

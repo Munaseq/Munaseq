@@ -3,16 +3,17 @@ import Title from '@/components/common/text/title';
 import SearchFetcher from '@/components/authenticated-content/search/search-fetcher';
 import { Suspense } from 'react';
 import LogoLoading from '@/components/common/logo-loading';
+import { SearchType } from '@/util/search-type';
 
-export default async function SearchPage({
-  searchParams,
+export default async function SearchEventPage({
+  params,
 }: {
-  searchParams: { searchTerm: string };
-}) {
-  const searchTerm = searchParams.searchTerm;
+  params: { username: string };
+}){
+  
   const itemsPerPage = 9;
 
-  if (!searchTerm) {
+  if (!params.username) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center py-12">
@@ -28,7 +29,7 @@ export default async function SearchPage({
       <h1 className="text-2xl font-bold mb-6 text-center"></h1>
       <Title>
         <SearchIcon size={32} color="var(--custom-light-purple)" />
-        نتائج البحث عن "{searchTerm}"
+        نتائج البحث عن "{params.username}"
       </Title>
       <Suspense
         fallback={
@@ -37,7 +38,7 @@ export default async function SearchPage({
           </div>
         }
       >
-        <SearchFetcher searchTerm={searchTerm} itemsPerPage={itemsPerPage} />
+        <SearchFetcher searchType={SearchType.USER}  searchTerm={params.username} itemsPerPage={itemsPerPage} />
       </Suspense>
     </div>
   );

@@ -1,10 +1,20 @@
 'use server'
 
-export default async function getUserSearchAction(username?: string) {
+export default async function getUserSearchAction({
+    username,
+    pageNumber,
+    pageSize,
+  }: {username?: string, pageNumber?: number, pageSize?: number}) {
     try {
       const url = new URL(`${process.env.BACKEND_URL}/user`);
       const params = new URLSearchParams();
-  
+
+      if (pageNumber !== undefined) {
+        params.append("pageNumber", pageNumber.toString());
+      }
+      if (pageSize !== undefined) {
+        params.append("pageSize", pageSize.toString());
+      }
       if (username) {
         params.append("username", username);
       }

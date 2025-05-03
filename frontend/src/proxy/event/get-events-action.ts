@@ -4,10 +4,14 @@ export default async function getEventsAction({
   pageNumber,
   pageSize,
   title,
+  category,
+  highestRated,
 }: {
   pageNumber?: number;
   pageSize?: number;
   title?: string;
+  category?: string;
+  highestRated?: boolean;
 } = {}) {
   try {
   
@@ -22,6 +26,12 @@ export default async function getEventsAction({
     }
     if (title !== undefined) {
       params.append("title", title);
+    }
+    if (category !== undefined) {
+      params.append("category", category);
+    }
+    if (highestRated !== undefined) {
+      params.append("highestRated", highestRated.toString());
     }
 
     url.search = params.toString();
@@ -38,7 +48,7 @@ export default async function getEventsAction({
     }
 
     const data = await eventsRes.json();
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Fake delay of 1 second
+    
 
     return data;
   } catch (error: any) {

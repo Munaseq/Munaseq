@@ -5,6 +5,7 @@ import { SparklesIcon } from "lucide-react";
 import HighestRatedEvents from "@/components/authenticated-content/discover/highest-rated-events";
 import { Suspense } from "react";
 import LogoLoading from "@/components/common/logo-loading";
+import PreferredCategoriesEvents from "@/components/authenticated-content/discover/preferred-categories-events";
 
 export const metadata: Metadata = {
     title: "اكتشف",
@@ -26,6 +27,7 @@ export default async function Discover() {
                 }
             >
                 <HighestRatedEvents />
+                <PreferredCategoriesEvents/>
             </Suspense>
         </div>
     );

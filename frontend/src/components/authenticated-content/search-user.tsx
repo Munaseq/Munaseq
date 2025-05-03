@@ -7,7 +7,7 @@ import { UserDataDto } from "@/dtos/user-data.dto"; // New data DTO for user
 import Image from "next/image";
 import Button from "@/components/common/buttons/button";
 import { PlusIcon, UserRoundIcon } from "lucide-react";
-import { useRolesContext } from "@/store/rolesContext";
+import { useRolesContext } from "@/store/roles-context";
 import { Role } from "@/dtos/roles-data.dto";
 import getProfileAction from "@/proxy/user/get-profile-action";
 

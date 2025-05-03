@@ -3,7 +3,7 @@ import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
 import SelectEvents from "@/components/authenticated-content/event-lists/select-events";
 import Title from "@/components/common/text/title";
-import { EventProvider } from "@/store/eventContext";
+import { EventProvider } from "@/store/event-context";
 import StoreEventData from "@/components/authenticated-content/event-lists/store-event-data";
 
 export enum EventType {

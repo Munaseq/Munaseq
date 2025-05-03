@@ -5,3 +5,8 @@
 - change how members look.
 - fix how add content works
 - fix rating (you cant rate if you are a member)
+
+IMPORTANT:
+- make assignment or quiz maker see answers of people who have submitted
+- if date of submition is like date of starting of quiz and assignment you cant submit
+- if only 1 answer in activity next and prev button appear

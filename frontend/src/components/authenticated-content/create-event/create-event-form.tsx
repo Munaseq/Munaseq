@@ -8,7 +8,7 @@ import TimeForm from "@/components/authenticated-content/create-event/time-form"
 import ForwhoForm from "@/components/authenticated-content/create-event/forwho-form";
 import createEventAction from "@/proxy/event/create-event-action";
 import CreateEventProgress from "./create-event-progress";
-import { useRolesContext } from "@/store/rolesContext";
+import { useRolesContext } from "@/store/roles-context";
 
 // export const metadata: Metadata = {
 //     title: "انشاء فعالية",

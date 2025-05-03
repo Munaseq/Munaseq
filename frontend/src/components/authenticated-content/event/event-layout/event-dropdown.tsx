@@ -37,7 +37,7 @@ export default function EventDropdown({eventId, isEventCreator}: {eventId: strin
 
     return (
         <DropdownMenu dir="rtl">
-            <DropdownMenuTrigger className="absolute top-5 left-5 z-30">
+            <DropdownMenuTrigger className="">
               <EllipsisVerticalIcon color='white' size={32}/>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-white relative">

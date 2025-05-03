@@ -6,8 +6,9 @@ import Search from "@/components/authenticated-content/search";
 import deco from "@/assets/auth-content-assets/deco.svg";
 import MenuMobile from "@/components/authenticated-content/menu-mobile";
 import logoSmall from "@/assets/logo/munaseq-icon-dark-lines.svg";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from "react-hot-toast";
 import getProfileAction from "@/proxy/user/get-profile-action";
+import { SearchTypeProvider } from "@/store/search-type-context";
 
 export default async function AuthContentLayout({
     children,
@@ -19,8 +20,7 @@ export default async function AuthContentLayout({
     return (
         <section className=" flex grid-cols-2 ">
             <div dir="ltr">
-            <Toaster />
-
+                <Toaster />
             </div>
             <div className="h-screen w-[22rem] lg:block hidden">
                 <Menu profileData={data} />
@@ -36,7 +36,9 @@ export default async function AuthContentLayout({
                         className="absolute -right-32 top-0 -z-10 min-w-96 lg:block hidden"
                         priority
                     />
-                    <Search />
+                    <SearchTypeProvider>
+                        <Search />
+                    </SearchTypeProvider>
                     <Link href="/" className="">
                         <Image
                             priority

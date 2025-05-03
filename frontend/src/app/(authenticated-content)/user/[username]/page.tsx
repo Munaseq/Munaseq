@@ -40,7 +40,7 @@ export default async function UserProfile({
     if (!data) {
       notFound();
     }
-    // const rating = await getUserRating(data.id);
+    const rating = await getUserRating(data.id);
     const profile: UserDataDto = await getProfileAction();
     const hisProfile: boolean = data.username === profile.username;
     data.socialAccounts = JSON.parse(data.socialAccounts as string);
@@ -124,9 +124,9 @@ export default async function UserProfile({
           )}
         </div>
         <div className="mt-5 flex gap-24">
-          <div>
+          <div className='flex gap-1 text-custom-light-purple text-xl'>
             <StarIcon className="text-custom-light-purple" />
-            {/* {rating} */}
+            {rating.avgRating}
           </div>
 
           <div className="flex gap-3"></div>

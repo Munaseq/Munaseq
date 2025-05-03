@@ -1,4 +1,4 @@
-import fileIcon from "@/assets/event/file-gradient.svg";
+import { FileIcon } from "lucide-react";
 import Image from "next/image";
 import getMaterialsAction from "@/proxy/material/get-material-action";
 import isEventPresenterAction from "@/proxy/user/is-event-presenter-action";
@@ -35,7 +35,7 @@ export default async function ContentPage({
   return (
     <div>
       <h1 className="font-bold flex items-center text-3xl gap-2 mt-4">
-        <Image className="sm:w-12 w-10" src={fileIcon} alt="material icon" />
+        <FileIcon className="text-custom-light-purple" size={32} />
         محتوى الفعالية
       </h1>
       <div className="flex flex-wrap gap-4 mt-10">
@@ -47,10 +47,10 @@ export default async function ContentPage({
             key={material.materialId}
             href={material.materialUrl}
             target="_blank"
-            className="p-2 bg-white rounded-lg shadow-strong grid place-items-center gap-2 w-56 aspect-square hover:shadow-md hover:scale-105 transition-all"
+            className="p-2 bg-white rounded-lg shadow-md grid place-items-center gap-2 w-48 h-48  hover:scale-105 transition-all"
           >
-            <div className="gri place-items-center">
-              <Image src={fileIcon} alt="file icon" className="w-10" />
+            <div className="grid place-items-center">
+            <FileIcon className="text-custom-light-purple" size={32} />
               <div>
                 <p className="font-semibold text-lg">مادة تعليمية</p>
                 <p className="text-custom-gray text-sm">

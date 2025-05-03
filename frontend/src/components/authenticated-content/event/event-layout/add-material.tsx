@@ -12,6 +12,8 @@ import {
 } from "@/components/common/shadcn-ui/dialog";
 import { Input } from "@/components/common/shadcn-ui/input";
 import addMateiralAction from "@/proxy/material/add-material-action";
+import { motion } from "framer-motion";
+import { CirclePlus } from "lucide-react";
 import { useState, useRef } from "react";
 
 export default function AddMaterial({ eventId }: { eventId: string }) {
@@ -27,39 +29,28 @@ export default function AddMaterial({ eventId }: { eventId: string }) {
     return (
         <Dialog>
             <DialogTrigger>
-                <div className="border-4 border-[#949494] border-dashed w-56 aspect-square rounded-3xl grid place-items-center transition-colors group hover:border-[#666666] cursor-pointer">
-                    <div className="grid place-items-center group-hover:text-[#666666] transition-colors text-custom-gray ">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth="1.5"
-                            stroke="currentColor"
-                            className="w-12"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                            />
-                        </svg>
-                        <p className="text-lg">أضف محتوى</p>
+                <motion.div
+                    whileHover={{ scale: 1.05, borderColor: "#666666" }}
+                    className="border-2 border-[#949494] border-dashed w-48 h-48 aspect-square rounded-2xl grid place-items-center cursor-pointer"
+                >
+                    <div className="grid place-items-center group-hover:text-[#666666] transition-colors text-custom-gray">
+                        <CirclePlus size={32} />
+                        <p className="text-lg mt-2">أضف محتوى</p>
                     </div>
-                </div>
+                </motion.div>
             </DialogTrigger>
             <DialogContent dir="rtl" className="bg-white">
                 <DialogHeader className=" !text-right  ps-4">
                     <DialogTitle>اضافة محتوى</DialogTitle>
                     <DialogDescription>
                         <form
-                        className="grid gap-4"
+                            className="grid gap-4"
                             action={async (formData: FormData) => {
-
                                 if (!ref.current.value) {
                                     setError("يجب اختيار ملف");
                                     return;
                                 }
-                               
+
                                 const error: { message: string } | undefined =
                                     await addMateiralAction(eventId, formData);
                                 if (error?.message) {

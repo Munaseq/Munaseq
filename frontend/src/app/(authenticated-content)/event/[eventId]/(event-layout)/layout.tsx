@@ -12,6 +12,7 @@ import EventDropdown from "@/components/authenticated-content/event/event-layout
 import { notFound } from "next/navigation";
 import { StarIcon, UserRound, UserRoundIcon } from "lucide-react";
 import SelectEventTap from "@/components/authenticated-content/event/event-layout/select-event-tap";
+import EventQRDialog from "@/components/authenticated-content/event/event-layout/event-qr-dialog";
 
 export default async function EventLayout({
     children,
@@ -61,10 +62,14 @@ export default async function EventLayout({
                     ))}
                 </div>
 
-                <EventDropdown
-                    eventId={params.eventId}
-                    isEventCreator={isEventCreator}
-                />
+                <div className="absolute z-20 top-3 left-3 flex flex-row-reverse gap-2">
+                    <EventDropdown
+                        eventId={params.eventId}
+                        isEventCreator={isEventCreator}
+                    />
+
+                    <EventQRDialog eventId={params.eventId} />
+                </div>
 
                 <div className="absolute z-20 text-white bottom-0 right-0 grid p-4 pb-2">
                     <div className="mb-10">
@@ -86,7 +91,7 @@ export default async function EventLayout({
                     <div>
                         <div className="gap-8 sm:flex hidden text-xl ">
                             <Link
-                                href="./about"
+                                href={`/event/${params.eventId}/about`}
                                 className="relative text-nowrap"
                             >
                                 حول
@@ -96,7 +101,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./content"
+                                href={`/event/${params.eventId}/content`}
                                 className="relative text-nowrap"
                             >
                                 المحتوى{" "}
@@ -106,7 +111,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./activities"
+                                href={`/event/${params.eventId}/activities`}
                                 className="relative text-nowrap"
                             >
                                 الأنشطة{" "}
@@ -116,7 +121,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./members"
+                                href={`/event/${params.eventId}/members`}
                                 className="relative text-nowrap"
                             >
                                 الأعضاء{" "}
@@ -126,7 +131,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./rate"
+                                href={`/event/${params.eventId}/rate`}
                                 className="relative text-nowrap"
                             >
                                 التقييم{" "}
