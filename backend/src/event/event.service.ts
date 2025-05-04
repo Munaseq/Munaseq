@@ -418,6 +418,7 @@ export class EventService {
             profilePictureUrl: true,
             username: true,
             visibleName: true,
+            rating: true,
           },
         },
       },
