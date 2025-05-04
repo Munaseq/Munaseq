@@ -390,7 +390,7 @@ export class EventService {
   //pageNumber is help the user to indicate how many records will be skipped. The following variable will calculate the number of skipped records
   // const skipedRecords = (pageNumber - 1) * pageSize;  if the pageNumber =1 (i.e. the user want the first elements) then the skipped records will equal 0*5(default pageSize) = 0
 
-  getAllEvents(
+  async getAllEvents(
     title?: string,
     pageNumber: number = 1,
     pageSize: number = 5,
@@ -426,7 +426,9 @@ export class EventService {
       },
       take: pageSize,
       skip: skipedRecords,
-      ...(highestRated && { orderBy: { rating: 'desc' } }),
+      ...(highestRated && {
+        orderBy: [{ eventCreator: { rating: 'desc' } }, { rating: 'desc' }],
+      }),
     });
   }
   async findAllCurrentUserEvents(
