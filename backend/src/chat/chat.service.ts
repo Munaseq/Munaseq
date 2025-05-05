@@ -133,6 +133,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
               createdAt: true,
               Sender: {
                 select: {
+                  id: true,
                   firstName: true,
                   lastName: true,
                   username: true,
@@ -183,6 +184,8 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
               createdAt: true,
               Sender: {
                 select: {
+                  id: true,
+
                   firstName: true,
                   lastName: true,
                   username: true,
