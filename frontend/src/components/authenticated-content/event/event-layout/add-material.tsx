@@ -31,7 +31,7 @@ export default function AddMaterial({ eventId }: { eventId: string }) {
             <DialogTrigger>
                 <motion.div
                     whileHover={{ scale: 1.05, borderColor: "#666666" }}
-                    className="border-2 border-[#949494] border-dashed w-48 h-48 aspect-square rounded-2xl grid place-items-center cursor-pointer"
+                    className="border-2 border-[#949494] border-dashed w-48 h-48 aspect-square rounded-2xl grid place-items-center cursor-pointer group"
                 >
                     <div className="grid place-items-center group-hover:text-[#666666] transition-colors text-custom-gray">
                         <CirclePlus size={32} />

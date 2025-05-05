@@ -2,6 +2,7 @@
 
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function leaveEventAction(eventId: string) {
     const cookiesList = cookies();
@@ -26,10 +27,11 @@ export default async function leaveEventAction(eventId: string) {
         }
 
         revalidateTag("joined-events");
-        return leaveResJson;
+        
     } catch (error: any) {
         const message = error.message;
 
         return { message };
     }
+    redirect("/event/" + eventId);
 }

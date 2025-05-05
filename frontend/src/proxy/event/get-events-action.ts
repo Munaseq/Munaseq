@@ -46,6 +46,8 @@ export default async function getEventsAction({
     if (!eventsRes.ok) {
       throw new Error(`HTTP error! status: ${eventsRes.status}`);
     }
+    //create fake delay for 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const data = await eventsRes.json();
     

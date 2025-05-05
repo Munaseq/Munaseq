@@ -91,7 +91,7 @@ export default async function EventLayout({
                     <div>
                         <div className="gap-8 sm:flex hidden text-xl ">
                             <Link
-                                href="./about"
+                                 href={`/event/${params.eventId}/about`}
                                 className="relative text-nowrap"
                             >
                                 حول
@@ -101,7 +101,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./content"
+                               href={`/event/${params.eventId}/content`}
                                 className="relative text-nowrap"
                             >
                                 المحتوى{" "}
@@ -111,7 +111,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./activities"
+                                href={`/event/${params.eventId}/activities`}
                                 className="relative text-nowrap"
                             >
                                 الأنشطة{" "}
@@ -121,7 +121,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./members"
+                                href={`/event/${params.eventId}/members`}
                                 className="relative text-nowrap"
                             >
                                 الأعضاء{" "}
@@ -131,7 +131,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./rate"
+                                href={`/event/${params.eventId}/rate`}
                                 className="relative text-nowrap"
                             >
                                 التقييم{" "}
@@ -141,7 +141,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./announcement"
+                                href={`/event/${params.eventId}/announcement`}
                                 className="relative text-nowrap"
                             >
                                 الاخبار{" "}

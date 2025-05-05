@@ -18,4 +18,5 @@ export interface UserDataDto {
   description?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  rating?: number;
 }

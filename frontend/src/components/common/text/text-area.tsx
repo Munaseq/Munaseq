@@ -10,6 +10,8 @@ const TextArea = forwardRef(function TextArea(
         cols?: number;
         rows?: number;
         defaultValue?: string;
+        onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+        value?: string;
     },
     ref: any
 ) {
@@ -19,13 +21,15 @@ const TextArea = forwardRef(function TextArea(
                 {props.placeholder}
             </label>
             <textarea
+            value={props.value}
                 ref={ref}
                 id={props.name}
                 name={props.name}
                 cols={props.cols}
                 defaultValue={props.defaultValue}
                 maxLength={500}
-                className="w-full h-28 min-h-32 border-b border-gray-300 focus:outline-none peer resize-none bg-transparent z-10 px-3"
+                onChange={props.onChange}
+                className={"w-full h-28 min-h-32 border-b border-gray-300 focus:outline-none peer resize-none bg-transparent z-10 px-3 "+ props.className}
             />
         </div>
     );

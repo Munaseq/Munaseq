@@ -316,7 +316,7 @@ export default function Activities({
                         <motion.div
                             custom={assignments.length + quizzes.length}
                             whileHover={{ scale: 1.05, borderColor: "#666666" }}
-                            className="border-2 border-[#949494] border-dashed w-48 h-48 aspect-square rounded-2xl grid place-items-center cursor-pointer"
+                            className="border-2 border-[#949494] border-dashed w-48 h-48 aspect-square rounded-2xl grid place-items-center cursor-pointer group"
                         >
                             <Link
                                 href={`/event/${eventId}/activities/create-activity`}

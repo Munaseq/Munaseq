@@ -97,14 +97,15 @@ const isInEvent = async (req: NextRequest, eventId: string) => {
 
 export async function middleware(req: NextRequest) {
     const pathname: string = req.nextUrl.pathname;
-
+    
     if (
         authRequiredStaticPaths.includes(pathname) ||
-        authRequiredDynamicPaths.some(path => pathname.startsWith(path))
+        pathname.startsWith("/user/")
     ) {
         return await checkAuth(req);
     }
-
+    
+   // checks if user is logged in and if he is in event
     if (pathname.startsWith("/event/")) {
         const eventId = pathname.split("/")[2];
         const event = await getEventAction(eventId);
@@ -113,6 +114,7 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL("/event-not-found", req.url));
         }
 
+        
         if (eventId && pathname.split("/").length >= 4) {
             // Check if user is in event
 
