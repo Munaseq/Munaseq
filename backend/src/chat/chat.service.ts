@@ -223,9 +223,8 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
             chatOnlineUsers.push(client.id);
             client.join(chat.id);
           }
-          if (chat.Messages.length > 0) {
-            chats.eventChats.push(chat);
-          }
+
+          chats.eventChats.push(chat);
         });
         client.emit(ClientEvents.Chats, chats);
       } else {
