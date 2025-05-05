@@ -2,13 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as moment from 'moment-timezone';
+import { sendEmailSendGrid } from 'src/utils/aws.uploading';
 
 @Injectable()
 export class ReminderService {
   constructor(private prisma: PrismaService) {}
   private readonly logger = new Logger(ReminderService.name);
 
-  @Cron('* 26 16 * * *', { timeZone: 'Asia/Riyadh' })
+  @Cron('00 00 12 * * *', { timeZone: 'Asia/Riyadh' })
   async handleCron() {
     this.logger.log('Running reminder cron job at 12 PM Riyadh time.');
 
@@ -31,7 +32,6 @@ export class ReminderService {
       include: {
         User: {
           select: {
-            id: true,
             firstName: true,
             email: true,
           },
@@ -44,6 +44,9 @@ export class ReminderService {
           },
         },
       },
+    });
+    reminders.forEach(async (reminder) => {
+      this.logger.log(reminder);
     });
   }
 }

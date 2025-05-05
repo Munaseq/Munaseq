@@ -522,6 +522,8 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
         },
         select: {
           id: true,
+          category: true,
+          isAttendeesAllowed: true,
           Users: {
             //check for all events that the sender is execluded from the retrieved users. When previewing the members of an eventChat the sender's data will be added to the list by the frontend
             where: { id: { not: userId } },

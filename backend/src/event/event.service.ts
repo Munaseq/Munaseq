@@ -3714,6 +3714,7 @@ export class EventService {
   async setEventReminder(userId: string, eventId: string) {
     //check if the user exist
     const reminderDate = new Date();
+    reminderDate.setDate(reminderDate.getDate() - 1);
     await this.checkIfUserExist(userId);
 
     const event = await this.prisma.event.findUnique({

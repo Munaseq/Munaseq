@@ -195,24 +195,7 @@ export async function sendEmailSendGrid(
       });
   });
 }
-export async function scheduling(
-  reminderTime: Date,
-  eventId: string,
-): Promise<void> {
-  const client = new SchedulerClient({ region });
-  await client.send(
-    new CreateScheduleCommand({
-      Name: `event-reminder-${eventId}-${uuidv4()}`,
-      ScheduleExpression: `at(${reminderTime.toISOString()})`,
-      FlexibleTimeWindow: { Mode: 'OFF' },
-      Target: {
-        Arn: 'arn:aws:lambda:your-lambda-arn', // or HTTP endpoint of your backend
-        RoleArn: 'arn:aws:iam::your-account-id:role/EventBridgeSchedulerRole',
-        Input: JSON.stringify({ eventId }),
-      },
-    }),
-  );
-}
+
 // FileFieldsInterceptor(
 //   [
 //     { name: 'image', maxCount: 1 }, // The field name for the image file
