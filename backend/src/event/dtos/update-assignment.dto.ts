@@ -7,6 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { UpdateAssignmentQuestionDTO } from './update-assignment-question.dto';
+import * as moment from 'moment-timezone';
 
 export class UpdateAssignmentDTO {
   @IsArray()
@@ -21,11 +22,23 @@ export class UpdateAssignmentDTO {
 
   @IsOptional()
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    const localDate = new Date(value); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    ); // Convert to UTC
+    return utcDate;
+  })
   startDate?: Date;
 
   @IsOptional()
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    const localDate = new Date(value); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    ); // Convert to UTC
+    return utcDate;
+  })
   endDate?: Date;
 }

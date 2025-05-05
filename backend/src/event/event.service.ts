@@ -27,8 +27,9 @@ import * as path from 'path';
 import * as fontkit from '@pdf-lib/fontkit';
 import * as ArabicReshaper from 'arabic-reshaper';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
-import { uploadCertificate } from '../utils/aws.uploading';
+import { sendEmailSendGrid, uploadCertificate } from '../utils/aws.uploading';
 import { checkAuthorization } from '../utils/helper.functions';
+
 @Injectable()
 export class EventService {
   constructor(private prisma: PrismaService) {}
@@ -2314,7 +2315,7 @@ export class EventService {
       role = 'presenters';
     }
     //disconnect the user from the joinedUsers and the EventChat
-    await this.prisma.event.update({
+    const updatedEvent = await this.prisma.event.update({
       where: { id: eventId },
       data: {
         [role]: {
@@ -2324,7 +2325,16 @@ export class EventService {
           update: { Users: { disconnect: { id: userId } } },
         },
       },
+      select: {
+        Reminders: { where: { userId, eventId } },
+      },
     });
+    const isThereReminder = updatedEvent.Reminders[0];
+    if (isThereReminder) {
+      await this.prisma.reminder.delete({
+        where: { id: isThereReminder.id },
+      });
+    }
   }
   //--------------------------------------------------
   //THE FOLLOWING IS FOR RATING AN EVENT LOGIC
@@ -3698,6 +3708,60 @@ export class EventService {
       isAttendeesAllowed,
     };
   }
+  //-----------------------------------------
+  // Event Reminder endpoint
+  //-----------------------------------------
+  async setEventReminder(userId: string, eventId: string) {
+    //check if the user exist
+    const reminderDate = new Date();
+    await this.checkIfUserExist(userId);
+
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        startDateTime: true,
+        title: true,
+        eventCreator: { select: { id: true, firstName: true, email: true } },
+        moderators: { select: { id: true } },
+        presenters: { select: { id: true } },
+        joinedUsers: { select: { id: true } },
+      },
+    });
+    const isAuthorized = checkAuthorization(
+      userId,
+      event.eventCreator.id,
+      event.joinedUsers,
+      event.moderators,
+      event.presenters,
+    );
+
+    if (!isAuthorized) {
+      throw new BadRequestException(
+        'Your not authorized to set a reminder for this event',
+      );
+    }
+    await this.prisma.reminder.upsert({
+      where: { userId_eventId: { userId, eventId } },
+      update: {
+        reminderDate,
+      },
+      create: { reminderDate, userId, eventId },
+    });
+    return 'HHELLOO';
+    // //send email
+    // const msg = await sendEmailSendGrid(
+    //   event.eventCreator.firstName,
+    //   event.startDateTime.toLocaleDateString('en-CA', {
+    //     year: 'numeric',
+    //     month: 'numeric',
+    //     day: 'numeric',
+    //   }),
+    //   event.title,
+    //   event.eventCreator.email,
+    // );
+    // return msg;
+  }
+  async sendEmail(userId: string) {}
 
   //-----------------------------------------
   // Certificate endpoint

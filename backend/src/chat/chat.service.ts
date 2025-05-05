@@ -38,7 +38,14 @@ The system shall allow the event creator to make the generated messaging group c
 
 //TODO WHEN APPLYING INVITATION FEATURE ADD THE USER IF HE ACCEPTS
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: '*',
+    credentials: true,
+  },
+})
 @Injectable()
 export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(

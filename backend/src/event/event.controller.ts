@@ -929,6 +929,23 @@ export class EventController {
       body.isAttendeesAllowed,
     );
   }
+
+  //-----------------------------------------
+  // Event Reminder endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @Post('reminder/:eventId')
+  setReminder(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.setEventReminder(userId, eventId);
+  }
+
+  @Post('mail')
+  sendEmai() {
+    return this.eventService.sendEmail('hish');
+  }
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------

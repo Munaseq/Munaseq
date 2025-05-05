@@ -50,24 +50,26 @@ model User {
   Followers     Following[]    @relation("follower")
   FollowedUsers Following[]    @relation("followedUser")
   Announcments  Announcement[]
+  Reminders     Reminder[]
 }
 
 model Event {
-  id             String         @id @default(uuid())
-  title          String
-  description    String? // Optional description
-  categories     String[] // Array of event categories (string array)
-  location       String? // Optional location
-  seatCapacity   Int? // New: Optional seat capacity
-  isPublic       Boolean        @default(true) // New: Whether the event is public or private
-  isOnline       Boolean        @default(true) // New: Whether the event is remote or on-site
-  gender         Gender         @default(BOTH) // New: Gender of attendees (male, female, both)
+  id            String   @id @default(uuid())
+  title         String
+  description   String? // Optional description
+  categories    String[] // Array of event categories (string array)
+  location      String? // Optional location
+  seatCapacity  Int? // New: Optional seat capacity
+  isPublic      Boolean  @default(true) // New: Whether the event is public or private
+  isOnline      Boolean  @default(true) // New: Whether the event is remote or on-site
+  gender        Gender   @default(BOTH) // New: Gender of attendees (male, female, both)
   // targetAudience String[] // New: Array of target audiences
-  startDateTime  DateTime // Date without time
-  endDateTime    DateTime // Date without time
-  imageUrl       String? // New: Optional image string
-  price          Int?           @default(0) // New: Price for the event
-  rating         Float?         @default(0)
+  startDateTime DateTime // Date without time
+  endDateTime   DateTime // Date without time
+  imageUrl      String? // New: Optional image string
+  price         Int?     @default(0) // New: Price for the event
+  rating        Float?   @default(0)
+
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   presenters     User[]         @relation("EventPresenters") // New: List of event presenters (many-to-many)
@@ -85,6 +87,7 @@ model Event {
   Requests     Request[]      @relation("RequestedEvent") // one to many relationship
   Certificate  Certificate[]
   Announcments Announcement[]
+  Reminders    Reminder[]
 }
 
 model QuizQuestion {
@@ -292,6 +295,21 @@ model Announcement {
   eventId   String?
   Event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+//-----------------------------------------
+//Reminder model
+//----------------------------------------
+
+model Reminder {
+  id           String   @id @default(uuid())
+  reminderDate DateTime
+  userId       String
+  eventId      String
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
 }
 
 // -------------------------------------------------------------------------------------

@@ -11,6 +11,7 @@ import {
   IsEnum,
   IsBoolean,
 } from 'class-validator';
+import * as moment from 'moment-timezone';
 
 export class UpdateEventDto {
   @IsString()

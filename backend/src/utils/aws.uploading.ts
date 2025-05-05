@@ -4,7 +4,14 @@ import { S3Client } from '@aws-sdk/client-s3';
 import * as AWS from 'aws-sdk';
 import * as dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import { Unit } from 'aws-sdk/clients/emr';
+
+import { Injectable } from '@nestjs/common';
+import * as sgMail from '@sendgrid/mail';
+import {
+  SchedulerClient,
+  CreateScheduleCommand,
+} from '@aws-sdk/client-scheduler';
+
 dotenv.config();
 const bucketName = process.env.BUCKET_NAME;
 const region = process.env.BUCKET_REGION;
@@ -46,6 +53,7 @@ export function multerEventLogic() {
     },
   );
 }
+
 export function multerUserLogic() {
   return FileFieldsInterceptor(
     [
@@ -139,6 +147,71 @@ export function uploadCertificate(
       }
     });
   });
+}
+
+export async function sendEmailSendGrid(
+  firstName: string,
+  startEventDate: string,
+  eventTitle: string,
+  eventCreatorEmail: string,
+): Promise<string> {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  return new Promise((resolve, reject) => {
+    sgMail
+      .send({
+        personalizations: [
+          {
+            to: [
+              // {
+              //   email: eventCreatorEmail, // Recipient email
+              // },
+              { email: '443100831@student.ksu.edu.sa' },
+              { email: '443101240@student.ksu.edu.sa' },
+              { email: '443105662@student.ksu.edu.sa' },
+              { email: '443100662@student.ksu.edu.sa' },
+            ],
+            dynamicTemplateData: {
+              munaseqWebsite: 'https://munaseq.vercel.app/',
+              eventTitle,
+              firstName,
+              startEventDate,
+              eventCreatorMail: eventCreatorEmail,
+            },
+          },
+        ],
+        from: {
+          email: process.env.FROM_EMAIL, // Verified sender email
+          name: 'فريق منسّق', // Optional sender name
+        },
+        subject: ` ${eventTitle} :تذكير لحضور فعالية`, // Subject line
+        templateId: process.env.TEMPLATE_ID, // Dynamic template ID
+      })
+      .then(() => {
+        resolve('Email sent');
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+}
+export async function scheduling(
+  reminderTime: Date,
+  eventId: string,
+): Promise<void> {
+  const client = new SchedulerClient({ region });
+  await client.send(
+    new CreateScheduleCommand({
+      Name: `event-reminder-${eventId}-${uuidv4()}`,
+      ScheduleExpression: `at(${reminderTime.toISOString()})`,
+      FlexibleTimeWindow: { Mode: 'OFF' },
+      Target: {
+        Arn: 'arn:aws:lambda:your-lambda-arn', // or HTTP endpoint of your backend
+        RoleArn: 'arn:aws:iam::your-account-id:role/EventBridgeSchedulerRole',
+        Input: JSON.stringify({ eventId }),
+      },
+    }),
+  );
 }
 // FileFieldsInterceptor(
 //   [
