@@ -164,6 +164,7 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
           isAttendeesAllowed: true,
           Event: {
             select: {
+              id: true,
               title: true,
               imageUrl: true,
               eventCreator: {
@@ -185,7 +186,6 @@ export class ChatService implements OnGatewayConnection, OnGatewayDisconnect {
               Sender: {
                 select: {
                   id: true,
-
                   firstName: true,
                   lastName: true,
                   username: true,
