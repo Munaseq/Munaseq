@@ -3996,4 +3996,130 @@ export class EventService {
 
     return { certificateUrl };
   }
+
+  async getRecommendedEvents(
+    userId: string,
+    pageNumber: number = 1,
+    pageSize: number = 5,
+  ) {
+    // Check if the user exists
+    await this.checkIfUserExist(userId);
+
+    // Get user's categories
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { categories: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const userCategories = user.categories || [];
+    const skipedRecords = (pageNumber - 1) * pageSize;
+
+    try {
+      // Get all public events that are not at full capacity
+      // First, get events with capacity info
+      const events = await this.prisma.event.findMany({
+        where: {
+          isPublic: true,
+          // Exclude events created by the user or where user is already participating
+          AND: [
+            { eventCreatorId: { not: userId } },
+            { joinedUsers: { none: { id: userId } } },
+            { moderators: { none: { id: userId } } },
+            { presenters: { none: { id: userId } } },
+          ],
+        },
+        include: {
+          eventCreator: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              profilePictureUrl: true,
+              username: true,
+              visibleName: true,
+              rating: true,
+            },
+          },
+          _count: {
+            select: { joinedUsers: true },
+          },
+          joinedUsers: {
+            select: { id: true },
+          },
+        },
+      });
+
+      // Filter out events that are at full capacity
+      const availableEvents = events.filter(event => 
+        event.seatCapacity === 0 || event._count.joinedUsers < event.seatCapacity
+      );
+
+      // If no events found, return empty array
+      if (availableEvents.length === 0) {
+        return [];
+      }
+
+      // Calculate matches and sort events
+      const eventsWithScore = availableEvents.map(event => {
+        // Count how many categories match between user and event
+        const categoryMatches = userCategories.filter(category => 
+          event.categories.includes(category)
+        ).length;
+        
+        return {
+          ...event,
+          categoryMatchScore: categoryMatches,
+          popularityScore: event._count.joinedUsers,
+        };
+      });
+
+      // Sort by category matches (primary), then by rating (secondary), then by popularity (tertiary)
+      const sortedEvents = [...eventsWithScore].sort((a, b) => {
+        // First, compare by category match score
+        if (b.categoryMatchScore !== a.categoryMatchScore) {
+          return b.categoryMatchScore - a.categoryMatchScore;
+        }
+        
+        // If same category match score, compare by rating
+        if ((b.rating || 0) !== (a.rating || 0)) {
+          return (b.rating || 0) - (a.rating || 0);
+        }
+        
+        // If same rating, compare by popularity (number of joined users)
+        return b.popularityScore - a.popularityScore;
+      });
+
+      // Apply pagination after sorting
+      const paginatedEvents = sortedEvents.slice(skipedRecords, skipedRecords + pageSize);
+
+      // Return the sorted events (without the internal scoring properties and with readable counts)
+      return paginatedEvents.map(event => {
+        // Create a clean object without internal properties
+        const { 
+          categoryMatchScore, 
+          popularityScore, 
+          _count, 
+          joinedUsers,
+          ...cleanEvent 
+        } = event;
+        
+        // Add useful metadata for the client
+        return {
+          ...cleanEvent,
+          joinedUsersCount: _count.joinedUsers,
+          matchingCategories: userCategories.filter(category => 
+            event.categories.includes(category)
+          ),
+        };
+      });
+    } catch (error) {
+      console.error('Error in getRecommendedEvents:', error);
+      // Don't expose the actual error, return empty array instead
+      return [];
+    }
+  }
 }

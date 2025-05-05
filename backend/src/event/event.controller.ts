@@ -241,8 +241,6 @@ export class EventController {
     );
   }
 
-  // exec 2
-  // Returns all users that present in a certain event
   @Get('presenters/:eventId')
   @ApiOperation({ summary: 'Get all presenters of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -277,7 +275,23 @@ export class EventController {
     return this.eventService.findEventCreator(eventId);
   }
 
-  // What if the event is not public?
+  @Get('recommended')
+  @ApiOperation({ summary: 'Get recommended events for user'})
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiQuery({ name: 'pageNumber', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  getRecommendedEvents(
+    @GetCurrentUserId() userId: string,
+    @Query() query: { pageNumber?: number, pageSize?: number }
+  ) {
+    return this.eventService.getRecommendedEvents(
+      userId,
+      query.pageNumber,
+      query.pageSize
+    );
+  }
+
   @Get(':eventId')
   @ApiOperation({ summary: 'Get event details by ID' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
