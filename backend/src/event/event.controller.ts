@@ -278,19 +278,19 @@ export class EventController {
   }
 
   @Get('recommended')
-  @ApiOperation({ summary: 'Get recommended events for user'})
+  @ApiOperation({ summary: 'Get recommended events for user' })
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiQuery({ name: 'pageNumber', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
   getRecommendedEvents(
     @GetCurrentUserId() userId: string,
-    @Query() query: { pageNumber?: number, pageSize?: number }
+    @Query() query: { pageNumber?: number; pageSize?: number },
   ) {
     return this.eventService.getRecommendedEvents(
       userId,
       query.pageNumber,
-      query.pageSize
+      query.pageSize,
     );
   }
 
@@ -957,7 +957,8 @@ export class EventController {
   })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiBody({
-    description: 'Payload for creating/updating event Reminder',
+    description:
+      'Payload for defining the number of offset days. To clarify, if the date is 2025/1/5 and daysOffset=2 then the reminder will be send in 2025/1/3',
     type: CreateReminderDTO,
   })
   setReminder(
