@@ -29,6 +29,6 @@ import { ReminderModule } from './reminder/reminder.module';
     ReminderModule,
   ],
   controllers: [AppController, UserController, EventController],
-  providers: [AppService, UserService, EventService, ReminderService],
+  providers: [AppService, UserService, EventService],
 })
 export class AppModule {}

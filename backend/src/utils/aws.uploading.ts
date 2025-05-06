@@ -142,7 +142,7 @@ export function uploadCertificate(
       } else {
         // Extract the URL from the response
         const fileUrl = data.Location;
-        console.log('File uploaded successfully. URL:', fileUrl);
+
         resolve(fileUrl); // Resolve the promise with the file URL
       }
     });
@@ -153,6 +153,7 @@ export async function sendEmailSendGrid(
   firstName: string,
   startEventDate: string,
   eventTitle: string,
+  userEmail: string,
   eventCreatorEmail: string,
 ): Promise<string> {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -163,13 +164,9 @@ export async function sendEmailSendGrid(
         personalizations: [
           {
             to: [
-              // {
-              //   email: eventCreatorEmail, // Recipient email
-              // },
-              { email: '443100831@student.ksu.edu.sa' },
-              { email: '443101240@student.ksu.edu.sa' },
-              { email: '443105662@student.ksu.edu.sa' },
-              { email: '443100662@student.ksu.edu.sa' },
+              {
+                email: userEmail, // Recipient email
+              },
             ],
             dynamicTemplateData: {
               munaseqWebsite: 'https://munaseq.vercel.app/',

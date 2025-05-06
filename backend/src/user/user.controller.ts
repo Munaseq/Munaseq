@@ -284,6 +284,8 @@ export class UserController {
   getFollowing(@GetCurrentUserId() userId: string) {
     return this.userService.getFollowing(userId);
   }
+
+  
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('followers')
@@ -293,6 +295,8 @@ export class UserController {
   getFollowers(@GetCurrentUserId() userId: string) {
     return this.userService.getFollowers(userId);
   }
+
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('follow/:userId')
@@ -306,6 +310,8 @@ export class UserController {
   ) {
     return this.userService.followUser(userId, followedUserId);
   }
+
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Delete('unfollow/:userId')

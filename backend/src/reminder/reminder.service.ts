@@ -11,15 +11,15 @@ export class ReminderService {
 
   @Cron('00 00 12 * * *', { timeZone: 'Asia/Riyadh' })
   async handleCron() {
-    this.logger.log('Running reminder cron job at 12 PM Riyadh time.');
-
     // Step 1: Get the current date in Riyadh timezone and normalize it to midnight
-    const currentDate = moment.tz('Asia/Riyadh').startOf('day').toDate(); // Midnight of the current day
-    const nextDate = moment
-      .tz('Asia/Riyadh')
-      .add(1, 'day')
-      .startOf('day')
-      .toDate(); // Midnight of the next day
+    const currentDate = new Date();
+    currentDate.setUTCHours(0, 0, 0, 0); // Set time to midnight UTC
+
+    // Step 2: Calculate the next date (midnight of the next day in UTC)
+    const nextDate = new Date(currentDate);
+    nextDate.setUTCDate(currentDate.getUTCDate() + 1); // Add one day
+    nextDate.setUTCHours(0, 0, 0, 0); // Normalize to midnight UTC
+
 
     // Step 2: Retrieve all reminders where the reminderDate matches the current date
     const reminders = await this.prisma.reminder.findMany({
@@ -46,7 +46,25 @@ export class ReminderService {
       },
     });
     reminders.forEach(async (reminder) => {
-      this.logger.log(reminder);
+      const firstName = reminder.User.firstName;
+      const eventTitle = reminder.Event.title;
+      const userEmail = reminder.User.email;
+      const startDate = reminder.Event.startDateTime.toLocaleDateString(
+        'en-CA',
+        {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+        },
+      );
+      const eventCreatorEmail = reminder.Event.eventCreator.email;
+      await sendEmailSendGrid(
+        firstName,
+        startDate,
+        eventTitle,
+        userEmail,
+        eventCreatorEmail,
+      );
     });
   }
 }

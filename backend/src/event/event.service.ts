@@ -29,6 +29,7 @@ import * as ArabicReshaper from 'arabic-reshaper';
 type TypeOfSubmisson = 'SUBMITTED' | 'SAVED_ANSWERS';
 import { sendEmailSendGrid, uploadCertificate } from '../utils/aws.uploading';
 import { checkAuthorization } from '../utils/helper.functions';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class EventService {
@@ -3711,23 +3712,31 @@ export class EventService {
   //-----------------------------------------
   // Event Reminder endpoint
   //-----------------------------------------
-  async setEventReminder(userId: string, eventId: string) {
+  async setEventReminder(userId: string, eventId: string, daysOffset: number) {
     //check if the user exist
-    const reminderDate = new Date();
-    reminderDate.setDate(reminderDate.getDate() - 1);
-    await this.checkIfUserExist(userId);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, email: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
         startDateTime: true,
         title: true,
-        eventCreator: { select: { id: true, firstName: true, email: true } },
+        eventCreator: { select: { id: true, email: true } },
         moderators: { select: { id: true } },
         presenters: { select: { id: true } },
         joinedUsers: { select: { id: true } },
       },
     });
+    if (!event) {
+      throw new NotFoundException('event not found');
+    }
     const isAuthorized = checkAuthorization(
       userId,
       event.eventCreator.id,
@@ -3741,6 +3750,50 @@ export class EventService {
         'Your not authorized to set a reminder for this event',
       );
     }
+
+    const reminderDate = event.startDateTime;
+    reminderDate.setUTCDate(reminderDate.getUTCDate() - daysOffset); // Subtract one day in UTC
+    reminderDate.setUTCHours(0, 0, 0, 0); // Normalize to midnight UTC
+    const localDate = new Date(); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    );
+    utcDate.setUTCHours(0, 0, 0, 0);
+    if (reminderDate < utcDate) {
+      throw new BadRequestException("The reminder can't be in the past");
+    } else if (reminderDate.getTime() === utcDate.getTime()) {
+      const nowInRiyadh = moment.tz('Asia/Riyadh'); // Current time in Riyadh
+      const riyadh12PM = moment
+        .tz('Asia/Riyadh')
+        .set({ hour: 12, minute: 0, second: 0, millisecond: 0 }); // 12 PM Riyadh time
+      if (nowInRiyadh.isAfter(riyadh12PM)) {
+        //if the reminder should be sent today, but the cron job (which will run at 12PM of Riyadh timezone ) then send it right now
+
+        const isReminderExist = await this.prisma.reminder.findUnique({
+          where: { userId_eventId: { userId, eventId } },
+        });
+        if (isReminderExist) {
+          await this.prisma.reminder.delete({
+            where: { id: isReminderExist.id },
+          });
+        }
+        //send a reminder
+        await sendEmailSendGrid(
+          user.firstName,
+          event.startDateTime.toLocaleDateString('en-CA', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+          }),
+          event.title,
+          user.email,
+          event.eventCreator.email,
+        );
+        return {
+          message: 'The reminder was set successfully!',
+        };
+      }
+    }
     await this.prisma.reminder.upsert({
       where: { userId_eventId: { userId, eventId } },
       update: {
@@ -3748,21 +3801,10 @@ export class EventService {
       },
       create: { reminderDate, userId, eventId },
     });
-    return 'HHELLOO';
-    // //send email
-    // const msg = await sendEmailSendGrid(
-    //   event.eventCreator.firstName,
-    //   event.startDateTime.toLocaleDateString('en-CA', {
-    //     year: 'numeric',
-    //     month: 'numeric',
-    //     day: 'numeric',
-    //   }),
-    //   event.title,
-    //   event.eventCreator.email,
-    // );
-    // return msg;
+    return {
+      message: 'The reminder was set successfully!',
+    };
   }
-  async sendEmail(userId: string) {}
 
   //-----------------------------------------
   // Certificate endpoint

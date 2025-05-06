@@ -13,6 +13,7 @@ import {
   UploadedFiles,
   Query,
   BadRequestException,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -45,6 +46,7 @@ import {
   SendRequestDTO,
   RespondRequestDto,
   UpdateChatAllowanceDto,
+  CreateReminderDTO,
 } from './dtos';
 
 import { multerEventLogic, multerMaterialtLogic } from '../utils/aws.uploading';
@@ -948,18 +950,24 @@ export class EventController {
   // Event Reminder endpoint
   //-----------------------------------------
   @UseGuards(AuthGuard)
-  @Post('reminder/:eventId')
+  @ApiBearerAuth()
+  @Put('reminder/:eventId')
+  @ApiOperation({
+    summary: 'Create/update a reminder for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for creating/updating event Reminder',
+    type: CreateReminderDTO,
+  })
   setReminder(
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
+    @Body() { daysOffset }: CreateReminderDTO,
   ) {
-    return this.eventService.setEventReminder(userId, eventId);
+    return this.eventService.setEventReminder(userId, eventId, daysOffset);
   }
 
-  @Post('mail')
-  sendEmai() {
-    return this.eventService.sendEmail('hish');
-  }
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------
