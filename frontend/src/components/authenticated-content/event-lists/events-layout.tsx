@@ -35,7 +35,7 @@ export default async function EventsLayout({
                 {eventString}
             </Title>
             <Subtitle>
-                <div className="gap-8 sm:flex hidden">
+                <div className="gap-8 sm:flex hidden mt-8">
                     <Link
                         href={`/${eventType}-events/active`}
                         className="relative text-nowrap"

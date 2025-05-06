@@ -160,7 +160,7 @@ export default function Activities({
                     size={32}
                 />
                 {selectedActivity === null
-                    ? "الأنشطة"
+                    ? "أنشطة الفعالية"
                     : activityType === "assignment"
                     ? "تفاصيل الواجب"
                     : "تفاصيل الاختبار"}

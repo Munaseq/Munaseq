@@ -121,6 +121,16 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
+                                href={`/event/${params.eventId}/chat`}
+                                className="relative text-nowrap"
+                            >
+                                الدردشة{" "}
+                                <TabIndicator
+                                    layoutId="active-event-tab"
+                                    tab="/chat"
+                                />
+                            </Link>
+                            <Link
                                 href={`/event/${params.eventId}/members`}
                                 className="relative text-nowrap"
                             >
@@ -153,7 +163,7 @@ export default async function EventLayout({
                         </div>
 
                         <div className="sm:hidden block">
-                            <SelectEventTap />
+                            <SelectEventTap eventID={params.eventId} />
                         </div>
                     </div>
                 </div>

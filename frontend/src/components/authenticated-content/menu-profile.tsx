@@ -14,6 +14,7 @@ export default function MenuProfile({ profileData, onLinkClick }: { profileData:
               src={profileData.profilePictureUrl}
               alt="preview"
               fill
+              className="object-cover"
               sizes="100%"
               priority
             />

@@ -21,6 +21,8 @@ export default async function MenuProfile() {
               src={data.profilePictureUrl}
               alt="preview"
               fill
+              className="object-cover"
+              sizes="100%"
               priority
             />
           ) : (

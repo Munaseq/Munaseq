@@ -10,7 +10,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function SelectEventTap() {
+export default function SelectEventTap({eventID}: { eventID: string }) {
     const path = usePathname();
     const router = useRouter();
     const [selectedValue, setSelectedValue] = useState<string>("");
@@ -28,7 +28,7 @@ export default function SelectEventTap() {
             value={selectedValue} 
             dir="rtl" 
             onValueChange={(e) => {
-                router.push(`${e}`);
+                router.push(`/event/${eventID}/${e}`);
             }}
         >
             <SelectTrigger className="m-2 !text-xl border-0 rounded-none border-b-2 border-custom-black">
@@ -44,11 +44,17 @@ export default function SelectEventTap() {
                 <SelectItem value="activities" className="!text-lg">
                 الأنشطة
                 </SelectItem>
+                <SelectItem value="chat" className="!text-lg">
+                الدردشة
+                </SelectItem>
                 <SelectItem value="members" className="!text-lg">
                 الأعضاء
                 </SelectItem>
                 <SelectItem value="rate" className="!text-lg">
                 التقييم 
+                </SelectItem>
+                <SelectItem value="announcement" className="!text-lg">
+                الاخبار 
                 </SelectItem>
             </SelectContent>
         </Select>

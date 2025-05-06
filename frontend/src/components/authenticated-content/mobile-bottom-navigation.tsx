@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Cookies from "js-cookie";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import getProfileAction from "@/proxy/user/get-profile-action";
 import { signOut } from "@/proxy/signout-action";

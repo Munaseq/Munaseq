@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   CalendarDaysIcon,
+  MessagesSquareIcon,
   Rss,
   SparklesIcon,
   UserRoundIcon,
@@ -45,6 +46,11 @@ export default function Nav(props: {
       name: "الملف الشخصي",
       path: "/user/" + props.username,
       icon: <UserRoundIcon />,
+    },
+    {
+      name: "المحادثات",
+      path: "/chat",
+      icon: <MessagesSquareIcon />,
     },
     {
       name: "الاخبار",

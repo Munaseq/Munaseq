@@ -48,7 +48,7 @@ const SearchUserComponent = ({
             setIsLoading(true);
             const currentUser: UserDataDto = await getProfileAction(); // Fetch current user
             const userList: UserDataDto[] = [
-                ...(await getUserSearchAction(searchTerm)),
+                ...(await getUserSearchAction({username: searchTerm})),
             ];
             // filter users that are already selected and that are in roles
             const filteredUsers = userList.filter(user => {
@@ -111,11 +111,12 @@ const SearchUserComponent = ({
                                         <div className="relative shrink-0 w-10 h-10 ">
                                             {result.profilePictureUrl ? (
                                                 <Image
-                                                    className="rounded-full"
+                                                    className="rounded-full object-cover"
                                                     src={
                                                         result.profilePictureUrl
                                                     }
                                                     fill
+                                                    sizes="100%"
                                                     alt="user image"
                                                 />
                                             ) : (
