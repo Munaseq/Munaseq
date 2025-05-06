@@ -17,7 +17,6 @@ export default async function getAnnouncementAction() {
     );
 
     const data = await announcement.json();
-    console.log("Announcement data:", data); // Debugging line
 
     return data;
   } catch (error: any) {

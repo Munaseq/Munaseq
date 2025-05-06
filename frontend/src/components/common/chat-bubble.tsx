@@ -1,4 +1,5 @@
 import { Message } from "@/dtos/message-data.dto";
+import { CircleUserRoundIcon } from "lucide-react";
 import Image from "next/image";
 
 export default function ChatBubble({
@@ -6,14 +7,12 @@ export default function ChatBubble({
     isSender,
     isEventCreator,
     isPresenter,
-    isModerator,
     isMember,
 }: {
     message: Message;
     isSender: boolean;
     isEventCreator: boolean;
     isPresenter: boolean;
-    isModerator: boolean;
     isMember: boolean;
 }) {
     if (!isSender) {
@@ -48,13 +47,18 @@ export default function ChatBubble({
                     </span>
                 </div>
                 <div className="w-10 h-10 aspect-square relative rounded-full overflow-hidden">
-                    <Image
-                        src={message.Sender.profilePictureUrl}
-                        fill
-                        sizes="100%"
-                        className="object-cover"
-                        alt="User profile picture"
-                    />
+                    {
+                        message.Sender.profilePictureUrl ? (<Image
+                            src={message.Sender.profilePictureUrl}
+                            fill
+                            sizes="100%"
+                            className="object-cover"
+                            alt="User profile picture"
+                        /> ): (
+                            <CircleUserRoundIcon className="w-full h-full aspect-square"/>
+                        )
+                    }
+                    
                 </div>
             </div>
         );

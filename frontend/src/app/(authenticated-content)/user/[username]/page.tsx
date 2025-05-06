@@ -92,13 +92,8 @@ export default async function UserProfile({
             </div>
           </div>
         </div>
+          
         <div className="flex gap-3 mt-3">
-          {!hisProfile && <FollowButton userId={data.id} />}
-          {hisProfile && (
-            <p className="text-custom-light-purple text-xl">
-              عدد المتابعين: {numberOfFollowers}
-            </p>
-          )}
           {data.cvUrl && (
             <TooltipWrapper text="السيرة الذاتية">
               <a href={data.cvUrl} target="_blank" rel="noopener noreferrer">
@@ -146,6 +141,12 @@ export default async function UserProfile({
             </TooltipWrapper>
           )}
         </div>
+        {!hisProfile && <FollowButton userId={data.id} />}
+          {hisProfile && (
+            <p className="text-custom-light-purple text-xl">
+              عدد المتابعين: {numberOfFollowers}
+            </p>
+          )}
         <div className="mt-5 flex gap-24">
           <div className="flex gap-1 text-custom-light-purple text-xl">
             <StarIcon className="text-custom-light-purple" />

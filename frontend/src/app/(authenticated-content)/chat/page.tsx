@@ -1,10 +1,10 @@
-import { MessageCircleIcon } from "lucide-react";
+import { MessagesSquareIcon } from "lucide-react";
 import Title from "@/components/common/text/title";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import getProfileAction from "@/proxy/user/get-profile-action";
 import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
-import ChatMenu from "../event/[eventId]/(event-layout)/chat/chat-menu";
+import ChatMenu from "../../../components/authenticated-content/chat/chat-menu";
 
 export default async function ChatPage() {
     const cookiesStore = cookies();
@@ -18,7 +18,7 @@ export default async function ChatPage() {
     return (
         <div>
             <Title>
-                <MessageCircleIcon
+                <MessagesSquareIcon
                     className="text-custom-light-purple"
                     size={32}
                 />

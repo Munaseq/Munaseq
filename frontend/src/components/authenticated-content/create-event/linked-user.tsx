@@ -19,9 +19,10 @@ export default function LinkedUser(props: { user: UserDataDto }) {
                     <Image
                         src={props.user.profilePictureUrl}
                         alt={props.user.username}
-                        layout="fill"
-                        objectFit="cover"
-                        className="z-10"
+                        fill
+                        sizes="100%"
+
+                        className="z-10 object-cover"
                     />
                 ) : (
                     <UserRoundIcon className="z-10 w-full h-full" />

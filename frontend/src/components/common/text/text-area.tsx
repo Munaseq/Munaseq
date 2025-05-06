@@ -29,7 +29,7 @@ const TextArea = forwardRef(function TextArea(
                 defaultValue={props.defaultValue}
                 maxLength={500}
                 onChange={props.onChange}
-                className={"w-full h-28 min-h-32 border-b border-gray-300 focus:outline-none peer resize-none bg-transparent z-10 px-3 "+ props.className}
+                className={"w-full h-28 min-h-32 border-b border-gray-300 focus:outline-none peer resize-none bg-transparent z-10"+ props.className}
             />
         </div>
     );

@@ -15,7 +15,8 @@ export default async function createEventAction(
   if (!token?.value) {
     redirect("signin");
   }
-  let eventData: EventDataDto;
+  let eventData: any;
+  
 
   try {
     const createRes = await fetch(`${process.env.BACKEND_URL}/event`, {
@@ -27,11 +28,10 @@ export default async function createEventAction(
     });
 
     eventData = await createRes.json();
+    
 
     if (!createRes.ok) {
-      const errorResponse = await createRes.text(); // Capture the error message
-      console.error("Error response:", errorResponse);
-      throw Error(errorResponse);
+      throw Error(eventData.error as string);
     }
 
     revalidateTag("event");
@@ -46,20 +46,24 @@ export default async function createEventAction(
   
     
         // Iterate through roles and make API calls
-        for (const role of rolesValue) {
+        for (const role of rolesValue) {``
           
           const parsedRole = JSON.parse(role as string); 
        
           try {
             const response = await fetch(
-              `${process.env.BACKEND_URL}/event/assignRole/${eventData.id}`,
+              `${process.env.BACKEND_URL}/event/invitation/${eventData.id}`,
               {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${token?.value}`,
                 },
-                body: JSON.stringify(parsedRole),
+                body: JSON.stringify({
+                  "invitationType": 'ROLE_INVITATION',
+                  "receiverId": parsedRole.assignedUserId,
+                  "roleType": parsedRole.role === "moderators" ? "MODERATOR" : "PRESENTER",
+                }),
               }
             );
 
@@ -87,8 +91,9 @@ export default async function createEventAction(
     //   }
     // );
   } catch (error: any) {
+
     return {
-      message: "ERROR",
+      message: error.message,
     };
   }
   redirect("/event/" + eventData.id + "/about");

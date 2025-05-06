@@ -1,11 +1,12 @@
 import Title from "@/components/common/text/title";
 import { Metadata } from "next";
-import { SparklesIcon, TagsIcon } from "lucide-react";
+import { BrushIcon, SparklesIcon, TagsIcon } from "lucide-react";
 import HighestRatedEvents from "@/components/authenticated-content/discover/highest-rated-events";
 import PreferredCategoriesEvents from "@/components/authenticated-content/discover/preferred-categories-events";
 import EventListSection from "@/components/authenticated-content/discover/event-list-section";
 import LogoLoading from "@/components/common/logo-loading";
 import { Suspense } from "react";
+import RecommendedEvents from "@/components/authenticated-content/discover/recommend-events";
 
 export const metadata: Metadata = {
     title: "اكتشف",
@@ -21,6 +22,7 @@ export default function Discover() {
             <EventListSection message="فعاليات منسقين اعلى من 4.5 نجوم">
                 <HighestRatedEvents />
             </EventListSection>
+
             <Title>
                 <TagsIcon size={32} color="var(--custom-light-purple)" />
                 من فئاتك المفضلة
@@ -34,6 +36,13 @@ export default function Discover() {
             >
                 <PreferredCategoriesEvents />
             </Suspense>
+            <Title>
+                <BrushIcon size={32} color="var(--custom-light-purple)" />
+                فعاليات مقترحة لك
+            </Title>
+            <EventListSection message="فعاليات مقترحة لك">
+                <RecommendedEvents />
+            </EventListSection>
         </div>
     );
 }

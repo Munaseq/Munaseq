@@ -24,21 +24,18 @@ export default function forwhoForm({
     onCategoriesChange: (categories: string[]) => void;
     step: number;
     prevStepHandler: () => void;
-    error: { message: string };
+    error: any;
 }>) {
     const [selectedCatagories, setSelectedCatagories] = useState<Category[]>(
         []
     );
-
-    const {roles, setRoles} = useRolesContext();
+    const { roles, setRoles } = useRolesContext();
 
     const removeUser = (user: UserDataDto) => {
         setRoles(prevState => {
-            return prevState.filter(
-                role => role.user.id !== user.id
-            );
-        })
-    }
+            return prevState.filter(role => role.user.id !== user.id);
+        });
+    };
 
     useEffect(() => {
         onCategoriesChange(selectedCatagories);
@@ -99,12 +96,17 @@ export default function forwhoForm({
             </motion.h3>
             <motion.div layout className="flex gap-2 mt-2">
                 {moderators.map(moderator => (
-                    <div onClick={e => {
-                        e.preventDefault();
-                        removeUser(moderator.user);
-                    }}>
-                        <LinkedUser key={moderator.user.id} user={moderator.user} />
-
+                    <div
+                        key={moderator.user.id}
+                        onClick={e => {
+                            e.preventDefault();
+                            removeUser(moderator.user);
+                        }}
+                    >
+                        <LinkedUser
+                            key={moderator.user.id}
+                            user={moderator.user}
+                        />
                     </div>
                 ))}
                 {moderators.length < 3 && (
@@ -123,6 +125,7 @@ export default function forwhoForm({
             <motion.div layout className="flex gap-2 mt-2">
                 {presenters.map(presenter => (
                     <div
+                        key={presenter.user.id}
                         onClick={e => {
                             e.preventDefault();
                             removeUser(presenter.user);
@@ -145,7 +148,7 @@ export default function forwhoForm({
             {/* Error Message */}
             {error.message && (
                 <p className="text-red-500 text-center mt-5">
-                    حدث خطأ, الرجاء المحاولة مره اخرى.
+                    {error.message === 'Conflict' ? (<>يتعارض الفعالية مع فعالية اخرى انت بها</>) : (<>حدث خطأ, الرجاء المحاولة مره اخرى.</>)}
                 </p>
             )}
 

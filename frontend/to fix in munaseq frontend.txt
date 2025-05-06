@@ -7,6 +7,7 @@
 - fix rating (you cant rate if you are a member)
 - redo add materail
 - redo rating
+- respond to conflicts
 
 for al mohammed:
 - make assignment or quiz maker see answers of people who have submitted

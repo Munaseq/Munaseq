@@ -8,17 +8,20 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/common/shadcn-ui/dropdown-menu";
-import { useRouter } from "next/navigation";
 import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react";
+import EditEventDialog from "./edit-event-dialog";
+import { EventDataDto } from "@/dtos/event-data.dto";
 export default function EventDropdown({
-    eventId,
+    event,
     isEventCreator,
+    isAdmin,
 }: {
-    eventId: string;
+    event: EventDataDto;
     isEventCreator: boolean;
+    isAdmin: boolean;
 }) {
     const leaveEvent = async () => {
-        const res = await leaveEventAction(eventId);
+        const res = await leaveEventAction(event.id);
 
         if (res) {
             toast.error("حدث خطأ ما");
@@ -28,7 +31,7 @@ export default function EventDropdown({
     };
 
     const cancelEvent = async () => {
-        const res = await cancelEventAction(eventId);
+        const res = await cancelEventAction(event.id);
         if (res) {
             toast.error("حدث خطأ ما");
             return;
@@ -58,6 +61,7 @@ export default function EventDropdown({
                         الخروج من الفعالية <LogOutIcon />
                     </div>
                 )}
+                {isAdmin && <EditEventDialog event={event} />}
             </DropdownMenuContent>
         </DropdownMenu>
     );

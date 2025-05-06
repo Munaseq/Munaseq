@@ -55,7 +55,7 @@ export default function ParticipantsForm({
                 />
                 <div className="flex gap-4">
                     <label
-                        htmlFor="capacity"
+                        htmlFor="seatCapacity"
                         className="block text-lg text-custom-gray text-nowrap"
                     >
                         عدد الحاضرين
@@ -63,7 +63,7 @@ export default function ParticipantsForm({
                     <Input
                         ref={capacityInputRef}
                         type="number"
-                        name="capacity"
+                        name="seatCapacity"
                         defaultValue={50}
                         min={1}
                         max={1000}

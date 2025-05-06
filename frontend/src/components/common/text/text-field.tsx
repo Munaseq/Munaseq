@@ -11,6 +11,7 @@ const Input = forwardRef(function TextField(
         error?: boolean;
         disabled?: boolean;
         defaultValue?: string;
+        value?: string;
         onBlur?: (e: any) => void
     },
     ref: any

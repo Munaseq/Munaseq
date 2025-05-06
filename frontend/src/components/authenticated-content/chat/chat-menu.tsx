@@ -8,6 +8,11 @@ import LogoLoading from "@/components/common/logo-loading";
 import Image from "next/image";
 import Link from "next/link";
 import Subtitle from "@/components/common/text/subtitle";
+import {
+    CalendarDaysIcon,
+    CircleUserRoundIcon,
+    UserRoundIcon,
+} from "lucide-react";
 // Using a ref to maintain socket instance between renders
 // instead of a global variable for better lifecycle management
 
@@ -69,9 +74,12 @@ export default function ChatMenu({
                 </div>
             ) : (
                 <>
-                        <Subtitle>
+                    <Subtitle>
+                        <div className="flex gap-1 items-center">
+                            <UserRoundIcon />
                             المحادثات المباشرة
-                        </Subtitle>
+                        </div>
+                    </Subtitle>
                     <div className="flex flex-col pt-4">
                         {Chats.directChats.map((chat, index) => (
                             <Link
@@ -99,15 +107,20 @@ export default function ChatMenu({
                                         }
                                     </h1>
                                     <div className="w-20 h-20 aspect-square relative rounded-full overflow-hidden">
-                                        <Image
-                                            src={
-                                                chat.Users[0].profilePictureUrl
-                                            }
-                                            fill
-                                            sizes="100%"
-                                            className="object-cover"
-                                            alt="User profile picture"
-                                        />
+                                        {chat.Users[0].profilePictureUrl ? (
+                                            <Image
+                                                src={
+                                                    chat.Users[0]
+                                                        .profilePictureUrl
+                                                }
+                                                fill
+                                                sizes="100%"
+                                                className="object-cover"
+                                                alt="User profile picture"
+                                            />
+                                        ) : (
+                                            <CircleUserRoundIcon className="w-full h-full aspect-square" />
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex flex-col justify-end">
@@ -139,7 +152,12 @@ export default function ChatMenu({
                             </Link>
                         ))}
                     </div>
-                        <Subtitle >محادثات الفعاليات</Subtitle>
+                    <Subtitle>
+                        <div className="flex gap-1 items-center">
+                            <CalendarDaysIcon />
+                            محادثات الفعاليات
+                        </div>
+                    </Subtitle>
                     <div className="flex flex-col pt-4">
                         {Chats.eventChats.map((chat: any, index) => (
                             <Link
@@ -163,28 +181,41 @@ export default function ChatMenu({
                                 </div>
                                 <div className="flex flex-col justify-end">
                                     <p className="text-md text-gray-500 overflow-ellipsis overflow-hidden max-h-32 max-w-56">
-                                        {chat.Messages[0]?.Sender.username ===
-                                            currentUser.username && (
-                                            <span className="text-custom-light-purple font-bold">
-                                                انت:{" "}
+                                        {chat.Messages[0]?.content ? (
+                                            <>
+                                                {chat.Messages[0]?.Sender
+                                                    .username ===
+                                                    currentUser.username && (
+                                                    <span className="text-custom-light-purple font-bold">
+                                                        انت:{" "}
+                                                    </span>
+                                                )}
+                                                {chat.Messages[0]?.content}
+                                            </>
+                                        ): (
+                                            <span className="">
+                                                لا توجد رسائل بعد
                                             </span>
                                         )}
-                                        {chat.Messages[0]?.content}
                                     </p>
                                     <p className="text-sm text-gray-500">
-                                        {new Date(
-                                            chat.Messages[0]?.createdAt
-                                        ).toLocaleDateString("ar-EG", {
-                                            year: "numeric",
-                                            month: "2-digit",
-                                            day: "2-digit",
-                                        })}{" "}
-                                        {new Date(
-                                            chat.Messages[0]?.createdAt
-                                        ).toLocaleTimeString("ar-EG", {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
+                                        {chat.Messages[0]?.content && (
+                                            <>
+                                                {new Date(
+                                                    chat.Messages[0]?.createdAt
+                                                ).toLocaleDateString("ar-EG", {
+                                                    year: "numeric",
+                                                    month: "2-digit",
+                                                    day: "2-digit",
+                                                })}{" "}
+                                                {new Date(
+                                                    chat.Messages[0]?.createdAt
+                                                ).toLocaleTimeString("ar-EG", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
+                                            </>
+                                        )}
                                     </p>
                                 </div>
                             </Link>

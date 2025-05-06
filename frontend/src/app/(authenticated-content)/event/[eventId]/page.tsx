@@ -121,7 +121,7 @@ export default async function EventPage({
                         </div>
                     </div>
 
-                    <JoinButton eventId={params.eventId}>
+                    <JoinButton isEventPublic={event.isPublic} eventId={params.eventId}>
                         <Image
                             className="absolute bottom-0 left-0 "
                             src={decoBottom}

@@ -57,7 +57,7 @@ export default function ChatComponent({
         const socket = socketRef.current;
 
         // Set up event listeners
-        const onNewChat = ({ chatId }: {chatId: string}) => {
+        const onNewChat = ({ chatId }: { chatId: string }) => {
             console.log("Chat data received:", chatId);
             chatIdRef.current = chatId;
             socket.emit("SelectChat", {
@@ -67,8 +67,9 @@ export default function ChatComponent({
 
         const onChat = (data: Chat) => {
             setIsLoading(false);
-            setMessages(data.Messages.reverse());
-        }
+            if (data.id !== chatIdRef.current) return;
+                setMessages(data.Messages.reverse());
+        };
 
         const onMessage = (data: any) => {
             if (data.chatId !== chatIdRef.current) return;
@@ -79,14 +80,38 @@ export default function ChatComponent({
             console.error("Socket error:", data);
         };
 
+        const onChats = (data: any) => {
+            const directChats = data.directChats || [];
+            let found = false;
+            console.log("Direct chats:", directChats);
+
+            for (const directChat of directChats) {
+                if (directChat.Users[0].username === reciverUser.username) {
+                    chatIdRef.current = directChat.id;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found && chatIdRef.current) {
+                // Request chat data to load message history
+                socket.emit("SelectChat", {
+                    chatId: chatIdRef.current,
+                });
+            } else {
+                // Create a new chat if not found
+                socket.emit("NewChat", {
+                    receiverId: reciverUser.id,
+                });
+            }
+        };
+
         // Register event listeners
         socket.on("connect", () => {
             console.log("Socket connected");
-            socket.emit("NewChat", {
-                receiverId: reciverUser.id,
-            });
         });
 
+        socket.on("Chats", onChats);
         socket.on("NewChat", onNewChat);
         socket.on("Chat", onChat);
         socket.on("Message", onMessage);
@@ -94,6 +119,7 @@ export default function ChatComponent({
 
         // Clean up function to remove event listeners
         return () => {
+            socket.off("Chats", onChats);
             socket.off("Chat", onChat);
             socket.off("NewChat", onNewChat);
             socket.off("Message", onMessage);
@@ -136,7 +162,6 @@ export default function ChatComponent({
                                     isMember={true}
                                     isEventCreator={false}
                                     isPresenter={false}
-                                    isModerator={false}
                                 />
                             ))
                         )}

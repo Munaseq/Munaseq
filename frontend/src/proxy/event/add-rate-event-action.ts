@@ -1,8 +1,9 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 
-export default async function rateEventAction(eventId: string, rating: number) {
+export default async function rateEventAction(eventId: string, rating: number, feedback: string) {
   // Get token from cookies
   const cookiesList = cookies();
   const token = cookiesList.get("token");
@@ -23,10 +24,7 @@ export default async function rateEventAction(eventId: string, rating: number) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token.value}`,
         },
-        next: {
-          tags: ['user']
-        },
-        body: JSON.stringify({ rating: rating }),
+        body: JSON.stringify({ rating: rating,  comment: feedback }),
       }
     );
 
@@ -36,6 +34,8 @@ export default async function rateEventAction(eventId: string, rating: number) {
       throw new Error(errorResponse.message || "Failed to submit the rating.");
     }
 
+    revalidateTag("rating"); 
+    revalidateTag("user");
     const data = await response.json();
 
 

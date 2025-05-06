@@ -138,7 +138,6 @@ export default function EventChat({
         setMessageInput("");
     };
 
-    
     return (
         <div>
             {!isLoading && (
@@ -191,10 +190,6 @@ export default function EventChat({
                                     isPresenter={memberList.presenters.some(
                                         presenter =>
                                             presenter.id === message.Sender.id
-                                    )}
-                                    isModerator={memberList.moderators.some(
-                                        moderator =>
-                                            moderator.id === message.Sender.id
                                     )}
                                     isMember={memberList.joinedUsers.some(
                                         user => user.id === message.Sender.id

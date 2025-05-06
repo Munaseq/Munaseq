@@ -2,7 +2,7 @@ import EventChat from "@/components/authenticated-content/event/event-layout/eve
 import { UserDataDto } from "@/dtos/user-data.dto";
 import getAllUsers from "@/proxy/user/get-all-user-event-action";
 import getProfileAction from "@/proxy/user/get-profile-action";
-import { MessageCircleIcon } from "lucide-react";
+import { MessagesSquareIcon } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -28,7 +28,7 @@ export default async function ChatPage({
     return (
         <div>
             <h1 className="font-bold flex items-center text-3xl gap-2 mt-4">
-                <MessageCircleIcon
+                <MessagesSquareIcon
                     className="text-custom-light-purple"
                     size={32}
                 />

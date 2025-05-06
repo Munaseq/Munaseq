@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import {
   CalendarDaysIcon,
+  InboxIcon,
   MessagesSquareIcon,
   Rss,
   SparklesIcon,
@@ -51,6 +52,11 @@ export default function Nav(props: {
       name: "المحادثات",
       path: "/chat",
       icon: <MessagesSquareIcon />,
+    },
+    {
+      name: "الدعوات",
+      path: "/invites",
+      icon: <InboxIcon />,
     },
     {
       name: "الاخبار",

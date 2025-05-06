@@ -7,7 +7,7 @@ export interface EventDataDto {
     categories: string[];
     location?: string;
     seatCapacity: number;
-    isPublic?: boolean;
+    isPublic: boolean;
     isOnline?: boolean;
     gender: string;
     startDateTime: string;
@@ -15,4 +15,5 @@ export interface EventDataDto {
     imageUrl: string;
     price?: number;
     eventCreator: UserDataDto;
+    rating: number;
 }

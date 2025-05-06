@@ -7,6 +7,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/common/shadcn-ui/dialog";
+import TooltipWrapper from "@/components/common/tooltip";
 import { QrCodeIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
