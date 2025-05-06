@@ -139,10 +139,6 @@ export class UserController {
           format: 'email',
           description: 'User email address.',
         },
-        visibleName: {
-          type: 'string',
-          description: 'Display name or organization name.',
-        },
         gender: {
           type: 'string',
           enum: ['MALE', 'FEMALE', 'OTHER'],
@@ -285,7 +281,6 @@ export class UserController {
     return this.userService.getFollowing(userId);
   }
 
-  
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('followers')
@@ -295,7 +290,6 @@ export class UserController {
   getFollowers(@GetCurrentUserId() userId: string) {
     return this.userService.getFollowers(userId);
   }
-
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
@@ -310,7 +304,6 @@ export class UserController {
   ) {
     return this.userService.followUser(userId, followedUserId);
   }
-
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()

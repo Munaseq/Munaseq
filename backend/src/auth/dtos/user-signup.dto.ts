@@ -30,10 +30,6 @@ export class userSignUpDto {
   @IsString()
   username: string;
 
-  @IsOptional()
-  @IsString()
-  visibleName?: string; // Can be name or organization name
-
   @IsNotEmpty()
   @IsEnum(Gender)
   gender: Gender;

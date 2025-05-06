@@ -21,10 +21,6 @@ export class EditUserInfoDto {
   email?: string;
 
   @IsOptional()
-  @IsString()
-  visibleName?: string; // Can be name or organization name
-
-  @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
 

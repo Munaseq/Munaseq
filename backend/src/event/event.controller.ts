@@ -765,8 +765,8 @@ export class EventController {
     @GetCurrentUserId() userId: string,
     @Body() ratingDto: CreateUpdateRating,
   ) {
-    const { rating } = ratingDto;
-    return this.eventService.rateEvent(userId, eventId, rating);
+    const { rating, comment } = ratingDto;
+    return this.eventService.rateEvent(userId, eventId, rating, comment);
   }
 
   @Get('ratings/:eventId')

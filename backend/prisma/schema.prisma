@@ -24,7 +24,7 @@ model User {
   // organizationName String? // Optional for organizations -> not needed
   profilePictureUrl String? // Optional profile picture
   cvUrl             String? //Optional cv 
-  visibleName       String? // Can default to name or organization
+
   gender            Gender // Optional gender field -->Are You sure mohammed?
   socialAccounts    Json? // Optional social accounts linked
   categories        String[] // Array of strings for interests in event categories
@@ -67,7 +67,7 @@ model Event {
   startDateTime DateTime // Date without time
   endDateTime   DateTime // Date without time
   imageUrl      String? // New: Optional image string
-  price         Int?     @default(0) // New: Price for the event
+
   rating        Float?   @default(0)
 
   createdAt      DateTime       @default(now())
@@ -191,6 +191,7 @@ model TakeAssignment {
 model GiveFeedback {
   id        String   @id @default(uuid())
   rating    Float
+  comment String?
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   Event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)

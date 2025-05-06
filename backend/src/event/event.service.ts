@@ -142,7 +142,6 @@ export class EventService {
             lastName: true,
             profilePictureUrl: true,
             username: true,
-            visibleName: true,
           },
         },
       },
@@ -304,7 +303,6 @@ export class EventService {
               lastName: true,
               profilePictureUrl: true,
               username: true,
-              visibleName: true,
             },
           },
         },
@@ -419,7 +417,7 @@ export class EventService {
             lastName: true,
             profilePictureUrl: true,
             username: true,
-            visibleName: true,
+
             rating: true,
           },
         },
@@ -463,7 +461,6 @@ export class EventService {
               lastName: true,
               profilePictureUrl: true,
               username: true,
-              visibleName: true,
             },
           },
         },
@@ -486,7 +483,6 @@ export class EventService {
               lastName: true,
               profilePictureUrl: true,
               username: true,
-              visibleName: true,
             },
           },
         },
@@ -510,7 +506,6 @@ export class EventService {
             lastName: true,
             profilePictureUrl: true,
             username: true,
-            visibleName: true,
           },
         },
       },
@@ -555,7 +550,6 @@ export class EventService {
               lastName: true,
               profilePictureUrl: true,
               username: true,
-              visibleName: true,
             },
           },
         },
@@ -582,7 +576,6 @@ export class EventService {
               lastName: true,
               profilePictureUrl: true,
               username: true,
-              visibleName: true,
             },
           },
         },
@@ -2340,7 +2333,12 @@ export class EventService {
   //--------------------------------------------------
   //THE FOLLOWING IS FOR RATING AN EVENT LOGIC
   //--------------------------------------------------
-  async rateEvent(userId: string, eventId: string, rating: number) {
+  async rateEvent(
+    userId: string,
+    eventId: string,
+    rating: number,
+    comment?: string,
+  ) {
     //check if the user exist or not
     await this.checkIfUserExist(userId);
     //the following logic is to ensure that the rating will not be add to event unless that the user is authorized to do that
@@ -2394,6 +2392,7 @@ export class EventService {
             create: {
               rating,
               userId, //Creating an event rating and assign it to the user
+              comment,
             },
           },
         },
@@ -2438,6 +2437,7 @@ export class EventService {
               where: { id: feedbackId },
               data: {
                 rating,
+                comment,
               },
             },
           },
@@ -2519,6 +2519,24 @@ export class EventService {
       select: {
         rating: true,
         _count: { select: { GivenFeedbacks: true } },
+        GivenFeedbacks: {
+          select: {
+            comment: true,
+            createdAt: true,
+            updatedAt: true,
+            rating: true,
+            User: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                username: true,
+                profilePictureUrl: true,
+                rating: true,
+              },
+            },
+          },
+        },
       },
     });
     //Check wether the event exist or not
@@ -2529,6 +2547,7 @@ export class EventService {
     return {
       avgRating: result.rating,
       numberOfRatings: result._count.GivenFeedbacks,
+      feedbacks: result.GivenFeedbacks,
     };
   }
   //not useful anymore, it should be removed
@@ -4082,7 +4101,6 @@ export class EventService {
               lastName: true,
               profilePictureUrl: true,
               username: true,
-              visibleName: true,
               rating: true,
             },
           },
@@ -4096,8 +4114,10 @@ export class EventService {
       });
 
       // Filter out events that are at full capacity
-      const availableEvents = events.filter(event => 
-        event.seatCapacity === 0 || event._count.joinedUsers < event.seatCapacity
+      const availableEvents = events.filter(
+        (event) =>
+          event.seatCapacity === 0 ||
+          event._count.joinedUsers < event.seatCapacity,
       );
 
       // If no events found, return empty array
@@ -4106,12 +4126,12 @@ export class EventService {
       }
 
       // Calculate matches and sort events
-      const eventsWithScore = availableEvents.map(event => {
+      const eventsWithScore = availableEvents.map((event) => {
         // Count how many categories match between user and event
-        const categoryMatches = userCategories.filter(category => 
-          event.categories.includes(category)
+        const categoryMatches = userCategories.filter((category) =>
+          event.categories.includes(category),
         ).length;
-        
+
         return {
           ...event,
           categoryMatchScore: categoryMatches,
@@ -4125,36 +4145,39 @@ export class EventService {
         if (b.categoryMatchScore !== a.categoryMatchScore) {
           return b.categoryMatchScore - a.categoryMatchScore;
         }
-        
+
         // If same category match score, compare by rating
         if ((b.rating || 0) !== (a.rating || 0)) {
           return (b.rating || 0) - (a.rating || 0);
         }
-        
+
         // If same rating, compare by popularity (number of joined users)
         return b.popularityScore - a.popularityScore;
       });
 
       // Apply pagination after sorting
-      const paginatedEvents = sortedEvents.slice(skipedRecords, skipedRecords + pageSize);
+      const paginatedEvents = sortedEvents.slice(
+        skipedRecords,
+        skipedRecords + pageSize,
+      );
 
       // Return the sorted events (without the internal scoring properties and with readable counts)
-      return paginatedEvents.map(event => {
+      return paginatedEvents.map((event) => {
         // Create a clean object without internal properties
-        const { 
-          categoryMatchScore, 
-          popularityScore, 
-          _count, 
+        const {
+          categoryMatchScore,
+          popularityScore,
+          _count,
           joinedUsers,
-          ...cleanEvent 
+          ...cleanEvent
         } = event;
-        
+
         // Add useful metadata for the client
         return {
           ...cleanEvent,
           joinedUsersCount: _count.joinedUsers,
-          matchingCategories: userCategories.filter(category => 
-            event.categories.includes(category)
+          matchingCategories: userCategories.filter((category) =>
+            event.categories.includes(category),
           ),
         };
       });

@@ -83,8 +83,5 @@ export class UpdateEventDto {
   @IsNotEmpty()
   gender?: Gender;
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  price?: number;
+
 }

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateUpdateRating {
   @Type(() => Number)
@@ -7,4 +7,8 @@ export class CreateUpdateRating {
   @Max(5)
   @IsNumber()
   rating: number;
+
+  @IsOptional()
+  @IsString()
+  comment?: string;
 }

@@ -76,8 +76,5 @@ export class CreateEventDto {
   })
   endDateTime: Date;
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  price?: number;
+ 
 }

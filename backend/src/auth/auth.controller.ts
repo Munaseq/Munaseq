@@ -37,7 +37,6 @@ export class AuthController {
         firstName: { type: 'string' },
         lastName: { type: 'string' },
         username: { type: 'string' },
-        visibleName: { type: 'string' },
         gender: { type: 'string', enum: ['MALE', 'FEMALE', 'OTHER'] }, // Adjust values per your Gender enum
         categories: {
           type: 'array',

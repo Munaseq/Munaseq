@@ -96,7 +96,6 @@ export class AuthService {
         description: signUpDto.description,
         profilePictureUrl: profilePictureUrl,
         cvUrl: cvUrl,
-        visibleName: signUpDto.visibleName,
         socialAccounts: signUpDto.socialAccounts,
       },
     });
