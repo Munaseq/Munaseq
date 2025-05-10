@@ -32,7 +32,6 @@ export default async function joinEventAction(eventId: string) {
         const joinResJson = await joinRes.json();
 
         if (!joinRes.ok) {
-            console.log(joinResJson);
             throw Error(joinResJson.message);
         }
 

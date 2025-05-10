@@ -6,28 +6,51 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from "@/components/common/shadcn-ui/dialog";
 import { Input } from "@/components/common/shadcn-ui/input";
+import TooltipWrapper from "@/components/common/tooltip";
 import addMateiralAction from "@/proxy/material/add-material-action";
 import { motion } from "framer-motion";
-import { CirclePlus } from "lucide-react";
+import {
+    CirclePlus,
+    FileTextIcon,
+    PencilIcon,
+    XCircleIcon,
+} from "lucide-react";
 import { useState, useRef } from "react";
 
 export default function AddMaterial({ eventId }: { eventId: string }) {
     const [file, setFile] = useState("");
+    const [fileName, setFileName] = useState("");
     const [error, setError] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+
     const ref = useRef({} as HTMLInputElement);
     const handleUpload = (e: any) => {
+        setError("");
+        setFileName(e.target.files[0].name);
         if (e.target.files.length === 0) {
             return;
         }
         setFile(URL.createObjectURL(e.target.files[0]));
     };
+
     return (
-        <Dialog>
+        <Dialog
+            open={isOpen}
+            onOpenChange={() => {
+                if (!isOpen) {
+                    setFile("");
+                    setFileName("");
+                    setError("");
+                }
+                setIsOpen(!isOpen);
+            }}
+        >
             <DialogTrigger>
                 <motion.div
                     whileHover={{ scale: 1.05, borderColor: "#666666" }}
@@ -43,68 +66,106 @@ export default function AddMaterial({ eventId }: { eventId: string }) {
                 <DialogHeader className=" !text-right  ps-4">
                     <DialogTitle>اضافة محتوى</DialogTitle>
                     <DialogDescription>
-                        <form
-                            className="grid gap-4"
-                            action={async (formData: FormData) => {
-                                if (!ref.current.value) {
-                                    setError("يجب اختيار ملف");
-                                    return;
-                                }
+                        ارفق الملف الذي تريد اضافته للفعالية
+                    </DialogDescription>
+                    <form
+                        className="grid gap-4"
+                        action={async (formData: FormData) => {
+                            if (!file) {
+                                setError("يجب اختيار ملف");
+                                return;
+                            }
 
-                                const error: { message: string } | undefined =
-                                    await addMateiralAction(eventId, formData);
-                                if (error?.message) {
-                                    setError("حدث خطأ ما");
-                                }
-                            }}
-                        >
-                            <label htmlFor="Materials">
-                                ارفق الملف الذي تريد اضافته للفعالية
-                            </label>
-                            <div className="grid gap-3 mt-5">
-                                {file ? (
-                                    <div className="flex items-center gap-5">
+                            const error: { message: string } | undefined =
+                                await addMateiralAction(eventId, formData);
+                            if (error?.message) {
+                                setError("حدث خطأ ما");
+                                return
+                            }
+                            setIsOpen(!isOpen);
+                        }}
+                    >
+                        <div className="grid gap-3 mt-5">
+                            {file && (
+                                <div className="flex items-center gap-5">
+                                    <TooltipWrapper text="عرض الملف">
                                         <a
                                             href={file}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-custom-gray"
+                                            className="text-custom-gray flex gap-1 items-center"
                                         >
-                                            عرض الملف
+                                            <FileTextIcon className="cursor-pointer" />
+                                            <span className="max-w-56 truncate">
+                                                {/* display file name */}
+                                                {fileName}
+                                            </span>
                                         </a>
-                                        <button
-                                            className="rounded-3xl p-2"
+                                    </TooltipWrapper>
+                                    <TooltipWrapper text="تعديل الملف">
+                                        <motion.div
+                                            layout
+                                            className="ms-5"
                                             onClick={e => {
                                                 e.preventDefault();
                                                 ref.current.click();
                                             }}
                                         >
-                                            تغيير الملف
-                                        </button>
-                                    </div>
-                                ) : null}
-                                <Input
-                                    name="materials"
-                                    id="materials"
-                                    type="file"
-                                    className={
-                                        "cursor-pointer " +
-                                        (file ? "hidden" : "")
-                                    }
-                                    onChange={handleUpload}
-                                    ref={ref}
-                                />
-                            </div>
+                                            <PencilIcon />
+                                        </motion.div>
+                                    </TooltipWrapper>
 
-                            {error && <p className="text-red-500">{error}</p>}
+                                    <TooltipWrapper text="حذف الملف">
+                                        <motion.div
+                                            layout
+                                            className=""
+                                            onClick={e => {
+                                                e.preventDefault();
+                                                setFile("");
+                                                setFileName("");
+                                            }}
+                                        >
+                                            <XCircleIcon />
+                                        </motion.div>
+                                    </TooltipWrapper>
+                                </div>
+                            )}
+                            <Input
+                                dir="ltr"
+                                name="materials"
+                                id="materials"
+                                type="file"
+                                className={
+                                    "cursor-pointer " + (file ? "hidden" : "")
+                                }
+                                onChange={handleUpload}
+                                ref={ref}
+                            />
+                        </div>
 
+                        {error && <p className="text-red-500">{error}</p>}
+
+                        <DialogFooter className="flex !justify-between sm:gap-0 gap-2">
                             <LoadingWrapper>
-                                <Button className="mt-2" gradient>
+                                <Button
+                                    onClick={e => {
+                                        e.preventDefault();
+                                        if (!isOpen) {
+                                            setFile("");
+                                            setFileName("");
+                                            setError("");
+                                        }
+                                        setIsOpen(!isOpen);
+                                    }}
+                                >
+                                    الغاء
+                                </Button>
+                                <Button className="mt-2 px-12" gradient>
                                     تثبيت
                                 </Button>
                             </LoadingWrapper>
-                        </form>
-                    </DialogDescription>
+                        </DialogFooter>
+                    </form>
                 </DialogHeader>
             </DialogContent>
         </Dialog>

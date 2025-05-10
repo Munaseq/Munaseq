@@ -18,7 +18,6 @@ export default async function getFollowersUsersAction() {
     }
 
     const data = await response.json();
-    console.log("Followers users data:", data?.numberOfFollowersUsers); // Debugging line
     return data;
   } catch (error) {
     console.error("Error fetching followers users:", error);

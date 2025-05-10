@@ -16,10 +16,8 @@ export default async function getEventAnnouncementAction(eventId: string) {
       }
     );
 
-    console.log("event id", eventId);
 
     const data = await announcement.json();
-    console.log("Announcement event data:", data); // Debugging line
 
     return data;
   } catch (error: any) {

@@ -26,8 +26,6 @@ export default async function updateQuizAction(
         },
       }
     );
-    console.log("Update quiz response:", updateRes);
-
     if (!updateRes.ok) {
       const errorResponse = await updateRes.text(); // Capture the error message
       console.error("Error response:", errorResponse);

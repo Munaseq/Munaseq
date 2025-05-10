@@ -24,7 +24,6 @@ export default async function getEventRequestsAction(eventId: string) {
             }
         );
 
-        console.log("eventsRes", await eventsRes.json());
 
         if (eventsRes.status === 404) {
             return [];

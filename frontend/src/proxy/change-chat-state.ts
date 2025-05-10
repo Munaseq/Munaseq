@@ -18,7 +18,6 @@ export default async function changeChatState(eventId: string, isAttendeesAllowe
         if (!response.ok) {
             throw new Error('ERROR');
         }
-        console.log(await response.json());
     } catch (error: any) {
         return {
             message: error.message,

@@ -50,13 +50,8 @@ export default function TakeQuiz({ questions, time, quizId, eventId }: Props) {
     if (submittedRef.current) return;
     submittedRef.current = true;
     setSubmitted(true);
-    console.log("Submitted answers:", answers);
     alert("تم تسليم الاختبار!");
 
-    console.log(
-      "Submitted answers:######################################x",
-      answers
-    );
 
     const answersToSubmit = {
       answers: answers,

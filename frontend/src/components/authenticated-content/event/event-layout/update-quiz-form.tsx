@@ -109,7 +109,6 @@ export default function updateAssignmentForm({
   };
 
   const handleSaveActivity = async () => {
-    console.log("Activity saved:", formData);
 
     const quizData = { ...formData, timeLimit: parseInt(formData.timeLimit) };
 

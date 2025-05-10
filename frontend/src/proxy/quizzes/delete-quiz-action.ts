@@ -13,7 +13,7 @@ export default async function deleteQuizAction(
     throw new Error("Unauthorized: User is not signed in.");
   }
 
-  console.log("Deleting quiz with ID:", quizId); // Debugging line
+
 
   try {
     const deleteRes = await fetch(
@@ -25,7 +25,7 @@ export default async function deleteQuizAction(
         },
       }
     );
-    console.log("Delete quiz response:", deleteRes);
+
 
     if (!deleteRes.ok) {
       const errorResponse = await deleteRes.text(); // Capture the error message

@@ -14,8 +14,7 @@ export default async function SubmitQuiz({
     questionType: question.questionType,
     options: question.options,
   }));
-  console.log("quiz ####################", quiz);
-  console.log("time quiz  @@@@@@@@@@@@@@@@@@@@@@@@@@", quiz.timeLimit);
+
 
   return (
     <Quiz

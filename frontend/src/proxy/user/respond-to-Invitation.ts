@@ -32,7 +32,6 @@ export default async function responndToinvitationAction({
             }
         );
 
-        console.log("inviteRes", await inviteRes.json());
 
         if (!inviteRes.ok) {
             throw new Error("Failed to respond to the invitation");

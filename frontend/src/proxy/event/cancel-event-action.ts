@@ -22,7 +22,6 @@ export default async function cancelEventAction(eventId: string) {
         const cancelResJson = await cancelRes.json();
 
         if (!cancelRes.ok) {
-            console.log(cancelResJson);
             throw Error(cancelResJson.message);
         }
 

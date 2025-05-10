@@ -122,7 +122,6 @@ export default function updateAssignmentForm({
   };
 
   async function handleSaveActivity() {
-    console.log("Activity saved:", formData);
 
     const assignmentData = { ...formData };
 

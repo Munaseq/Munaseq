@@ -26,7 +26,6 @@ export default async function updateAssignmentAction(
         },
       }
     );
-    console.log("Update assignment response:", updateRes);
 
     if (!updateRes.ok) {
       const errorResponse = await updateRes.text(); // Capture the error message

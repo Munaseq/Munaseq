@@ -22,7 +22,6 @@ export default async function followUserAction(userId: string) {
     }
 
     const data = await response.json();
-    console.log("Follow/Unfollow user response:", data); // Debugging line
     return data;
   } catch (error) {
     console.error("Error following/unfollowing user:", error);

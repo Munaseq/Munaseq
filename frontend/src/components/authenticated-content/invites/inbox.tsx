@@ -61,7 +61,6 @@ export default async function Inbox() {
         sentInvitations: Invite[];
         receivedInvitations: Invite[];
     } = await getInvitesAction();
-    console.log("invites", invites.sentInvitations);
 
     if (
         !invites ||

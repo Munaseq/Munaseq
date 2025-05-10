@@ -15,7 +15,6 @@ export default async function getAssignmentAction(eventID: string) {
     );
 
     const data = await assignments.json();
-    console.log("Assignments data:", data.assignments); // Debugging line
 
     return data.assignments;
   } catch (error: any) {

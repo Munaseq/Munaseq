@@ -26,12 +26,7 @@ export default async function submitQuizAction(
         },
       }
     );
-    console.log("Submit quiz response:", submitRes);
-    console.log("Submit quiz data:(normal)", answersToSubmit); // Debugging line
-    console.log(
-      "Submit quiz data:(stringify)",
-      JSON.stringify(answersToSubmit)
-    ); // Debugging line
+
     if (!submitRes.ok) {
       const errorResponse = await submitRes.text(); // Capture the error message
       console.error("Error response:", errorResponse);

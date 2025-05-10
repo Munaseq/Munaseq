@@ -49,12 +49,8 @@ export default function ChatMenu({
         const socket = socketRef.current;
 
         // Register event listeners
-        socket.on("connect", () => {
-            console.log("Socket connected");
-        });
 
         const onChats = (data: { directChats: Chat[]; eventChats: Chat[] }) => {
-            console.log("Chats data received:", data);
             setChats(data);
             setIsLoading(false);
         };

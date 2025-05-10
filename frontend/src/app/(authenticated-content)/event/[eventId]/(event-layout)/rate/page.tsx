@@ -38,7 +38,6 @@ export default async function RatePage({
     } = await getEventRateAction(params.eventId);
 
     let currentUserRating: Feedback | undefined = undefined;
-    console.log("rating", rating.feedbacks);
 
     if (rating.feedbacks.length !== 0) {
         currentUserRating = rating.feedbacks.find(

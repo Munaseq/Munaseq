@@ -24,7 +24,6 @@ export default async function getCertificateAction(eventId: string) {
         }
 
         const data = await eventsRes.json();
-        console.log("Certificate data:", data); // Log the certificate data
 
         return data;
     } catch (error: any) {

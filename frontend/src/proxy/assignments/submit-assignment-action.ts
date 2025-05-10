@@ -26,12 +26,6 @@ export default async function submitAssignmentAction(
         },
       }
     );
-    console.log("Submit assignment response:", submitRes);
-    console.log("Submit assignment data:(normal)", answersToSubmit); // Debugging line
-    console.log(
-      "Submit assignment data:(stringify)",
-      JSON.stringify(answersToSubmit)
-    ); // Debugging line
     if (!submitRes.ok) {
       const errorResponse = await submitRes.text(); // Capture the error message
       console.error("Error response:", errorResponse);

@@ -58,7 +58,6 @@ export default function ChatComponent({
 
         // Set up event listeners
         const onNewChat = ({ chatId }: { chatId: string }) => {
-            console.log("Chat data received:", chatId);
             chatIdRef.current = chatId;
             socket.emit("SelectChat", {
                 chatId: chatId,
@@ -83,7 +82,6 @@ export default function ChatComponent({
         const onChats = (data: any) => {
             const directChats = data.directChats || [];
             let found = false;
-            console.log("Direct chats:", directChats);
 
             for (const directChat of directChats) {
                 if (directChat.Users[0].username === reciverUser.username) {
@@ -105,11 +103,6 @@ export default function ChatComponent({
                 });
             }
         };
-
-        // Register event listeners
-        socket.on("connect", () => {
-            console.log("Socket connected");
-        });
 
         socket.on("Chats", onChats);
         socket.on("NewChat", onNewChat);

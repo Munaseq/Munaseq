@@ -67,17 +67,12 @@ export default function TakeAssignment({
   const currentQuestion = questions[currentIndex];
 
   const handleAnswerChange = (newAnswer: string) => {
-    console.log("new answer", newAnswer);
     const updated = [...answers];
     updated[currentIndex].answer = newAnswer;
     setAnswers(updated);
   };
 
   async function handleSubmit(): Promise<void> {
-    console.log(
-      "Submitted answers:######################################x",
-      answers
-    );
 
     const answersToSubmit = {
       answers: answers,

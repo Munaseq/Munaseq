@@ -19,7 +19,6 @@ export default async function getFollowingUsersAction() {
     }
 
     const data = await response.json();
-    console.log("Following users data:", data?.followingUsers); // Debugging line
     return data?.followingUsers;
   } catch (error) {
     console.error("Error fetching following users:", error);

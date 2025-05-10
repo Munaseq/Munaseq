@@ -21,7 +21,6 @@ export default async function setReminderAction(
       }
     );
 
-    console.log("Set reminder response:", response); // Debugging line
 
     if (!response.ok) {
       throw new Error("Failed to set reminder");

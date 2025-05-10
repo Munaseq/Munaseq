@@ -12,7 +12,6 @@ export default async function getUserAction(id: string) {
       },
     });
     if (!response.ok) {
-      console.log("ERROR IN gitUserAction");
       throw Error("user not found");
     }
     const responseJson = await response.json();

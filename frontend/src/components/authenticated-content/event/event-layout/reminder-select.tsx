@@ -33,7 +33,6 @@ export default function ReminderSelect({
 
   const handleSetReminder = async (daysOffset: number) => {
     setSelected(daysOffset);
-    console.log("Selected days offset:", selected); // Debugging line
 
     try {
       await setReminderAction(eventId, daysOffset);

@@ -23,7 +23,6 @@ export default async function deleteAssignmentAction(
         },
       }
     );
-    console.log("Delete assignment response:", deleteRes);
 
     if (!deleteRes.ok) {
       const errorResponse = await deleteRes.text(); // Capture the error message

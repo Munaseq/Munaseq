@@ -154,7 +154,6 @@ export default function CreateActivityPage(params: {
     };
 
     const handleSaveActivity = async () => {
-        console.log("Activity saved:", formData);
 
         if (formData.activityType === "Assignment") {
             const { activityTimeLimit, activityTitle, activityType, ...rest } =

@@ -81,8 +81,6 @@ export default function EditEventDialog({ event }: { event: EventDataDto }) {
                         }
 
                         const error = await editEventAction(formData, event.id);
-                        console.log(formData.get("startDateTime"));
-                        console.log(formData.get("endDateTime"));
                         if (error) {
                             setError(error);
                             return;

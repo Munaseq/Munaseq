@@ -10,11 +10,6 @@ export default async function createQuizAction(eventId: string, quizData: any) {
     throw new Error("Unauthorized: User is not signed in.");
   }
 
-  console.log("Creating quiz with data:", quizData); // Debugging line
-  console.log(
-    "time @@@@@@@@@@@ " + quizData.timeLimit,
-    typeof quizData.timeLimit
-  );
 
   try {
     const createRes = await fetch(
@@ -28,7 +23,6 @@ export default async function createQuizAction(eventId: string, quizData: any) {
         },
       }
     );
-    console.log("Create assignment response:", createRes);
 
     if (!createRes.ok) {
       const errorResponse = await createRes.text(); // Capture the error message

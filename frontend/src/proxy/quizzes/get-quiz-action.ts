@@ -15,7 +15,7 @@ export default async function getQuizAction(eventID: string) {
     );
 
     const data = await quizzes.json();
-    console.log("quizzes data:", data.quizzes); // Debugging line
+
 
     return data.quizzes;
   } catch (error: any) {

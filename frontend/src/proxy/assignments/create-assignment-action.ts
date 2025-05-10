@@ -25,8 +25,6 @@ export default async function createAssignmentAction(
         },
       }
     );
-    console.log("Create assignment response:", createRes);
-
     if (!createRes.ok) {
       const errorResponse = await createRes.text(); // Capture the error message
       console.error("Error response:", errorResponse);

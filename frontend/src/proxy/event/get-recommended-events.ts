@@ -25,8 +25,6 @@ export default async function getRecommendedEvents() {
             }
         );
         const data = await eventsRes.json();
-        console.log(data);
-
         if (!eventsRes.ok) {
             throw new Error("Failed to fetch event");
         }

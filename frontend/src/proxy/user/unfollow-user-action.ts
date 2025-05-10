@@ -22,7 +22,6 @@ export default async function UnfollowUserAction(userId: string) {
     }
 
     const data = await response.json();
-    console.log("Unfollow user response:", data); // Debugging line
     return data;
   } catch (error) {
     console.error("Error unfollowing user:", error);

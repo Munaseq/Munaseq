@@ -8,10 +8,8 @@ export default async function UpdateQuiz({
   params: { eventId: any; quizId: string };
 }) {
   // const assignment:Assignment = getAssignmentId();
-  console.log("params @@@@@@@@@@@@@@@@@@@@@@@@@@", params);
   const quiz: any = await showQuizAction(params.quizId);
 
-  console.log("quiz @@@@@@@@@@@@@@@@@@@@@@@@@@#", quiz);
 
   return <UpdateQuizForm quiz={quiz} eventId={params.eventId} />;
 }

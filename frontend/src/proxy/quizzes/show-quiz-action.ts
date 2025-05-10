@@ -23,10 +23,8 @@ export default async function showQuizAction(quizId: string) {
         },
       }
     );
-    console.log("Show quiz response:", showRes);
 
     const data = await showRes.json();
-    console.log("Show quiz data:", data); // Debugging line
 
     return data;
   } catch (error: any) {

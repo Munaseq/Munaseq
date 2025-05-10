@@ -68,7 +68,6 @@ export default function EventChat({
 
         // Set up event listeners
         const onChat = (data: Chat) => {
-            console.log("Chat data received:", data);
             if (data.id !== eventChatIdRef.current) return;
             setIsLoading(false);
             setIsOpenForParticipants(data.isAttendeesAllowed);
@@ -105,12 +104,7 @@ export default function EventChat({
         };
 
         // Register event listeners
-        socket.on("connect", () => {
-            console.log("Socket connected");
 
-            // Request available chats to find our event chat
-            socket.emit("GetChats");
-        });
 
         socket.on("Chat", onChat);
         socket.on("Chats", onChats);

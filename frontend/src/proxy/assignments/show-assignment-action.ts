@@ -23,10 +23,8 @@ export default async function showAssignmentAction(assignmentId: string) {
         },
       }
     );
-    console.log("Show assignment response:", showRes);
 
     const data = await showRes.json();
-    console.log("Show assignment data:", data); // Debugging line
 
     return data;
   } catch (error: any) {

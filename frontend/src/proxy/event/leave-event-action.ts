@@ -22,7 +22,6 @@ export default async function leaveEventAction(eventId: string) {
         const leaveResJson = await leaveRes.json();
 
         if (!leaveRes.ok) {
-            console.log(leaveResJson);
             throw Error(leaveResJson.message);
         }
 

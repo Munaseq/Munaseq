@@ -38,7 +38,6 @@ export default async function createEventAction(
 
     // FETCH HERE
     const rolesValue = formDataRole.getAll("roles"); // This will be FormDataEntryValue (string | File)
-    console.log("Roles value:", rolesValue);
 
 
       try {
