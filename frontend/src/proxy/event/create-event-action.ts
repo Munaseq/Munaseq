@@ -28,6 +28,7 @@ export default async function createEventAction(
     });
 
     eventData = await createRes.json();
+    console.log(eventData);
     
 
     if (!createRes.ok) {

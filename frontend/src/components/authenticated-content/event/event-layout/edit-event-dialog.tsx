@@ -36,7 +36,7 @@ export default function EditEventDialog({ event }: { event: EventDataDto }) {
     const [selectedCatagories, setSelectedCatagories] = useState<Category[]>(
         []
     );
-    const [error, setError] = useState({ message: "" });
+    const [error, setError] = useState('');
 
     const handleImageUpload = (e: any) => {
         if (e.target.files.length === 0) {
@@ -82,11 +82,11 @@ export default function EditEventDialog({ event }: { event: EventDataDto }) {
 
                         const error = await editEventAction(formData, event.id);
                         if (error) {
-                            setError(error);
+                            setError(getErrorMessage(error));
                             return;
                         }
                         setIsOpen(false);
-                        setError({ message: "" });
+                        setError("");
                     }}
                 >
                     <h1 className="flex items-center gap-2 font-bold text-xl">
@@ -261,7 +261,7 @@ export default function EditEventDialog({ event }: { event: EventDataDto }) {
                             )}
                         </div>
                     </div>
-                    {error.message && (
+                    {error && (
                         <p className="text-red-500 text-center mt-5">
                             حدث خطأ, الرجاء المحاولة مره اخرى.
                         </p>

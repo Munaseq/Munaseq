@@ -37,12 +37,13 @@ export default function forwhoForm({
         });
     };
 
+    const moderators = roles.filter(role => role.role === Role.MODERATOR);
+    const presenters = roles.filter(role => role.role === Role.PRESENTER);
+    
     useEffect(() => {
         onCategoriesChange(selectedCatagories);
     }, [selectedCatagories]);
 
-    const moderators = roles.filter(role => role.role === Role.MODERATOR);
-    const presenters = roles.filter(role => role.role === Role.PRESENTER);
 
     return (
         <CreateEventCard actual={step} goal={4}>
