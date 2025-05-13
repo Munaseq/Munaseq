@@ -1,6 +1,7 @@
 import { Message } from "@/dtos/message-data.dto";
 import { CircleUserRoundIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ChatBubble({
     message,
@@ -46,7 +47,7 @@ export default function ChatBubble({
                         {new Date(message.createdAt).toLocaleTimeString()}
                     </span>
                 </div>
-                <div className="w-10 h-10 aspect-square relative rounded-full overflow-hidden">
+                <Link href={'/user/' + message.Sender.username} className="w-10 h-10 aspect-square relative rounded-full overflow-hidden">
                     {
                         message.Sender.profilePictureUrl ? (<Image
                             src={message.Sender.profilePictureUrl}
@@ -59,7 +60,7 @@ export default function ChatBubble({
                         )
                     }
                     
-                </div>
+                </Link>
             </div>
         );
     }

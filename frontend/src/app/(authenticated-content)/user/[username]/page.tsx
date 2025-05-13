@@ -152,8 +152,6 @@ export default async function UserProfile({
             <StarIcon className="text-custom-light-purple" />
             {rating.avgRating}
           </div>
-
-          <div className="flex gap-3"></div>
         </div>
 
         <div className="mt-5 flex items-center gap-1">

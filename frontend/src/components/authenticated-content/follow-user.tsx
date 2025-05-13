@@ -45,7 +45,7 @@ export default function FollowButton({ userId }: FollowButtonProps) {
   };
 
   return (
-    <Button gradient={!isFollowed} onClick={handleFollowToggle}>
+    <Button className="mt-2" gradient={!isFollowed} onClick={handleFollowToggle}>
       {isFollowed ? "إلغاء المتابعة" : "تابع"}
     </Button>
   );
