@@ -129,6 +129,9 @@ export default function CreateEventDialog() {
         setStartDate(today);
         setEndDateMin(endDate);
         setEndDateVal(endDate);
+        setIsLoading(false);
+        setImageFile(null);
+        
     };
 
     const removeUser = (user: UserDataDto) => {
