@@ -1,7 +1,17 @@
-import { IsOptional, IsString } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsArray, IsObject, IsString, ValidateNested } from 'class-validator';
 
-export class TakeAssigment {
-  @IsOptional()
+export class TakeAssigmentDTO {
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Answer)
+  answers: Answer[];
+}
+export class Answer {
   @IsString()
-  questions?: string;
+  questionTitle: string;
+
+  @IsString()
+  answer: string;
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import LogoLoading from "@/components/common/logo-loading";
-import SmallCard from "@/components/common/small-card";
-import { useEventContext } from "@/store/eventContext";
+import SmallCard from "@/components/common/cards/small-card";
+import { useEventContext } from "@/store/event-context";
 import { checkData } from "@/util/check-date";
 import getDate from "@/util/get-date";
 
@@ -18,14 +18,12 @@ export default function Events({ dateFilter }: { dateFilter: string }) {
                 filteredEvents.map((event: any) => (
                     <SmallCard
                         key={event.id}
-                        asEventCreator
                         image={event.imageUrl}
                         title={event.title}
                         date={getDate(event.startDateTime)}
-                        userId={event.eventCreatorId}
+                        eventCreator={event.eventCreator}
                         eventId={event.id}
                         badges={event.categories}
-                        isJoined
                     />
                 ))
             ) : (

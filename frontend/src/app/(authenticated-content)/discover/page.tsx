@@ -1,46 +1,48 @@
-import Subtitle from "@/components/common/subtitle";
-import Title from "@/components/common/title";
-import discover from "@/assets/icons/discover-active.svg";
-import Image from "next/image";
+import Title from "@/components/common/text/title";
 import { Metadata } from "next";
-import SmallCard from "@/components/common/small-card";
-import getDate from "@/util/get-date";
-
-import getEventsAction from "@/proxy/event/get-events-action";
+import { BrushIcon, SparklesIcon, TagsIcon } from "lucide-react";
+import HighestRatedEvents from "@/components/authenticated-content/discover/highest-rated-events";
+import PreferredCategoriesEvents from "@/components/authenticated-content/discover/preferred-categories-events";
+import EventListSection from "@/components/authenticated-content/discover/event-list-section";
+import LogoLoading from "@/components/common/logo-loading";
+import { Suspense } from "react";
+import RecommendedEvents from "@/components/authenticated-content/discover/recommend-events";
 
 export const metadata: Metadata = {
     title: "اكتشف",
 };
 
-export default async function Discover() {
-    const eventList = await getEventsAction();
-    
-    if (eventList?.length === 0) {
-        return (
-            <div className="mt-5 text-custom-gray">
-                لا يوجد فعاليات
-            </div>
-        );
-    }
+export default function Discover() {
     return (
         <div>
             <Title>
-                <Image src={discover} className="sm:w-14 w-10" alt="" />
+                <SparklesIcon size={32} color="var(--custom-light-purple)" />
                 اكتشف فعاليات المنسقين
             </Title>
-            <Subtitle>من أعلى المنسقين تقييما </Subtitle>
-            <div className="flex mt-4 gap-8 flex-wrap lg:justify-start justify-center">
-                {eventList?.map((event: any) => (
-                    <SmallCard
-                        image={event.imageUrl}
-                        title={event.title}
-                        date={getDate(event.startDateTime)}
-                        userId={event.eventCreatorId}
-                        eventId={event.id}
-                        badges={event.categories}
-                    />
-                ))}
-            </div>
+            <EventListSection message="فعاليات منسقين اعلى من 4.5 نجوم">
+                <HighestRatedEvents />
+            </EventListSection>
+
+            <Title>
+                <TagsIcon size={32} color="var(--custom-light-purple)" />
+                من فئاتك المفضلة
+            </Title>
+            <Suspense
+                fallback={
+                    <div className="grid place-items-center w-full">
+                        <LogoLoading className="w-20 aspect-square" />
+                    </div>
+                }
+            >
+                <PreferredCategoriesEvents />
+            </Suspense>
+            <Title>
+                <BrushIcon size={32} color="var(--custom-light-purple)" />
+                فعاليات مقترحة لك
+            </Title>
+            <EventListSection message="فعاليات مقترحة لك">
+                <RecommendedEvents />
+            </EventListSection>
         </div>
     );
 }

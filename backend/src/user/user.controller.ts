@@ -11,13 +11,28 @@ import {
   UploadedFiles,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody, ApiQuery, ApiParam, ApiOperation } from '@nestjs/swagger';
 
 import { UserService } from './user.service';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+  ApiQuery,
+  ApiParam,
+  ApiOperation,
+} from '@nestjs/swagger';
+
 import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorator';
 import { AuthGuard } from '../auth/auth.guard';
-import { EditUserInfoDto, SeacrhUser, userChangePasswordDto } from './dtos';
-import { multerUserLogic } from 'src/utils/multer.logic';
+import {
+  CreateAnnouncementDto,
+  EditUserInfoDto,
+  RespondInvitationDto,
+  SeacrhUser,
+  userChangePasswordDto,
+} from './dtos';
+import { multerUserLogic } from '../utils/aws.uploading';
 
 @ApiTags('user')
 @Controller('user')
@@ -26,6 +41,7 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve the currently authenticated user.' })
   @Get('me')
   @ApiOperation({ summary: 'Retrieve the currently authenticated user.' })
   getMe(@GetCurrentUserId() id: string) {
@@ -33,15 +49,47 @@ export class UserController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Search for users by username letters with optional pagination.' })
-  @ApiQuery({ name: 'username', required: false, type: String, description: 'Username substring to search.' })
-  @ApiQuery({ name: 'pageNumber', required: false, type: Number, description: 'Page number for pagination.' })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number, description: 'Page size for pagination.' })
+  @ApiOperation({
+    summary: 'Search for users by username letters with optional pagination.',
+  })
+  @ApiQuery({
+    name: 'username',
+    required: false,
+    type: String,
+    description: 'Username substring to search.',
+  })
+  @ApiQuery({
+    name: 'pageNumber',
+    required: false,
+    type: Number,
+    description: 'Page number for pagination.',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    type: Number,
+    description: 'Page size for pagination.',
+  })
+  @ApiQuery({
+    name: 'highestRated',
+    required: false,
+    type: Boolean,
+    description: 'Retreives the highestRated users.',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    type: String,
+    description: 'Retreives the users that have the category.',
+  })
   findAll(@Query() query: SeacrhUser) {
     return this.userService.findAllUsers(
       query.username,
       query.pageNumber,
       query.pageSize,
+
+      query.highestRated,
+      query.category,
     );
   }
 
@@ -71,30 +119,67 @@ export class UserController {
   @Patch()
   @UseInterceptors(multerUserLogic())
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Edit the current user information including optional file uploads for CV and profile picture.' })
+  @ApiOperation({
+    summary:
+      'Edit the current user information including optional file uploads for CV and profile picture.',
+  })
   @ApiBody({
     description:
       'Payload for editing user info. Fields correspond to EditUserInfoDto and include file uploads for cv and profilePicture.',
     schema: {
       type: 'object',
+
       properties: {
         firstName: { type: 'string', description: 'First name of the user.' },
         lastName: { type: 'string', description: 'Last name of the user.' },
         username: { type: 'string', description: 'Username of the user.' },
-        email: { type: 'string', format: 'email', description: 'User email address.' },
-        visibleName: { type: 'string', description: 'Display name or organization name.' },
-        gender: { type: 'string', enum: ['MALE', 'FEMALE', 'OTHER'], description: 'Gender of the user.' },
+
+        email: {
+          type: 'string',
+          format: 'email',
+          description: 'User email address.',
+        },
+        gender: {
+          type: 'string',
+          enum: ['MALE', 'FEMALE', 'OTHER'],
+          description: 'Gender of the user.',
+        },
+
         categories: {
           type: 'array',
           items: { type: 'string' },
           description: 'Array of user interests.',
         },
         description: { type: 'string', description: 'User biography.' },
-        socialAccounts: { type: 'object', description: 'JSON object for social media accounts.' },
-        cv: { type: 'string', format: 'binary', description: 'CV file upload.' },
-        profilePicture: { type: 'string', format: 'binary', description: 'Profile picture file upload.' },
+
+        socialAccounts: {
+          type: 'object',
+          description: 'JSON object for social media accounts.',
+        },
+        cv: {
+          type: 'string',
+          format: 'binary',
+          description: 'CV file upload.',
+        },
+        profilePicture: {
+          type: 'string',
+          format: 'binary',
+          description: 'Profile picture file upload.',
+        },
       },
     },
+  })
+  @ApiQuery({
+    name: 'removeImage',
+    required: false,
+    type: Boolean,
+    description: 'Flag to remove the profile picture.',
+  })
+  @ApiQuery({
+    name: 'removeCV',
+    required: false,
+    type: Boolean,
+    description: 'Flag to remove the CV.',
   })
   editUserInfo(
     @GetCurrentUserId() id: string,
@@ -104,29 +189,178 @@ export class UserController {
       cv?: any;
       profilePicture?: any;
     },
+    @Query('removeImage') removeImage?: boolean,
+    @Query('removeCV') removeCV?: boolean,
   ) {
     const cvUrl = files?.cv ? files.cv[0].location : null;
-    const profilePictureUrl = files?.profilePicture ? files.profilePicture[0].location : null;
+    const profilePictureUrl = files?.profilePicture
+      ? files.profilePicture[0].location
+      : null;
     return this.userService.editUserInfo(
       id,
       EditUserDto,
       cvUrl,
       profilePictureUrl,
+      removeImage,
+      removeCV,
     );
   }
-
+  //-----------------------------------------
+  // User's Rating endpoints
+  //-----------------------------------------
   @Get('rating/:userId')
   @ApiOperation({ summary: 'Get the rating of a user by their ID.' })
   @ApiParam({ name: 'userId', description: 'ID of the user.' })
   getUserRating(@Param('userId') userId: string) {
     return this.userService.getUserRating(userId);
   }
+  //-----------------------------------------
+  //Invitation endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('invitation')
+  @ApiOperation({
+    summary: "Get all invitations, wether they've sent or received",
+  })
+  getInvitation(@GetCurrentUserId() userId) {
+    return this.userService.getInvitation(userId);
+  }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
+  @Post('invitation/:invitationId')
+  @ApiOperation({
+    summary: 'Respond to an invitation with an accept or reject decision.',
+  })
+  @ApiParam({
+    name: 'invitationId',
+    description: 'ID of the invitation to respond to.',
+  })
+  @ApiBody({
+    description: 'Decision to accept or reject the invitation.',
+    type: RespondInvitationDto,
+  })
+  respondToInvitation(
+    @Body() body: RespondInvitationDto,
+    @GetCurrentUserId() userId: string,
+    @Param('invitationId') invitationId: string,
+  ) {
+    return this.userService.resopndToInvitation(
+      userId,
+      invitationId,
+      body.decision,
+    );
+  }
+  //-----------------------------------------
+  //Request endpoint
+  //-----------------------------------------
+
+  //Get all requests
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('requests')
+  @ApiOperation({
+    summary: 'Get all requests',
+  })
+  getRequest(@GetCurrentUserId() userId) {
+    return this.userService.getRequest(userId);
+  }
+
+  //-----------------------------------------
+  //Following  endpoints
+  //-----------------------------------------
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('following')
+  @ApiOperation({
+    summary: 'Get all users that the current user is following.',
+  })
+  getFollowing(@GetCurrentUserId() userId: string) {
+    return this.userService.getFollowing(userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('followers')
+  @ApiOperation({
+    summary: 'Get all users that are following the current user.',
+  })
+  getFollowers(@GetCurrentUserId() userId: string) {
+    return this.userService.getFollowers(userId);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('follow/:userId')
+  @ApiOperation({
+    summary: 'Follow a user by their ID.',
+  })
+  @ApiParam({ name: 'userId', description: 'ID of the user to follow.' })
+  followUser(
+    @GetCurrentUserId() userId: string,
+    @Param('userId') followedUserId: string,
+  ) {
+    return this.userService.followUser(userId, followedUserId);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Delete('unfollow/:userId')
+  @ApiOperation({
+    summary: 'Unfollow a user by their ID.',
+  })
+  @ApiParam({ name: 'userId', description: 'ID of the user to unfollow.' })
+  unfollowUser(
+    @GetCurrentUserId() userId: string,
+    @Param('userId') userIdToUnfollow: string,
+  ) {
+    return this.userService.unfollowUser(userId, userIdToUnfollow);
+  }
+  //-----------------------------------------
+  //Announcment endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('followers/announcement')
+  @ApiOperation({
+    summary: 'Create an announcement for the followers of currently  user.',
+  })
+  @ApiBody({
+    description: 'Payload for creating an announcement.',
+    type: CreateAnnouncementDto,
+  })
+  createFollowersAnnouncement(
+    @GetCurrentUserId() userId: string,
+    @Body() body: CreateAnnouncementDto,
+  ) {
+    return this.userService.createFollowersAnnouncement(userId, body);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('followingUsers/announcement')
+  @ApiOperation({
+    summary: 'Get all announcements for the followed users of currently user.',
+  })
+  getFollowedUsersAnnouncement(@GetCurrentUserId() userId: string) {
+    return this.userService.getFollowedUsersAnnouncement(userId);
+  }
+
+  //-----------------------------------------
+  //User stuff endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
   @Post('changePassword')
-  @ApiOperation({ summary: 'Change the password for the currently authenticated user.' })
-  @ApiBody({ description: 'Payload for changing user password.', type: userChangePasswordDto })
+  @ApiOperation({
+    summary: 'Change the password for the currently authenticated user.',
+  })
+  @ApiBody({
+    description: 'Payload for changing user password.',
+    type: userChangePasswordDto,
+  })
   changePassword(
     @Body() passwordChangeDto: userChangePasswordDto,
     @GetCurrentUserId() userId: string,
@@ -140,12 +374,14 @@ export class UserController {
   findById(@Param('id') id: string) {
     return this.userService.findById(id);
   }
-
+  //-----------------------------------------
+  // Deleting User endpoint
+  //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Delete()
   @ApiOperation({ summary: 'Delete the currently authenticated user.' })
-  async deleteUser(@GetCurrentUserId() id: string) {
+  async deleteUser(@GetCurrentUserId() id) {
     return this.userService.deleteUser(id);
   }
 }

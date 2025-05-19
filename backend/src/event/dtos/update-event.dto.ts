@@ -9,9 +9,9 @@ import {
   IsInt,
   IsArray,
   IsEnum,
-  IsNumber,
   IsBoolean,
 } from 'class-validator';
+import * as moment from 'moment-timezone';
 
 export class UpdateEventDto {
   @IsString()
@@ -33,12 +33,24 @@ export class UpdateEventDto {
 
   @IsOptional()
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    const localDate = new Date(value); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    ); // Convert to UTC
+    return utcDate;
+  })
   startDateTime?: Date;
 
   @IsOptional()
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    const localDate = new Date(value); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    ); // Convert to UTC
+    return utcDate;
+  })
   endDateTime?: Date;
 
   @IsOptional()
@@ -46,10 +58,22 @@ export class UpdateEventDto {
   @Transform(({ value }) => parseInt(value, 10))
   seatCapacity?: number;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    if (typeof value === 'number') return value === 1;
+    return false;
+  })
   @IsOptional()
   @IsBoolean()
   isOnline?: boolean;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    if (typeof value === 'number') return value === 1;
+    return false;
+  })
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
@@ -59,8 +83,5 @@ export class UpdateEventDto {
   @IsNotEmpty()
   gender?: Gender;
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  price?: number;
+
 }

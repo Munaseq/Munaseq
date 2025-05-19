@@ -46,7 +46,7 @@ describe('App e2e ', () => {
         description: 'SWE student',
         visibleName: 'Krcher',
         socialAccounts: {
-          twiiter: 'https://x.com/KSU_HSS',
+          twiiter: 'https://x.com/X',
           linkedin: 'https://www.linkedin.com/in/hisham-alsuhaibani-649a8a238/',
         },
       };

@@ -1,13 +1,11 @@
 import Tag from "@/components/common/category";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
-import mail from "@/assets/icons/mail.svg";
-import user from "@/assets/icons/user-gradiant.svg";
-import userCircle from "@/assets/icons/user-circle.svg";
 import { MutableRefObject, useRef } from "react";
 import LogoLoading from "../common/logo-loading";
 import useFormVariants from "./hooks/use-form-variants";
+import { CircleUserRoundIcon, MailIcon, UserRoundIcon } from "lucide-react";
 
 export default function FinalForm(props: {
     step: number;
@@ -60,7 +58,7 @@ export default function FinalForm(props: {
                             {image.current.length > 0 ? (
                                 <Image src={image.current} alt="preview" fill />
                             ) : (
-                                <Image src={userCircle} alt="preview" fill />
+                                <CircleUserRoundIcon className="w-full h-full aspect-square"/>
                             )}
                         </div>
                         <div className="mt-2">
@@ -71,15 +69,9 @@ export default function FinalForm(props: {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Image src={mail} alt="mail icon" />
+                        <MailIcon/>
                         <p className="font-semibold">{data.email}</p>
                     </div>
-                    {data.displayName && (
-                        <div className="flex gap-2">
-                            <Image src={user} alt="mail icon" />
-                            <p className="font-semibold">{data.displayName}</p>
-                        </div>
-                    )}
                     <div>
                         <p className="font-bold text-lg">الاهتمامات</p>
                         <div className="flex flex-wrap gap-2 mt-5 sm:text-[0.75rem] text-xs max-h-44 overflow-hidden">

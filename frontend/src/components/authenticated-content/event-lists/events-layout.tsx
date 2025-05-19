@@ -1,12 +1,10 @@
-import Subtitle from "@/components/common/subtitle";
+import Subtitle from "@/components/common/text/subtitle";
 import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
-import SelectEvents from "@/components/common/select-events";
-import Title from "@/components/common/title";
-import Image from "next/image";
-import { EventProvider } from "@/store/eventContext";
+import SelectEvents from "@/components/authenticated-content/event-lists/select-events";
+import Title from "@/components/common/text/title";
+import { EventProvider } from "@/store/event-context";
 import StoreEventData from "@/components/authenticated-content/event-lists/store-event-data";
-import { StaticImport } from "next/dist/shared/lib/get-img-props";
 
 export enum EventType {
     COORDINATED = "coordinated",
@@ -26,22 +24,18 @@ export default async function EventsLayout({
     children: React.ReactNode;
     eventType: string;
     eventString: string;
-    eventIcon: StaticImport;
+    eventIcon: React.ReactElement;
     eventData: any;
 }) {
     
     return (
         <>
             <Title>
-                <Image
-                    src={eventIcon}
-                    className="sm:w-14 w-10"
-                    alt={`${eventType} events icon`}
-                />
+                {eventIcon}
                 {eventString}
             </Title>
             <Subtitle>
-                <div className="gap-8 sm:flex hidden">
+                <div className="gap-8 sm:flex hidden mt-8">
                     <Link
                         href={`/${eventType}-events/active`}
                         className="relative text-nowrap"

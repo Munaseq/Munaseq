@@ -15,6 +15,8 @@ export default async function createEventAction(
   if (!token?.value) {
     redirect("signin");
   }
+  let eventData: any;
+  
 
   try {
     const createRes = await fetch(`${process.env.BACKEND_URL}/event`, {
@@ -25,43 +27,43 @@ export default async function createEventAction(
       },
     });
 
-    const eventData: EventDataDto = await createRes.json();
+    eventData = await createRes.json();
+    console.log(eventData);
+    
 
     if (!createRes.ok) {
-      const errorResponse = await createRes.text(); // Capture the error message
-      console.error("Error response:", errorResponse);
-      throw Error(errorResponse);
+      throw Error(eventData.error as string);
     }
 
     revalidateTag("event");
 
     // FETCH HERE
-    const rolesValue = formDataRole.get("roles"); // This will be FormDataEntryValue (string | File)
+    const rolesValue = formDataRole.getAll("roles"); // This will be FormDataEntryValue (string | File)
 
-    if (typeof rolesValue === "string") {
+
       try {
-        // Parse rolesValue into an object or array
-        const parsedRoles:
-          | { assignedUserId: string; role: string }
-          | { assignedUserId: string; role: string }[] = JSON.parse(rolesValue);
-
-        // Ensure parsedRoles is an array for consistent processing
-        const rolesArray = Array.isArray(parsedRoles)
-          ? parsedRoles
-          : [parsedRoles];
-
+   
+  
+    
         // Iterate through roles and make API calls
-        for (const role of rolesArray) {
+        for (const role of rolesValue) {``
+          
+          const parsedRole = JSON.parse(role as string); 
+       
           try {
             const response = await fetch(
-              `${process.env.BACKEND_URL}/event/assignRole/${eventData.id}`,
+              `${process.env.BACKEND_URL}/event/invitation/${eventData.id}`,
               {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${token?.value}`,
                 },
-                body: JSON.stringify(role),
+                body: JSON.stringify({
+                  "invitationType": 'ROLE_INVITATION',
+                  "receiverId": parsedRole.assignedUserId,
+                  "roleType": parsedRole.role === "moderators" ? "MODERATOR" : "PRESENTER",
+                }),
               }
             );
 
@@ -76,9 +78,8 @@ export default async function createEventAction(
       } catch (parseError) {
         console.error("Failed to parse rolesValue:", parseError);
       }
-    } else {
-      console.error("rolesValue is not a string");
-    }
+   
+      
 
     // const ratingRes = await fetch(
     //   `${process.env.BACKEND_URL}/event/assignRole/${eventData.id}`,
@@ -90,9 +91,10 @@ export default async function createEventAction(
     //   }
     // );
   } catch (error: any) {
+
     return {
-      message: "ERROR",
+      message: error.message,
     };
   }
-  redirect("coordinated-events/upcoming");
+  redirect("/event/" + eventData.id + "/about");
 }

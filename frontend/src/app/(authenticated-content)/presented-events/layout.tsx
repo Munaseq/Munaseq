@@ -1,7 +1,7 @@
 
-import presentIcon from "@/assets/icons/presenter.svg";
 import EventsLayout, { EventType } from "@/components/authenticated-content/event-lists/events-layout";
 import getPresentedEvents from "@/proxy/event/get-presented-events-action";
+import { MicIcon } from "lucide-react";
 
 export default async function PresentedEvents({
     children,
@@ -12,8 +12,8 @@ export default async function PresentedEvents({
     return (
         <EventsLayout
             eventType={EventType.PRESENTED}
-            eventString="الفعاليات المقدمة"
-            eventIcon={presentIcon}
+            eventString="الفعاليات التي قدمتها"
+            eventIcon={<MicIcon className="text-custom-light-purple" size={32}/>}
             eventData={eventList}
         >
             {children}

@@ -4,13 +4,18 @@ import Image from "next/image";
 import leftDeco from "@/assets/event/left-deco.png";
 import rightDeco from "@/assets/event/right-deco.png";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import getUserAction from "@/proxy/user/get-user-using-id-action";
-import userIcon from "@/assets/icons/user-gradiant.svg";
-import starIcon from "@/assets/icons/rating-star.svg";
 import Link from "next/link";
 import TabIndicator from "@/components/common/tab-indicator";
-import Tag from "@/components/common/category";
 import getUserRating from "@/proxy/user/get-user-rating-action";
+import getProfileAction from "@/proxy/user/get-profile-action";
+import EventDropdown from "@/components/authenticated-content/event/event-layout/event-dropdown";
+import { notFound } from "next/navigation";
+import { StarIcon, UserRound, UserRoundIcon } from "lucide-react";
+import SelectEventTap from "@/components/authenticated-content/event/event-layout/select-event-tap";
+import EventQRDialog from "@/components/authenticated-content/event/event-layout/event-qr-dialog";
+import InviteUserDialog from "@/components/authenticated-content/event/event-layout/invite-user-dialog";
+import getAllUsers from "@/proxy/user/get-all-user-event-action";
+import getEventRateAction from "@/proxy/event/get-event-rate-action";
 
 export default async function EventLayout({
     children,
@@ -20,10 +25,26 @@ export default async function EventLayout({
     params: { eventId: string };
 }) {
     const event: EventDataDto = await getEventAction(params.eventId);
-    const eventCreator: UserDataDto = await getUserAction(event.eventCreatorId);
-    // const rating: any = await getUserRating(event.eventCreatorId);
-    
-    
+    const rating = await getEventRateAction(params.eventId);
+    if (!event) {
+        notFound();
+    }
+    const user: UserDataDto = event.eventCreator;
+    const currentUser: UserDataDto = await getProfileAction();
+    const Users: {
+        eventCreator: UserDataDto;
+        joinedUsers: UserDataDto[];
+        presenters: UserDataDto[];
+        moderators: UserDataDto[];
+    } = await getAllUsers(params.eventId);
+    const isEventCreator = currentUser.id === user.id;
+    const isEventModerator = Users.moderators.some(
+        m => m.id === currentUser.id
+    );
+    const isEventPresenter = Users.presenters.some(
+        m => m.id === currentUser.id
+    );
+
     return (
         <div className="bg-white shadow-strong min-h-screen rounded-3xl overflow-hidden">
             <div className="h-96 rounded-t-3xl relative">
@@ -33,6 +54,7 @@ export default async function EventLayout({
                     alt="event image"
                     className="object-cover"
                     fill
+                    sizes="100%"
                 />
                 <Image
                     src={leftDeco}
@@ -48,12 +70,35 @@ export default async function EventLayout({
                 <div className="absolute z-20 flex gap-1 top-3 right-3">
                     {event.categories.map(category => (
                         <span
-                        key={category}
-                        className="rounded-full bg-white text-primary px-2.5 py-1 ml-2 text-md font-medium "
-                    >
-                        {category}
-                    </span>
+                            key={category}
+                            className="rounded-full bg-white text-custom-light-purple px-2.5 py-1 ml-2 text-md font-medium "
+                        >
+                            {category}
+                        </span>
                     ))}
+                </div>
+
+                <div className="absolute z-20 top-3 left-3 flex flex-row-reverse gap-2">
+                    <EventDropdown
+                        isEventCreator={isEventCreator}
+                        isAdmin={
+                            isEventCreator ||
+                            isEventModerator ||
+                            isEventPresenter
+                        }
+                        event={event}
+                    />
+
+                    <EventQRDialog />
+                    {(event.isPublic ||
+                        isEventCreator ||
+                        isEventModerator ||
+                        isEventPresenter) && (
+                        <InviteUserDialog
+                            memberList={Users}
+                            eventId={event.id}
+                        />
+                    )}
                 </div>
 
                 <div className="absolute z-20 text-white bottom-0 right-0 grid p-4 pb-2">
@@ -63,30 +108,16 @@ export default async function EventLayout({
                         </h1>
                         <div className="flex items-center gap-2 font-light text-xl">
                             {" "}
-                            <Image
-                                src={userIcon}
-                                alt="user icon"
-                                className="w-10"
-                            />{" "}
-                            <span>
-                                {eventCreator.firstName +
-                                    " " +
-                                    eventCreator.lastName}
-                            </span>{" "}
-                            <Image
-                                src={starIcon}
-                                alt="star icon"
-                                className="w-10"
-                            />{" "}
-                            {/* {rating?.avgRating ? (<span>
-                                {rating?.avgRating}
-                                </span>) : (<span>0</span>)} */}
+                            <UserRoundIcon className="text-custom-light-purple" />{" "}
+                            <span>{user.firstName + " " + user.lastName}</span>{" "}
+                            <StarIcon className="text-custom-light-purple" />{" "}
+                            <span>{rating.avgRating}</span>
                         </div>
                     </div>
-                    <div>
-                        <div className="gap-8 sm:flex hidden text-xl ">
+                    <div className=" sm:w-full sm:overflow-x-auto">
+                        <div className="gap-8 sm:flex hidden text-xl">
                             <Link
-                                href="./about"
+                                href={`/event/${params.eventId}/about`}
                                 className="relative text-nowrap"
                             >
                                 حول
@@ -96,7 +127,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./content"
+                                href={`/event/${params.eventId}/content`}
                                 className="relative text-nowrap"
                             >
                                 المحتوى{" "}
@@ -105,8 +136,8 @@ export default async function EventLayout({
                                     tab="/content"
                                 />
                             </Link>
-                            {/* <Link
-                                href="./activities"
+                            <Link
+                                href={`/event/${params.eventId}/activities`}
                                 className="relative text-nowrap"
                             >
                                 الأنشطة{" "}
@@ -114,9 +145,19 @@ export default async function EventLayout({
                                     layoutId="active-event-tab"
                                     tab="/activities"
                                 />
-                            </Link> */}
+                            </Link>
                             <Link
-                                href="./members"
+                                href={`/event/${params.eventId}/chat`}
+                                className="relative text-nowrap"
+                            >
+                                الدردشة{" "}
+                                <TabIndicator
+                                    layoutId="active-event-tab"
+                                    tab="/chat"
+                                />
+                            </Link>
+                            <Link
+                                href={`/event/${params.eventId}/members`}
                                 className="relative text-nowrap"
                             >
                                 الأعضاء{" "}
@@ -126,7 +167,7 @@ export default async function EventLayout({
                                 />
                             </Link>
                             <Link
-                                href="./rate"
+                                href={`/event/${params.eventId}/rate`}
                                 className="relative text-nowrap"
                             >
                                 التقييم{" "}
@@ -135,12 +176,39 @@ export default async function EventLayout({
                                     tab="/rate"
                                 />
                             </Link>
+                            <Link
+                                href={`/event/${params.eventId}/announcement`}
+                                className="relative text-nowrap"
+                            >
+                                الاخبار{" "}
+                                <TabIndicator
+                                    layoutId="active-event-tab"
+                                    tab="/announcement"
+                                />
+                            </Link>
+                            {(isEventCreator ||
+                                isEventModerator ||
+                                isEventPresenter) && (
+                                <Link
+                                    href={`/event/${params.eventId}/requests`}
+                                    className="relative text-nowrap"
+                                >
+                                    الطلبات{" "}
+                                    <TabIndicator
+                                        layoutId="active-event-tab"
+                                        tab="/requests"
+                                    />
+                                </Link>
+                            )}
                         </div>
-                        <div className="sm:hidden block"></div>
+
+                        <div className="sm:hidden block">
+                            <SelectEventTap eventID={params.eventId} />
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className="pt-4 px-7">{children}</div>
+            <div className="p-5 relative">{children}</div>
         </div>
     );
 }

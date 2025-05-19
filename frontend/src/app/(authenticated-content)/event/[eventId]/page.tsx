@@ -2,12 +2,7 @@ import getEventAction from "@/proxy/event/get-event-using-id-action";
 import Image from "next/image";
 import { EventDataDto } from "@/dtos/event-data.dto";
 import Category from "@/components/common/category";
-import userIcon from "@/assets/icons/user-gradiant.svg";
 import { UserDataDto } from "@/dtos/user-data.dto";
-import calendarIcon from "@/assets/icons/calender.svg";
-import groupIcon from "@/assets/icons/participants.svg";
-import loactionIcon from "@/assets/icons/location.svg";
-import getUserAction from "@/proxy/user/get-user-using-id-action";
 import decoTop from "@/assets/event/top.png";
 import decoBottom from "@/assets/event/bottom.png";
 import Return from "@/components/authenticated-content/event/return";
@@ -16,6 +11,7 @@ import isInEventAction from "@/proxy/user/is-in-event-action";
 import getProfileAction from "@/proxy/user/get-profile-action";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { CalendarDaysIcon, MapPinIcon, UserRoundIcon, UsersRoundIcon } from "lucide-react";
 
 export default async function EventPage({
     params,
@@ -36,7 +32,7 @@ export default async function EventPage({
     if (isUserInEvent) {
         redirect("/event/" + event.id + "/about");
     }
-    const user: UserDataDto = await getUserAction(event.eventCreatorId);
+    const user: UserDataDto = event.eventCreator;
 
     return (
         <section className="grid place-items-center mb-10">
@@ -67,29 +63,21 @@ export default async function EventPage({
                         <h1 className="font-bold ">معلومات الحضور</h1>
                         <div className="text-custom-black gap-2 flex flex-col">
                             <p className="flex gap-2 items-center">
-                                <Image
-                                    src={calendarIcon}
-                                    alt="date icon"
-                                    className="w-10"
-                                />
+                                <CalendarDaysIcon />
                                 {"تاريخ بدأ الفعالية: " +
                                     new Date(
                                         event.startDateTime
                                     ).toLocaleDateString()}
                             </p>
                             <p className="flex gap-2 items-center">
-                                <Image
-                                    src={calendarIcon}
-                                    alt="date icon"
-                                    className="w-10"
-                                />
+                            <CalendarDaysIcon />
                                 {"تاريخ انتهاء الفعالية: " +
                                     new Date(
                                         event.endDateTime
                                     ).toLocaleDateString()}
                             </p>
                             <p className="flex gap-2 items-center">
-                                <Image src={groupIcon} alt="group icon" />
+                                <UsersRoundIcon />
                                 {(!event.isOnline ? "حضوري" : "عن بعد") +
                                     " " +
                                     (event.gender === "BOTH"
@@ -100,10 +88,7 @@ export default async function EventPage({
                             </p>
                             {!event.isOnline && (
                                 <p className="flex gap-2 items-center">
-                                    <Image
-                                        src={loactionIcon}
-                                        alt="loaction Icon"
-                                    />
+                                    <MapPinIcon />
                                     {event.location}
                                 </p>
                             )}
@@ -120,13 +105,9 @@ export default async function EventPage({
                     </div>
                     <div className="grid gap-3">
                         <h1 className="font-bold text-3xl">{event.title}</h1>
-                        <div className="flex items-center">
-                            <Image
-                                src={userIcon}
-                                alt="user icon"
-                                className="w-10"
-                            />
-                            <div className="text-[#AE00FE] font-semibold text-xl">
+                        <div className="flex items-center text-custom-light-purple">
+                            <UserRoundIcon/>
+                            <div className="font-semibold text-xl">
                                 <p>
                                     {"المنسق " +
                                         user.firstName +
@@ -140,7 +121,7 @@ export default async function EventPage({
                         </div>
                     </div>
 
-                    <JoinButton eventId={params.eventId}>
+                    <JoinButton isEventPublic={event.isPublic} eventId={params.eventId}>
                         <Image
                             className="absolute bottom-0 left-0 "
                             src={decoBottom}

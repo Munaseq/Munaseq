@@ -1,23 +1,23 @@
 "use client";
-import Button from "@/components/common/button";
-import { useToast } from "@/hooks/use-toast";
+import Button from "@/components/common/buttons/button";
+import toast from "react-hot-toast";
 import joinEventAction from "@/proxy/event/join-event-action";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import LogoLoading from "@/components/common/logo-loading";
+import requestToJoinEventAction from "@/proxy/event/request-to-join-event-action";
 
 export default function JoinButton({
     eventId,
+    isEventPublic,
     children,
 }: {
     eventId: string;
+    isEventPublic: boolean;
     children?: React.ReactNode;
 }) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
-    const { toast } = useToast();
-    const router = useRouter();
     const getErrorMessage: () => string = () => {
         switch (error) {
             case "GENDER":
@@ -26,10 +26,35 @@ export default function JoinButton({
                 return "تم الانضمام مسبقاً";
             case "CREATOR":
                 return "لا يمكنك الانضمام لفعالية قمت بإنشائها";
+            case "REQUESTED":
+                return "لقد قمت بإرسال طلب انضمام مسبقاً";
             default:
                 return "حدث خطأ ما، الرجاء المحاولة مرة أخرى";
         }
     };
+
+    const joinEvent = async () => {
+        setIsLoading(true);
+        const res = await joinEventAction(eventId);
+        if (res) {
+            setError(res.error);
+            setIsLoading(false);
+            return;
+        }
+        toast.success("تم الانضمام للفعالية");
+    };
+
+    const sendRequestToJoinEvent = async () => {
+      setIsLoading(true);
+        const res = await requestToJoinEventAction(eventId);
+        if (res) {
+            setError(res.error);
+            setIsLoading(false);
+            return;
+        }
+        toast.success("تم ارسال طلب الانضمام للفعالية");
+    }
+
 
     return (
         <div className="grid place-items-center">
@@ -42,24 +67,20 @@ export default function JoinButton({
                 <div className="w-full flex justify-end mt-5">
                     <Button
                         onClick={async () => {
-                            setIsLoading(true);
-                            const res = await joinEventAction(eventId);
-                            if (res.error) {
-                                setError(res.error);
-                                setIsLoading(false);
-                                return;
+                            if (isEventPublic) {
+                              joinEvent();
+                              return
                             }
-                            setIsLoading(false);
-                            toast({
-                                duration: 5000,
-                                title: "تم الانضمام للفعالية",
-                            });
-                            router.push("/joined-events/upcoming");
+                            sendRequestToJoinEvent()
                         }}
                         gradient
                         className="relative z-10"
                     >
-                        الانضمام للفعالية
+                        {isEventPublic ? (
+                            <>الانضمام للفعالية</>
+                        ) : (
+                            <>طلب الانضمام للفعالية</>
+                        )}
                     </Button>
                 </div>
             ) : (

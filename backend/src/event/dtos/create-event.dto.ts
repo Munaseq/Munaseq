@@ -7,7 +7,6 @@ import {
   IsInt,
   IsArray,
   IsEnum,
-  IsNumber,
   IsBoolean,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
@@ -58,15 +57,24 @@ export class CreateEventDto {
   isPublic?: boolean;
 
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    const localDate = new Date(value); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    ); // Convert to UTC
+    return utcDate;
+  })
   startDateTime: Date;
 
   @IsDate()
-  @Transform(({ value }) => new Date(value))
+  @Transform(({ value }) => {
+    const localDate = new Date(value); // Parse the input date
+    const utcDate = new Date(
+      localDate.getTime() - localDate.getTimezoneOffset() * 60000,
+    ); // Convert to UTC
+    return utcDate;
+  })
   endDateTime: Date;
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  price?: number;
+ 
 }

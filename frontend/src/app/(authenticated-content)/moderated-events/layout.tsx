@@ -1,7 +1,6 @@
-
-import modeIcon from "@/assets/icons/moderator.svg";
 import EventsLayout, { EventType } from "@/components/authenticated-content/event-lists/events-layout";
 import getModeratedEvents from "@/proxy/event/get-moderated-events-action";
+import { PencilRulerIcon } from "lucide-react";
 
 export default async function ModeratedEvents({
     children,
@@ -12,8 +11,8 @@ export default async function ModeratedEvents({
     return (
         <EventsLayout
             eventType={EventType.MODERATED}
-            eventString="الفعاليات المنظمة"
-            eventIcon={modeIcon}
+            eventString="الفعاليات التي نظمتها"
+            eventIcon={<PencilRulerIcon className="text-custom-light-purple" size={32} />}
             eventData={eventList}
         >
             {children}

@@ -1,18 +1,18 @@
-import user from "@/assets/auth-assets/icons/user.svg";
-import userCircle from "@/assets/auth-assets/icons/user-circle.svg";
-import check from "@/assets/auth-assets/icons/check-circle.svg";
-import tag from "@/assets/auth-assets/icons/tag.svg";
-import userGreen from "@/assets/auth-assets/icons/user-green.svg";
-import userCircleGreen from "@/assets/auth-assets/icons/user-circle-green.svg";
-import tagGreen from "@/assets/auth-assets/icons/tag-green.svg";
-import userGradient from "@/assets/auth-assets/icons/user-gradient.svg";
-import userCircleGradient from "@/assets/auth-assets/icons/user-circle-gradient.svg";
-import checkGradient from "@/assets/auth-assets/icons/check-circle-gradient.svg";
-import tagGradient from "@/assets/auth-assets/icons/tag-gradient.svg";
+import user from "@/assets/auth-assets/signup-step-indicator-icons/user.svg";
+import userCircle from "@/assets/auth-assets/signup-step-indicator-icons/user-circle.svg";
+import check from "@/assets/auth-assets/signup-step-indicator-icons/check-circle.svg";
+import tag from "@/assets/auth-assets/signup-step-indicator-icons/tag.svg";
+import userGreen from "@/assets/auth-assets/signup-step-indicator-icons/user-green.svg";
+import userCircleGreen from "@/assets/auth-assets/signup-step-indicator-icons/user-circle-green.svg";
+import tagGreen from "@/assets/auth-assets/signup-step-indicator-icons/tag-green.svg";
+import userGradient from "@/assets/auth-assets/signup-step-indicator-icons/user-gradient.svg";
+import userCircleGradient from "@/assets/auth-assets/signup-step-indicator-icons/user-circle-gradient.svg";
+import checkGradient from "@/assets/auth-assets/signup-step-indicator-icons/check-circle-gradient.svg";
+import tagGradient from "@/assets/auth-assets/signup-step-indicator-icons/tag-gradient.svg";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function Progress(props: { step: number }) {
+export default function SignUpProgress(props: { step: number }) {
     return (
         <motion.div className="grid grid-cols-4 place-items-center w-full text-red-500">
             <div>

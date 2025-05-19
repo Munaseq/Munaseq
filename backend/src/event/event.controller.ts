@@ -13,12 +13,12 @@ import {
   UploadedFiles,
   Query,
   BadRequestException,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiResponse,
   ApiConsumes,
   ApiBody,
   ApiQuery,
@@ -34,16 +34,24 @@ import {
   LeaveEventDto,
   SeacrhUser,
   SearchEvent,
-  UpdateAssignment,
+  UpdateAssignmentDTO,
   UpdateEventDto,
   CreateUpdateRating,
   AssignRoles,
-  TakeAssigment,
-  UpdateQuizDto,
+  TakeAssigmentDTO,
+  SendInvitationDTO,
   CreateQuizDto,
+  UpdateQuizDto,
   SubmitQuizDto,
+  SendRequestDTO,
+  RespondRequestDto,
+  UpdateChatAllowanceDto,
+  CreateReminderDTO,
 } from './dtos';
-import { multerEventLogic, multerMaterialtLogic } from 'src/utils/multer.logic';
+
+import { multerEventLogic, multerMaterialtLogic } from '../utils/aws.uploading';
+import { Gender } from '@prisma/client';
+import { CreateAnnouncementDto } from '../user/dtos/create-announcement.dto';
 
 @ApiTags('event')
 @Controller('event')
@@ -62,8 +70,20 @@ export class EventController {
     schema: {
       type: 'object',
       properties: {
-        // NOTE: Replace with your actual CreateEventDto properties.
-        // For example: title: { type: 'string' }, description: { type: 'string' }, etc.
+        title: { type: 'string' },
+        description: { type: 'string' },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        location: { type: 'string' },
+        seatCapacity: { type: 'number' },
+        isPublic: { type: 'boolean' },
+        isOnline: { type: 'boolean' },
+        gender: { type: 'string', enum: Object.values(Gender) },
+        startDateTime: { type: 'string', format: 'date-time' },
+        endDateTime: { type: 'string', format: 'date-time' },
+
         image: { type: 'string', format: 'binary' },
       },
     },
@@ -92,13 +112,26 @@ export class EventController {
   @ApiQuery({ name: 'title', required: false, type: String })
   @ApiQuery({ name: 'pageNumber', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  getAllEvents(
-    @Query() query: SearchEvent,
-  ) {
+  @ApiQuery({
+    name: 'highestRated',
+    required: false,
+    type: Boolean,
+    description: 'Retreives the highestRated events.',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    type: String,
+    description: 'Retreives the events that have the category.',
+  })
+  getAllEvents(@Query() query: SearchEvent) {
     return this.eventService.getAllEvents(
       query.title,
       query.pageNumber,
       query.pageSize,
+
+      query.category,
+      query.highestRated,
     );
   }
 
@@ -132,10 +165,7 @@ export class EventController {
   @ApiQuery({ name: 'title', required: false, type: String })
   @ApiQuery({ name: 'pageNumber', required: false, type: Number })
   @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  findJoinedEvents(
-    @GetCurrentUserId() userId,
-    @Query() query: SearchEvent,
-  ) {
+  findJoinedEvents(@GetCurrentUserId() userId, @Query() query: SearchEvent) {
     return this.eventService.findJoinedEvents(
       userId,
       query.title,
@@ -143,7 +173,7 @@ export class EventController {
       query.pageSize,
     );
   }
-
+  //must be DELETED
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('assignRole/:eventId')
@@ -173,8 +203,6 @@ export class EventController {
     return this.eventService.findAllUsersOfEvent(eventId);
   }
 
-  // exec 2
-  // Returns all users that attend a certain event
   @Get('attendees/:eventId')
   @ApiOperation({ summary: 'Get all attendees of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -215,8 +243,6 @@ export class EventController {
     );
   }
 
-  // exec 2
-  // Returns all users that present in a certain event
   @Get('presenters/:eventId')
   @ApiOperation({ summary: 'Get all presenters of an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -251,7 +277,23 @@ export class EventController {
     return this.eventService.findEventCreator(eventId);
   }
 
-  // What if the event is not public?
+  @Get('recommended')
+  @ApiOperation({ summary: 'Get recommended events for user' })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiQuery({ name: 'pageNumber', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  getRecommendedEvents(
+    @GetCurrentUserId() userId: string,
+    @Query() query: { pageNumber?: number; pageSize?: number },
+  ) {
+    return this.eventService.getRecommendedEvents(
+      userId,
+      query.pageNumber,
+      query.pageSize,
+    );
+  }
+
   @Get(':eventId')
   @ApiOperation({ summary: 'Get event details by ID' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
@@ -266,13 +308,32 @@ export class EventController {
   @ApiOperation({ summary: 'Update an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiConsumes('multipart/form-data')
+  @ApiQuery({
+    name: 'removeImage',
+    required: false,
+    type: Boolean,
+    description: 'Flag to remove the profile picture.',
+  })
   @ApiBody({
     description:
       'Payload for updating an event. Include all fields from UpdateEventDto and an optional image file.',
     schema: {
       type: 'object',
       properties: {
-        // NOTE: Replace with your actual UpdateEventDto properties.
+        title: { type: 'string' },
+        description: { type: 'string' },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        location: { type: 'string' },
+        seatCapacity: { type: 'number' },
+        isPublic: { type: 'boolean' },
+        isOnline: { type: 'boolean' },
+        gender: { type: 'string', enum: Object.values(Gender) },
+        startDateTime: { type: 'string', format: 'date-time' },
+        endDateTime: { type: 'string', format: 'date-time' },
+
         image: { type: 'string', format: 'binary' },
       },
     },
@@ -281,6 +342,7 @@ export class EventController {
     @GetCurrentUserId() userId: string,
     @Param('eventId') eventId: string,
     @Body() updateEventDto: UpdateEventDto,
+    @Query('removeImage') removeImage: boolean,
     @UploadedFiles()
     files: {
       image?: any;
@@ -292,13 +354,13 @@ export class EventController {
       eventId,
       updateEventDto,
       imageUrl,
+      removeImage,
     );
   }
 
   //-----------------------------------------
   // Joining/Leaving Event's endpoints
   //-----------------------------------------
-
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Post('join')
@@ -401,14 +463,14 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Get('quiz/:eventId')
-  @ApiOperation({ summary: 'Get quiz for an event' })
+  @Get('quizzes/:eventId')
+  @ApiOperation({ summary: 'Get quizzes for an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
-  getQuiz(
+  getQuizzes(
     @Param('eventId') eventId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.getQuiz(userId, eventId);
+    return this.eventService.getQuizzes(userId, eventId);
   }
 
   @UseGuards(AuthGuard)
@@ -430,92 +492,129 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Patch('quiz/:eventId/:quizId')
+  @Patch('quiz/:quizId')
   @ApiOperation({ summary: 'Update a quiz for an event' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
   @ApiBody({
     description: 'Payload for updating a quiz',
     type: UpdateQuizDto,
   })
   updateQuiz(
-    @Param('eventId') eventId: string,
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
     @Body() UpdateQuizDto: UpdateQuizDto,
   ) {
-    return this.eventService.updateQuiz(userId, eventId, quizId, UpdateQuizDto);
+    return this.eventService.updateQuiz(userId, quizId, UpdateQuizDto);
   }
+
+  //SEE THE COMMENT IN EVENT.SERVICE LINE 961
+  // @UseGuards(AuthGuard)
+  // @ApiBearerAuth()
+  // @Post('quiz/start/:quizId')
+  // @ApiOperation({ summary: 'Start a quiz' })
+  // @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  // @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
+  // startQuiz(
+  //   @Param('quizId') quizId: string,
+  //   @GetCurrentUserId() userId: string,
+  // ) {
+  //   return this.eventService.startQuiz(userId, quizId);
+  // }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('quiz/start/:eventId/:quizId')
-  @ApiOperation({ summary: 'Start a quiz' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @Get('quiz/show/:quizId')
+  @ApiOperation({
+    summary:
+      'Show quiz details. Adds takeQuizStatus if the user is an attendee, or numberParticipatedUsers if the user is a moderator, event creator, or presenter.',
+  })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
-  startQuiz(
-    @Param('eventId') eventId: string,
+  showQuiz(
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.startQuiz(userId, eventId, quizId);
+    return this.eventService.showQuiz(userId, quizId);
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('quiz/submit/:eventId/:quizId')
+  @Post('quiz/save/:quizId')
+  @ApiOperation({ summary: 'Save quiz answers' })
+  @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
+  @ApiBody({
+    description: 'Payload containing quiz answers',
+    type: SubmitQuizDto,
+  })
+  saveQuiz(
+    @Param('quizId') quizId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() submitQuizDto: SubmitQuizDto,
+  ) {
+    return this.eventService.saveQuiz(
+      userId,
+      quizId,
+      submitQuizDto.answers,
+      'SAVED_ANSWERS',
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('quiz/submit/:quizId')
   @ApiOperation({ summary: 'Submit quiz answers' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
   @ApiBody({
     description: 'Payload containing quiz answers',
     type: SubmitQuizDto,
   })
   submitQuiz(
-    @Param('eventId') eventId: string,
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
     @Body() submitQuizDto: SubmitQuizDto,
   ) {
-    return this.eventService.submitQuiz(userId, quizId, submitQuizDto.answers);
-  }
-
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
-  @Get('quiz/results/:eventId/:quizId')
-  @ApiOperation({ summary: 'Get all quiz results for an event' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
-  @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
-  getAllQuizResults(
-    @Param('eventId') eventId: string,
-    @Param('quizId') quizId: string,
-    @GetCurrentUserId() userId: string,
-  ) {
-    return this.eventService.getAllParticipantsQuizResults(
+    return this.eventService.saveQuiz(
       userId,
-      eventId,
       quizId,
+      submitQuizDto.answers,
+      'SUBMITTED',
     );
   }
 
+  // @UseGuards(AuthGuard)
+  // @ApiBearerAuth() //CHECK IF NEEDED
+  // @Get('quiz/results/:eventId/:quizId') //check if needed
+  // @ApiOperation({ summary: 'Get all quiz results for an event' })
+  // @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  // @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
+  // getAllQuizResults(
+  //   @Param('eventId') eventId: string,
+  //   @Param('quizId') quizId: string,
+  //   @GetCurrentUserId() userId: string,
+  // ) {
+  //   return this.eventService.getAllParticipantsQuizResults(
+  //     userId,
+  //     eventId,
+  //     quizId,
+  //   );
+  // }
+
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Delete('quiz/:eventId/:quizId')
+  @Delete('quiz/:quizId')
   @ApiOperation({ summary: 'Delete a quiz from an event' })
-  @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiParam({ name: 'quizId', description: 'ID of the quiz' })
   deleteQuiz(
-    @Param('eventId') eventId: string,
     @Param('quizId') quizId: string,
     @GetCurrentUserId() userId: string,
   ) {
-    return this.eventService.deleteQuiz(userId, eventId, quizId);
+    return this.eventService.deleteQuiz(userId, quizId);
   }
 
   //-----------------------------------------
-  // Assignment's endpoints
-  //-----------------------------------------
 
+  //Assignment endpoints
+
+  //-----------------------------------------
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Get('assignments/:eventId')
@@ -530,127 +629,116 @@ export class EventController {
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Post('submitAssignment/:assignmentId')
-  @UseInterceptors(multerMaterialtLogic())
-  @ApiOperation({ summary: 'Submit an assignment' })
-  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description:
-      'Payload for submitting an assignment. Expects a file upload with field "materials" and questions in the body.',
-    schema: {
-      type: 'object',
-      properties: {
-        questions: { type: 'string' }, // Adjust type as needed (e.g., array/object)
-        materials: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-        },
-      },
-    },
+  @Get('assignment/show/:assignmentId')
+  @ApiOperation({
+    summary:
+      'Show assignment details. Adds takeAssignmentStatus if the user is an attendee, or numberParticipatedUsers if the user is a moderator, event creator, or presenter.',
   })
+  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
+  showAssignments(
+    @Param('assignmentId') assignmentId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.showAssignment(userId, assignmentId);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('assignment/save/:assignmentId')
+  @ApiOperation({
+    summary:
+      'Save assignment answers. The user must be an attendee to save answers.',
+  })
+  @ApiBody({
+    description: 'Payload for saving an assignment',
+    type: TakeAssigmentDTO,
+  })
+  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
+  saveAssignemt(
+    @Param('assignmentId') assignmentId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() takeAssignmentDto: TakeAssigmentDTO,
+  ) {
+    return this.eventService.saveAssignment(
+      userId,
+      assignmentId,
+      takeAssignmentDto.answers,
+      'SAVED_ANSWERS',
+    );
+  }
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('assignment/submit/:assignmentId')
+  @ApiOperation({
+    summary:
+      'Submit assignment answers. The user must be an attendee to save answers.',
+  })
+  @ApiBody({
+    description: 'Payload for submitting an assignment',
+    type: TakeAssigmentDTO,
+  })
+  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
   submitAssignemt(
     @Param('assignmentId') assignmentId: string,
     @GetCurrentUserId() userId: string,
-    @UploadedFiles() files: { materials: any },
-    @Body() questionsDto: TakeAssigment,
+    @Body() takeAssignmentDto: TakeAssigmentDTO,
   ) {
-    const { questions } = questionsDto;
-    const materialUrl = files?.materials[0].location;
-    return this.eventService.submitAssignemnt(
+    return this.eventService.saveAssignment(
       userId,
       assignmentId,
-      materialUrl,
-      questions,
+
+      takeAssignmentDto.answers,
+      'SUBMITTED',
     );
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @UseInterceptors(multerMaterialtLogic())
-  @Post('addAssignment/:eventId')
-  @ApiOperation({ summary: 'Add an assignment to an event' })
+  @Post('assignment/:eventId')
+  @ApiOperation({
+    summary:
+      'create an assignment for an event. The user must be an event creator, moderator, or presenter to create an assignment.',
+  })
+  @ApiBody({
+    description: 'Payload for creating an assignment',
+    type: CreateAssignment,
+  })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description:
-      'Payload for adding an assignment. Include assignment details and a file upload with field "materials".',
-    schema: {
-      type: 'object',
-      properties: {
-        // NOTE: Replace with your actual CreateAssignment properties.
-        startDate: { type: 'string', format: 'date-time' },
-        endDate: { type: 'string', format: 'date-time' },
-        questions: { type: 'string' }, // Adjust as necessary (e.g., array/object)
-        materials: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-        },
-      },
-    },
-  })
-  addAssignmentToEvent(
+  addAssignment(
     @Param('eventId') eventId: string,
-    @UploadedFiles() files: { materials: any },
     @GetCurrentUserId() userId: string,
-    @Body() createAssignmentDto: CreateAssignment,
+    @Body() body: CreateAssignment,
   ) {
-    const materialUrl = files?.materials[0].location;
-    return this.eventService.addAssignmentToEvent(
-      eventId,
-      userId,
-      createAssignmentDto.startDate,
-      createAssignmentDto.endDate,
-      createAssignmentDto.questions,
-      materialUrl,
-    );
+    return this.eventService.addAssignment(eventId, userId, body);
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @UseInterceptors(multerMaterialtLogic())
-  @Patch('updateAssignment/:assignmentId')
-  @ApiOperation({ summary: 'Update an assignment' })
-  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    description:
-      'Payload for updating an assignment. Include updated assignment details and optionally a file upload with field "materials".',
-    schema: {
-      type: 'object',
-      properties: {
-        // NOTE: Replace with your actual UpdateAssignment properties.
-        startDate: { type: 'string', format: 'date-time' },
-        endDate: { type: 'string', format: 'date-time' },
-        questions: { type: 'string' },
-        materials: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-        },
-      },
-    },
+  @Patch('assignment/:assignmentId')
+  @ApiOperation({
+    summary:
+      'Update an assignment. The user must be an event creator, moderator, or presenter to update an assignment.',
   })
+  @ApiBody({
+    description: 'Payload for updating an assignment',
+    type: CreateAssignment,
+  })
+  @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
   updateAssignment(
     @Param('assignmentId') assignmentId: string,
-    @UploadedFiles() files: { materials: any },
     @GetCurrentUserId() userId: string,
-    @Body() createAssignmentDto: UpdateAssignment,
+    @Body() body: UpdateAssignmentDTO,
   ) {
-    const materialUrl = files?.materials[0].location;
-    return this.eventService.updateAssignment(
-      assignmentId,
-      userId,
-      createAssignmentDto.startDate,
-      createAssignmentDto.endDate,
-      createAssignmentDto.questions,
-      materialUrl,
-    );
+    return this.eventService.updateAssignment(assignmentId, userId, body);
   }
 
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  @Delete('deleteAssignment/:assignmentId')
-  @ApiOperation({ summary: 'Delete an assignment' })
+  @Delete('assignment/:assignmentId')
+  @ApiOperation({
+    summary:
+      'Delete an assignment. The user must be an event creator, moderator, or presenter to delete an assignment.',
+  })
   @ApiParam({ name: 'assignmentId', description: 'ID of the assignment' })
   deleteAssignment(
     @GetCurrentUserId() userId: string,
@@ -663,9 +751,9 @@ export class EventController {
   // Rating Event's endpoints
   //-----------------------------------------
 
-  @Post('ratingEvent/:eventId')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
+  @Post('ratingEvent/:eventId')
   @ApiOperation({ summary: 'Rate an event' })
   @ApiParam({ name: 'eventId', description: 'ID of the event' })
   @ApiBody({
@@ -677,8 +765,8 @@ export class EventController {
     @GetCurrentUserId() userId: string,
     @Body() ratingDto: CreateUpdateRating,
   ) {
-    const { rating } = ratingDto;
-    return this.eventService.rateEvent(userId, eventId, rating);
+    const { rating, comment } = ratingDto;
+    return this.eventService.rateEvent(userId, eventId, rating, comment);
   }
 
   @Get('ratings/:eventId')
@@ -687,11 +775,203 @@ export class EventController {
   eventRating(@Param('eventId') eventId: string) {
     return this.eventService.eventRating(eventId);
   }
+  //-----------------------------------------
+  //Invitation endpoints
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('invitation/:eventId')
+  @ApiOperation({
+    summary:
+      'Send Invitation to users in order to join or to be assigned to certain role',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for sending an invitation',
+    type: SendInvitationDTO,
+  })
+  sendInvitation(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: SendInvitationDTO,
+  ) {
+    return this.eventService.sendInvitation(
+      userId,
+      eventId,
+      body.receiverId,
+      body.invitationType,
+      body.roleType,
+    );
+  }
+
+  //-----------------------------------------
+  //Request endpoints
+  //-----------------------------------------
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('request/respond/:requestId')
+  @ApiOperation({
+    summary: 'Respond to a request',
+  })
+  @ApiParam({ name: 'requestId', description: 'ID of the request' })
+  @ApiBody({
+    description: 'Decision to accept or reject the request',
+    type: RespondRequestDto,
+  })
+  respondToRequest(
+    @Param('requestId') requestId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: RespondRequestDto,
+  ) {
+    return this.eventService.respondToRequest(userId, requestId, body.decision);
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('request/:eventId')
+  @ApiOperation({
+    summary: 'Request to join an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description:
+      'Payload for sending a request for joining an event or to be assigned to certain role',
+    type: SendRequestDTO,
+  })
+  sendRequest(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: SendRequestDTO,
+  ) {
+    return this.eventService.sendRequest(
+      userId,
+      eventId,
+      body.requestType,
+      body.roleType,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('requests/:eventId')
+  @ApiOperation({
+    summary: 'Get all requests for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  getRequests(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.getRequests(userId, eventId);
+  }
+
+  //-----------------------------------------
+  //Announcment endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Get('announcement/:eventId')
+  @ApiOperation({
+    summary: 'Get all announcements for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  getAnnouncements(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+  ) {
+    return this.eventService.getAnnouncements(userId, eventId);
+  }
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Post('announcement/:eventId')
+  @ApiOperation({
+    summary: 'Create an announcement for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for creating an announcement',
+    type: CreateAnnouncementDto,
+  })
+  sendAnnouncement(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() body: CreateAnnouncementDto,
+  ) {
+    return this.eventService.sendAnnouncement(userId, eventId, body.text);
+  }
+
+  //-----------------------------------------
+  // Event Certificate endpoint
+  //-----------------------------------------
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Get a certificate for an event. The user must an attendee to generate the certificate.',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @UseGuards(AuthGuard)
+  @Get('certificate/:eventId')
+  getCertificate(
+    @GetCurrentUserId() userId: string,
+    @Param('eventId') eventId: string,
+  ) {
+    return this.eventService.getCertificate(userId, eventId);
+  }
+
+  //-----------------------------------------
+  // Event Chat endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Patch('chat/:eventId')
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description: 'Payload for changing chat allowance',
+    type: UpdateChatAllowanceDto,
+  })
+  @ApiOperation({
+    summary:
+      'Change the chat allowance for attendees to send a chat (the default is true). The authorized user must be an event creator, moderator, or presenter.',
+  })
+  changeChatAllowance(
+    @GetCurrentUserId() userId: string,
+    @Param('eventId') eventId: string,
+    @Body() body: { isAttendeesAllowed: boolean },
+  ) {
+    return this.eventService.changeChatAllowance(
+      userId,
+      eventId,
+      body.isAttendeesAllowed,
+    );
+  }
+
+  //-----------------------------------------
+  // Event Reminder endpoint
+  //-----------------------------------------
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Put('reminder/:eventId')
+  @ApiOperation({
+    summary: 'Create/update a reminder for an event',
+  })
+  @ApiParam({ name: 'eventId', description: 'ID of the event' })
+  @ApiBody({
+    description:
+      'Payload for defining the number of offset days. To clarify, if the date is 2025/1/5 and daysOffset=2 then the reminder will be send in 2025/1/3',
+    type: CreateReminderDTO,
+  })
+  setReminder(
+    @Param('eventId') eventId: string,
+    @GetCurrentUserId() userId: string,
+    @Body() { daysOffset }: CreateReminderDTO,
+  ) {
+    return this.eventService.setEventReminder(userId, eventId, daysOffset);
+  }
 
   //-----------------------------------------
   // Deleting Event's endpoint
   //-----------------------------------------
-
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @Delete(':eventId')

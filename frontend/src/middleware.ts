@@ -1,26 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import getProfileAction from "./proxy/user/get-profile-action";
 import isInEventAction from "./proxy/user/is-in-event-action";
+import getEventAction from "./proxy/event/get-event-using-id-action";
+import { notFound } from "next/navigation";
 
-export const config = {
-    matcher: [
-        "/discover",
-        "/user/:username?",
-        "/coordinated-events/active",
-        "/coordinated-events/past",
-        "/coordinated-events/upcoming",
-        "/joined-events/active",
-        "/joined-events/past",
-        "/joined-events/upcoming",
-        "/account",
-        "/signin",
-        "/account/edit",
-        "/create-event",
-        "/event/:eventId*",
-    ],
-};
-
-const authRequiredStaticPaths = new Set([
+const authRequiredStaticPaths = [
     "/discover",
     "/coordinated-events/active",
     "/coordinated-events/past",
@@ -31,9 +15,30 @@ const authRequiredStaticPaths = new Set([
     "/account",
     "/account/edit",
     "/create-event",
-]);
+];
 
-// const authRequiredDynamicPaths = ["/user/", "/event/"];
+
+const authRequiredDynamicPaths = ["/user/", "/event/"];
+
+
+export const config = {
+    matcher: [
+        "/user/:username?",
+        "/signin",
+        "/event/:eventId*",
+        "/discover",
+        "/coordinated-events/active",
+        "/coordinated-events/past",
+        "/coordinated-events/upcoming",
+        "/joined-events/active",
+        "/joined-events/past",
+        "/joined-events/upcoming",
+        "/account",
+        "/account/edit",
+        "/create-event",
+    ],
+};
+
 
 const checkAuth = async (req: NextRequest) => {
     const token = req.cookies.get("token")?.value;
@@ -61,9 +66,10 @@ const checkAuth = async (req: NextRequest) => {
 };
 
 const isInEvent = async (req: NextRequest, eventId: string) => {
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-        return NextResponse.redirect(new URL("/signin", req.url));
+    const event = await getEventAction(eventId);
+    if (!event) {
+        console.error("Event not found:", eventId);
+        return notFound();
     }
 
     try {
@@ -91,20 +97,27 @@ const isInEvent = async (req: NextRequest, eventId: string) => {
 
 export async function middleware(req: NextRequest) {
     const pathname: string = req.nextUrl.pathname;
-
+    
     if (
-        authRequiredStaticPaths.has(pathname) ||
+        authRequiredStaticPaths.includes(pathname) ||
         pathname.startsWith("/user/")
     ) {
         return await checkAuth(req);
     }
-
+    
+   // checks if user is logged in and if he is in event
     if (pathname.startsWith("/event/")) {
         const eventId = pathname.split("/")[2];
+        const event = await getEventAction(eventId);
+        if (!event) {
+            console.error("Event not found:", eventId);
+            return NextResponse.redirect(new URL("/event-not-found", req.url));
+        }
 
+        
         if (eventId && pathname.split("/").length >= 4) {
             // Check if user is in event
-            
+
             return await isInEvent(req, eventId);
         }
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

@@ -1,11 +1,13 @@
-import TextField from "@/components/common/text-field";
-import Button from "@/components/common/button";
+import TextField from "@/components/common/text/text-field";
+import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
 import Radio from "../common/radio-group";
 import { Input } from "../common/shadcn-ui/input";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import useFormVariants from "./hooks/use-form-variants";
+import TooltipWrapper from "../common/tooltip";
+import { PencilIcon, XCircleIcon } from "lucide-react";
 
 export default function ProfileForm(props: {
     step: number;
@@ -65,13 +67,13 @@ export default function ProfileForm(props: {
                 props.step === 2 ? "active" : props.step > 2 ? "past" : "next"
             }
             variants={variants}
-            className="top-0 w-full"
+            className="w-full"
         >
             <motion.div layout>
                 <motion.div layout>
                     <h1 className="font-bold text-3xl text-center">
                         {" "}
-                        انشئ ملك الشخصي
+                        انشئ ملفك الشخصي
                     </h1>
                     <div className="grid grid-cols-2 gap-5 mt-10">
                         <TextField
@@ -89,7 +91,7 @@ export default function ProfileForm(props: {
                             error={formError.includes("LASTNAME_EMPTY")}
                         />
                     </div>
-                    <TextField placeholder="الاسم المعروض" name="displayName" />
+                    {/* <TextField placeholder="الاسم المعروض" name="displayName" /> */}
                     <div className="grid gap-3 mt-5">
                         <label className="block text-lg text-custom-gray">
                             الجنس
@@ -107,23 +109,39 @@ export default function ProfileForm(props: {
                     </motion.label>
 
                     {image ? (
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-center">
                             <motion.div
                                 layout
                                 className="w-20 aspect-square relative rounded-full overflow-hidden"
                             >
                                 <Image src={image} alt="preview" fill />
                             </motion.div>
-                            <motion.button
-                                layout
-                                className="rounded-3xl p-2"
-                                onClick={e => {
-                                    e.preventDefault();
-                                    ref.current.click();
-                                }}
-                            >
-                                تغيير الصورة
-                            </motion.button>
+                            <TooltipWrapper text="تعديل الصورة">
+                                <motion.button
+                                    layout
+                                    className="ms-5"
+                                    onClick={e => {
+                                        e.preventDefault();
+                                        ref.current.click();
+                                    }}
+                                >
+                                    <PencilIcon/>
+                                </motion.button>
+                            </TooltipWrapper>
+
+                            <TooltipWrapper text="حذف الصورة">
+                                <motion.button
+                                    layout
+                                    className=" ms-5"
+                                    onClick={e => {
+                                        e.preventDefault();
+                                        setImage("");
+                                        ref.current.value = "";
+                                    }}
+                                >
+                                    <XCircleIcon/>
+                                </motion.button>
+                            </TooltipWrapper>
                         </div>
                     ) : null}
                     <Input

@@ -16,11 +16,13 @@ export default async function isEmailUniqueAction(email: string) {
             throw new Error("EMAIL_NOT_UNIQUE");
         }
 
-        if (response.status !== 404 && !response.ok) {
-            throw new Error("ERROR");
+        if (response.status === 400) {
+            return { passed: true, error: "" };
         }
 
-        return { passed: true, error: "" };
+        throw new Error('ERROR')
+
+        
     } catch (error: any) {
         return { passed: false, error: error.message };
     }

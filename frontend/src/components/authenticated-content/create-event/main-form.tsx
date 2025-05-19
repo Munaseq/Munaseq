@@ -1,17 +1,22 @@
 import Image from "next/image";
-import puzzleIcon from "@/assets/icons/puzzle-gradient.svg";
 import CreateEventCard from "./create-event-card";
-import TextField from "@/components/common/text-field";
-import TextArea from "@/components/common/text-area";
+import TextField from "@/components/common/text/text-field";
+import TextArea from "@/components/common/text/text-area";
 import { Input } from "@/components/common/shadcn-ui/input";
 import { useState, useRef } from "react";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
+import { PuzzleIcon } from "lucide-react";
+import { motion } from "framer-motion";
+
 export default function MainForm({
     nextStepHandler,
-    step
-}: Readonly<{ nextStepHandler: () => void , step: number}>) {
+    step,
+}: Readonly<{ nextStepHandler: () => void; step: number }>) {
     const [image, setImage] = useState("");
-    const ref = useRef({} as HTMLInputElement);
+    const [isEmpty, setIsEmpty] = useState(false);
+    const imageInputRef = useRef({} as HTMLInputElement);
+    const titleInputRef = useRef({} as HTMLInputElement);
+    const descriptionInputRef = useRef({} as HTMLInputElement);
 
     const handleImageUpload = (e: any) => {
         if (e.target.files.length === 0) {
@@ -22,12 +27,20 @@ export default function MainForm({
     return (
         <CreateEventCard actual={step} goal={1}>
             <h1 className="flex items-center gap-2 font-bold text-xl">
-                <Image src={puzzleIcon} alt="puzzle icon" />
+                <PuzzleIcon className="text-custom-light-purple" size={32} />
                 المعلومات الاساسية
             </h1>
             <div className="max-w-96 w-full grid gap-5">
-                <TextField placeholder="عنوان الفعالية" name="title" />
-                <TextArea placeholder="وصف الفعالية" name="description" />
+                <TextField
+                    ref={titleInputRef}
+                    placeholder="عنوان الفعالية"
+                    name="title"
+                />
+                <TextArea
+                    ref={descriptionInputRef}
+                    placeholder="وصف الفعالية"
+                    name="description"
+                />
                 <div className="grid gap-3 ">
                     <label
                         htmlFor="image"
@@ -45,7 +58,7 @@ export default function MainForm({
                                 className="rounded-3xl p-2"
                                 onClick={e => {
                                     e.preventDefault();
-                                    ref.current.click();
+                                    imageInputRef.current.click();
                                 }}
                             >
                                 تغيير الصورة
@@ -59,14 +72,28 @@ export default function MainForm({
                         className={"cursor-pointer " + (image ? "hidden" : "")}
                         accept="image/png, image/jpeg , image/jpg"
                         onChange={handleImageUpload}
-                        ref={ref}
+                        ref={imageInputRef}
                     />
                 </div>
             </div>
+                {isEmpty && (
+                    <p  className="text-red-500 text-sm w-full text-center my-5">
+                        يجب ملئ جميع الحقول المطلوبة
+                    </p>
+                )}
             <div className="flex flex-row-reverse w-full mt-3">
                 <Button
                     onClick={e => {
                         e.preventDefault();
+                        if (
+                            imageInputRef.current.files?.length === 0 ||
+                            titleInputRef.current.value === "" ||
+                            descriptionInputRef.current.value === ""
+                        ) {
+                            setIsEmpty(true);
+                            return;
+                        }
+                        setIsEmpty(false);
                         nextStepHandler();
                     }}
                     gradient

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import Button from "../common/button";
+import Button from "../common/buttons/button";
 import Image from "next/image";
 import userIcon from "@/assets/land-assets/user-icon.svg";
 import eventIcon from "@/assets/land-assets/event-icon.svg";
@@ -39,7 +39,7 @@ export default function HeroSection() {
                     />
                     <h1 className="text-custom-black text-5xl font-bold mb-4 leading-snug">
                         ننسق{" "}
-                        <span className="bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent">
                             فعالياتك التعليمية{" "}
                         </span>
                         من الاف الى الياء
@@ -205,7 +205,7 @@ export default function HeroSection() {
                             },
                         }}
                     >
-                        <h5 className="text-2xl font-semibold tracking-tight bg-gradient-to-l from-primary to-secondary bg-clip-text text-transparent text-center mb-2">
+                        <h5 className="text-2xl font-semibold tracking-tight bg-gradient-to-l from-custom-dark-purple to-custom-light-purple bg-clip-text text-transparent text-center mb-2">
                             نسق فعالياتك بسهوله
                         </h5>
                         <Calendar />

@@ -1,4 +1,4 @@
-import calenderIcon from "@/assets/icons/calender-active.svg";
+import { CalendarDaysIcon } from "lucide-react"; 
 import GetUserEventsAction from "@/proxy/user/get-user-events-action";
 import EventsLayout from "@/components/authenticated-content/event-lists/events-layout";
 import { EventType } from "@/components/authenticated-content/event-lists/events-layout";
@@ -12,8 +12,8 @@ export default async function CoordinatedEvents({
     return (
         <EventsLayout
             eventType={EventType.COORDINATED}
-            eventString="الفعاليات القادمة"
-            eventIcon={calenderIcon}
+            eventString="الفعاليات التي نسقتها"
+            eventIcon={<CalendarDaysIcon size={32} color="#AE00FE"/>}
             eventData={eventList}
         >
             {children}

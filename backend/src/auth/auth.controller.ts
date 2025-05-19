@@ -6,10 +6,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { userSignInDto } from './dtos/user-signin.dto';
-import { userSignUpDto } from './dtos/user-signup.dto';
-import { multerUserLogic } from 'src/utils/multer.logic';
+
+import { multerUserLogic } from 'src/utils/aws.uploading';
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { userSignInDto, userSignUpDto } from './dtos';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -37,7 +37,6 @@ export class AuthController {
         firstName: { type: 'string' },
         lastName: { type: 'string' },
         username: { type: 'string' },
-        visibleName: { type: 'string' },
         gender: { type: 'string', enum: ['MALE', 'FEMALE', 'OTHER'] }, // Adjust values per your Gender enum
         categories: {
           type: 'array',
@@ -48,7 +47,15 @@ export class AuthController {
         cv: { type: 'string', format: 'binary' },
         profilePicture: { type: 'string', format: 'binary' },
       },
-      required: ['email', 'password', 'firstName', 'lastName', 'username', 'gender'],
+
+      required: [
+        'email',
+        'password',
+        'firstName',
+        'lastName',
+        'username',
+        'gender',
+      ],
     },
   })
   signUp(

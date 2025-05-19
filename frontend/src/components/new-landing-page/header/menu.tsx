@@ -8,9 +8,9 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/common/shadcn-ui/sheet";
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import Image from "next/image";
-import bars from "@/assets/icons/bars-white.svg";
+import { Menu as MenuIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -31,7 +31,7 @@ export default function Menu() {
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger className="block sm:hidden">
-                <Image src={bars} alt="menu" className="w-10 text-white" />
+                <MenuIcon  color="white" />
             </SheetTrigger>
             <SheetContent className="bg-white flex flex-col justify-center item py-20">
             <Image src={logo} alt="menu" className="" />

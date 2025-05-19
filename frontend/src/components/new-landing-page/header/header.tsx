@@ -1,4 +1,4 @@
-import Button from "@/components/common/button";
+import Button from "@/components/common/buttons/button";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/assets/logo/munaseq-logo.svg";

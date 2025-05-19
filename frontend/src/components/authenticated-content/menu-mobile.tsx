@@ -7,12 +7,12 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/common/shadcn-ui/sheet";
-import Image from "next/image";
-import bars from "@/assets/icons/bars.svg";
+import {MenuIcon} from 'lucide-react'
 import { useState, useEffect } from "react";
 import Menu from "./menu";
+import { UserDataDto } from "@/dtos/user-data.dto";
 
-export default function MenuMobile() {
+export default function MenuMobile({ profileData }: { profileData: UserDataDto }) {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
@@ -26,12 +26,12 @@ export default function MenuMobile() {
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger className="lg:hidden block">
-                <Image src={bars} alt="menu" className="w-10 min-w-10" />
+                <MenuIcon/>
             </SheetTrigger>
             <SheetContent className="max-w-[22rem] w-screen h-screen rounded-e-3xl fixed p-0 pt-10 bg-white flex">
                 <SheetTitle className="hidden">القائمة</SheetTitle>
                 <SheetDescription className="hidden">القائمة</SheetDescription>
-                <Menu mobile onLinkClick={() => setIsOpen(false)} />
+                <Menu profileData={profileData} mobile onLinkClick={() => setIsOpen(false)} />
             </SheetContent>
         </Sheet>
     );

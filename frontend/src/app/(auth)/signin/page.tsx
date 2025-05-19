@@ -5,7 +5,7 @@ import logoIcon from '@/assets/logo/logo-small-white.svg';
 import munaseq from '@/assets/logo/munaseq-text.svg';
 import fullLogo from '@/assets/logo/munaseq-logo-dark-white.svg'
 import logo from '@/assets/logo/munaseq-logo.svg';
-import TextField from '@/components/common/text-field';
+import TextField from '@/components/common/text/text-field';
 import { motion, Transition, useAnimate } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -86,6 +86,7 @@ export default function SignIn() {
     e.preventDefault();
     setIsLoading(true);
     if (!checkEmailNotEmpty() || !checkPasswordNotEmpty()) {
+      setIsLoading(false);
       return;
     }
     const form = e.target as HTMLFormElement;
@@ -107,7 +108,7 @@ export default function SignIn() {
         className="bg-white w-[min(900px,90vw)] md:min-h-[600px] shadow-2xl rounded-[50px] md:p-14 p-8 overflow-hidden grid"
       >
         <div className="flex md:flex-row flex-col h-full relative ">
-          <Link className="md:hidden bg-gradient-to-br from-primary to-secondary w-full grid place-items-center rounded-3xl py-12" href={'/'}>
+          <Link className="md:hidden bg-gradient-to-br to-custom-dark-purple from-custom-light-purple w-full grid place-items-center rounded-3xl py-12" href={'/'}>
             <div className="md:hidden grid">
               <Image src={fullLogo} priority alt="logo" />
             </div>
@@ -161,14 +162,14 @@ export default function SignIn() {
               ليس لديك حساب؟{' '}
               <span
                 onClick={transitionToSignUpHandler}
-                className="text-primary text-nowrap cursor-pointer"
+                className="text-custom-light-purple text-nowrap cursor-pointer"
               >
                 أنشئ حسابك الآن!
               </span>
             </motion.p>
           </motion.div>
           <Link className="w-full h-full md:block hidden" href={'/'}>
-            <div className="w-full h-full rounded-[50px] bg-gradient-to-br from-primary to-secondary overflow-hidden items-center flex flex-col justify-center gap-14  ">
+            <div className="w-full h-full rounded-[50px] bg-gradient-to-br to-custom-dark-purple from-custom-light-purple overflow-hidden items-center flex flex-col justify-center gap-14  ">
               <Image src={logoIcon} className="w-32" alt="logo" />
               <Image src={munaseq} className="w-48" alt="munaseq" />
             </div>

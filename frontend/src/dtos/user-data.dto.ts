@@ -1,3 +1,5 @@
+import { Category } from "@/util/categories";
+
 export interface UserDataDto {
   id: string;
   firstName: string;
@@ -12,8 +14,9 @@ export interface UserDataDto {
     xLink?: string;
     linkedinLink?: string;
   };
-  categories: string[];
+  categories: Category[];
   description?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  rating?: number;
 }

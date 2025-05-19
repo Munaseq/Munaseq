@@ -22,6 +22,7 @@ const isInEventAction = async (eventId: string, username: string) => {
             presenters: UserDataDto[];
             moderators: UserDataDto[];
         } = await eventAttendeesReq.json();
+        
 
         return (
             eventAttendees.eventCreator.username === username ||
@@ -33,6 +34,7 @@ const isInEventAction = async (eventId: string, username: string) => {
             ) ||
             eventAttendees.moderators.some(user => user.username === username)
         );
+        
     } catch (error) {
         return false;
     }

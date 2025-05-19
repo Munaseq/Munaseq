@@ -1,4 +1,4 @@
-import Button from '../common/button';
+import Button from '../common/buttons/button';
 import LogoLoading from '../common/logo-loading';
 
 export default function SubmitButton({ children, isLoading }: { children: any, isLoading: boolean }) {

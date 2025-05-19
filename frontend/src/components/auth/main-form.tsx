@@ -1,5 +1,5 @@
-import TextField from "@/components/common/text-field";
-import Button from "@/components/common/button";
+import TextField from "@/components/common/text/text-field";
+import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
 import { useRef, useState } from "react";
 import LogoLoading from "../common/logo-loading";
@@ -21,7 +21,7 @@ export default function mainForm(props: {
 
     const variants: Variants = useFormVariants()
     const isEmailCorrect: () => boolean = () => {
-        const re = /\S+@\S+\.\S+/;
+        const re = /\S{2,}@\S{2,}\.\S{2,}/;
         if (!re.test(emailRef.current.value)) {
             if (!formError.includes("EMAIL_INVALID")) {
                 setFormError(prev => [...prev, "EMAIL_INVALID"]);
@@ -248,7 +248,7 @@ export default function mainForm(props: {
                                 لديك حساب؟{" "}
                                 <span
                                     onClick={props.transitionToSignUpHandler}
-                                    className="text-primary text-nowrap cursor-pointer"
+                                    className="text-custom-light-purple text-nowrap cursor-pointer"
                                 >
                                     سجل دخولك الآن!
                                 </span>
