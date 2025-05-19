@@ -33,11 +33,7 @@ ehthumbs.db
 # Coverage directory for testing
 coverage/
 
-# Build directories and compiled files
-dist/
-build/
-*.out
-*.tsbuildinfo
+
 
 # Environment variable files
 .env
