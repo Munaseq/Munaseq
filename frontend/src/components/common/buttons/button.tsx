@@ -40,6 +40,7 @@ export default function Button(props: {
 
     return (
         <button
+        disabled={props.disabled}
             onClick={props.onClick}
             className={
                 "px-4 h-10 bg-[length:120%] hover:bg-right transition-all bg-black hover:bg-[#222222] hover:text-white rounded-full text-white font-semibold grid place-items-center text-nowrap  " +
