@@ -33,7 +33,7 @@ export default function Menu({
             </div>
             <div className=" grid place-items-center w-full py-5">
                 <RolesProvider>
-                    <CreateEventDialog />
+                    <CreateEventDialog onCreateButtonClick={onLinkClick} />
                 </RolesProvider>
             </div>
         </div>

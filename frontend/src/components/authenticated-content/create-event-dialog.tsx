@@ -42,7 +42,7 @@ import LinkUserModal from "./create-event/link-user-modal";
 import { UserDataDto } from "@/dtos/user-data.dto";
 import { useRolesContext } from "@/store/roles-context";
 
-export default function CreateEventDialog() {
+export default function CreateEventDialog({ onCreateButtonClick }: any) {
     const [isOpen, setIsOpen] = useState(false);
     const [isCreatingUsingAI, setIsCreatingUsingAI] = useState(false);
     const [error, setError] = useState("");
@@ -131,7 +131,6 @@ export default function CreateEventDialog() {
         setEndDateVal(endDate);
         setIsLoading(false);
         setImageFile(null);
-        
     };
 
     const removeUser = (user: UserDataDto) => {
@@ -220,7 +219,10 @@ export default function CreateEventDialog() {
                                 </div>
                             </div>
                         </motion.div>
-                        <Link href="/create-event">
+                        <Link
+                            onClick={onCreateButtonClick}
+                            href="/create-event"
+                        >
                             <motion.div
                                 whileHover={{
                                     scale: 1.05,
