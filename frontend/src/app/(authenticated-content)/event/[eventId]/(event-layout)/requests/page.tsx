@@ -6,11 +6,6 @@ import { CircleUserRoundIcon, MailIcon } from "lucide-react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
-export enum EventRequestType {
-    ROLE_REQUEST = "ROLE_REQUEST",
-    EVENT_REQUEST = "EVENT_REQUEST",
-}
-
 enum RequestRole {
     PRESENTER = "PRESENTER",
     MODERATOR = "MODERATOR",
