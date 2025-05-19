@@ -2842,6 +2842,7 @@ let EventService = class EventService {
         const event = await this.prisma.event.findUnique({
             where: { id: eventId },
             select: {
+                id: true,
                 startDateTime: true,
                 title: true,
                 eventCreator: { select: { id: true, email: true } },
@@ -2884,7 +2885,7 @@ let EventService = class EventService {
                     year: 'numeric',
                     month: 'numeric',
                     day: 'numeric',
-                }), event.title, user.email, event.eventCreator.email);
+                }), event.title, event.id, user.email, event.eventCreator.email);
                 return {
                     message: 'The reminder was set successfully!',
                 };

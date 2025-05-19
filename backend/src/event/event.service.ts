@@ -3745,6 +3745,7 @@ export class EventService {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
       select: {
+        id: true,
         startDateTime: true,
         title: true,
         eventCreator: { select: { id: true, email: true } },
@@ -3805,6 +3806,7 @@ export class EventService {
             day: 'numeric',
           }),
           event.title,
+          event.id,
           user.email,
           event.eventCreator.email,
         );

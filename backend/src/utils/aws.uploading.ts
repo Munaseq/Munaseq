@@ -153,6 +153,7 @@ export async function sendEmailSendGrid(
   firstName: string,
   startEventDate: string,
   eventTitle: string,
+  eventId: string,
   userEmail: string,
   eventCreatorEmail: string,
 ): Promise<string> {
@@ -169,7 +170,7 @@ export async function sendEmailSendGrid(
               },
             ],
             dynamicTemplateData: {
-              munaseqWebsite: 'https://munaseq.vercel.app/',
+              munaseqWebsite: `https://munaseq.vercel.app/event/${eventId}`,
               eventTitle,
               firstName,
               startEventDate,

@@ -20,7 +20,6 @@ export class ReminderService {
     nextDate.setUTCDate(currentDate.getUTCDate() + 1); // Add one day
     nextDate.setUTCHours(0, 0, 0, 0); // Normalize to midnight UTC
 
-
     // Step 2: Retrieve all reminders where the reminderDate matches the current date
     const reminders = await this.prisma.reminder.findMany({
       where: {
@@ -38,6 +37,7 @@ export class ReminderService {
         },
         Event: {
           select: {
+            id: true,
             title: true,
             startDateTime: true,
             eventCreator: { select: { email: true } },
@@ -62,6 +62,7 @@ export class ReminderService {
         firstName,
         startDate,
         eventTitle,
+        reminder.Event.id,
         userEmail,
         eventCreatorEmail,
       );

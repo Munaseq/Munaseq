@@ -122,7 +122,7 @@ function uploadCertificate(pdfBytes, certifId) {
         });
     });
 }
-async function sendEmailSendGrid(firstName, startEventDate, eventTitle, userEmail, eventCreatorEmail) {
+async function sendEmailSendGrid(firstName, startEventDate, eventTitle, eventId, userEmail, eventCreatorEmail) {
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     return new Promise((resolve, reject) => {
         sgMail
@@ -135,7 +135,7 @@ async function sendEmailSendGrid(firstName, startEventDate, eventTitle, userEmai
                         },
                     ],
                     dynamicTemplateData: {
-                        munaseqWebsite: 'https://munaseq.vercel.app/',
+                        munaseqWebsite: `https://munaseq.vercel.app/event/${eventId}`,
                         eventTitle,
                         firstName,
                         startEventDate,

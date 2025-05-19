@@ -42,6 +42,7 @@ let ReminderService = ReminderService_1 = class ReminderService {
                 },
                 Event: {
                     select: {
+                        id: true,
                         title: true,
                         startDateTime: true,
                         eventCreator: { select: { email: true } },
@@ -59,7 +60,7 @@ let ReminderService = ReminderService_1 = class ReminderService {
                 day: 'numeric',
             });
             const eventCreatorEmail = reminder.Event.eventCreator.email;
-            await (0, aws_uploading_1.sendEmailSendGrid)(firstName, startDate, eventTitle, userEmail, eventCreatorEmail);
+            await (0, aws_uploading_1.sendEmailSendGrid)(firstName, startDate, eventTitle, reminder.Event.id, userEmail, eventCreatorEmail);
         });
     }
 };
