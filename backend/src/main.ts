@@ -2,10 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
+import * as dotenv from 'dotenv';
 
 async function bootstrap() {
-  const PORT = 3002;
+  dotenv.config();
+
+  const PORT = parseInt(process.env.PORT || '3000', 10);
   console.log(
     'To open swagger navigate to: http://localhost:' +
       PORT +
@@ -14,7 +16,6 @@ async function bootstrap() {
       '\n',
   );
 
-
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,7 +23,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-
 
   const config = new DocumentBuilder()
     .setTitle('API')
@@ -35,6 +35,6 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
 
-  await app.listen(PORT);
+  await app.listen(PORT || 3000, '0.0.0.0');
 }
 bootstrap();

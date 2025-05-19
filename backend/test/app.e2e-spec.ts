@@ -44,7 +44,7 @@ describe('App e2e ', () => {
         username: 'krcherheadx',
         categories: ['الدراسات الاسلامية', 'البرمجة', 'التكنولوجيا'],
         description: 'SWE student',
-        visibleName: 'Krcher',
+
         socialAccounts: {
           twiiter: 'https://x.com/X',
           linkedin: 'https://www.linkedin.com/in/hisham-alsuhaibani-649a8a238/',
@@ -135,7 +135,7 @@ describe('App e2e ', () => {
             gender: body.gender,
             username: body.username,
             description: body.description,
-            visibleName: body.visibleName,
+
             socialAccounts: JSON.stringify(body.socialAccounts),
           });
         const categories = [...body.categories];
@@ -220,7 +220,6 @@ describe('App e2e ', () => {
         location: 'Riyadh',
         startDateTime: new Date(),
         endDateTime: new Date(),
-        price: 0,
       };
 
       it('the event shall be created and related to the creator user', () => {
@@ -235,7 +234,7 @@ describe('App e2e ', () => {
             gender: body.gender,
             categories: body.categories,
             location: body.location,
-            price: body.price,
+
             seatCapacity: body.seatCapacity,
           })
           .withBearerToken(token)
@@ -260,7 +259,6 @@ describe('App e2e ', () => {
     });
     describe('Patch update event', () => {
       const body: UpdateEventDto = {
-        price: 100,
         description: 'Needs a great team like Munaseq Team !',
       };
       it('update the event details', () => {
