@@ -20,7 +20,7 @@ export default function MemberCard({
     cv: string;
 }) {
     return (
-        <div className="w-96 shadow-custom rounded-2xl grid place-items-center py-10">
+        <div className="w-full shadow-custom rounded-2xl grid place-items-center py-10">
             <div className="flex flex-col items-center justify-center relative text-center z-10">
                 <Image src={image} alt="user icon" className="w-28" />
                 <div className="pt-5 px-5 flex flex-col relative">
