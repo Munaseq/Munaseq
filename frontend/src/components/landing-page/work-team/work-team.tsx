@@ -27,9 +27,9 @@ export default function WorkTeam() {
                 whileInView={"afterSlide"}
                 viewport={{ margin: "-100px 0px", once: true }}
                 transition={{ staggerChildren: 0.1, delayChildren: 0.4 }}
-                className="flex flex-row flex-wrap justify-center items-center gap-20 mb-10 px-5"
+                className="flex flex-row flex-wrap justify-center items-center gap-20 mb-10 px-5 w-full"
             >
-                <motion.div variants={variants}>
+                <motion.div className="max-w-96 w-full" variants={variants}>
                     <MemberCard
                         linkedin="https://www.linkedin.com/in/hussam-alqannam-9ab206299/"
                         image={hussam}
@@ -38,7 +38,7 @@ export default function WorkTeam() {
                         role="مطور واجهات امامية"
                     />
                 </motion.div>
-                <motion.div variants={variants}>
+                <motion.div className="max-w-96 w-full" variants={variants}>
                     <MemberCard
                         linkedin="https://www.linkedin.com/in/mohammed-al-mahmud-413371347/"
                         image={mahmoud}
@@ -47,7 +47,7 @@ export default function WorkTeam() {
                         role="مطور واجهات امامية"
                     />
                 </motion.div>
-                <motion.div variants={variants}>
+                <motion.div className="max-w-96 w-full" variants={variants}>
                     <MemberCard
                         linkedin="https://www.linkedin.com/in/hisham-alsuhaibani-649a8a238/"
                         image={hisham}
@@ -56,7 +56,7 @@ export default function WorkTeam() {
                         role="مطور واجهات خلفية"
                     />
                 </motion.div>
-                <motion.div variants={variants}>
+                <motion.div className="max-w-96 w-full" variants={variants}>
                     <MemberCard
                         linkedin="https://www.linkedin.com/in/mohammed-alfadl/"
                         image={fadl}
