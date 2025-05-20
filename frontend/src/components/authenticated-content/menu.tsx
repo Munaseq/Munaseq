@@ -25,23 +25,15 @@ export default function Menu({
             }
         >
             <MenuProfile onLinkClick={onLinkClick} profileData={profileData} />
-            <div className="!overflow-y-auto flex-1 h-min">
+            <div className="!overflow-y-auto lg:flex-1 flex-none h-min">
                 <Nav
                     onLinkClick={onLinkClick}
                     username={profileData?.username}
                 />
             </div>
-            <div className=" grid place-items-center w-full p-10">
-                {/* <Link
-                        onClick={onLinkClick}
-                        href="/create-event"
-                        className="bg-custom-gradient  px-6 py-4 text-white  text-xl flex justify-center items-center gap-3 bg-[length:120%] hover:bg-right transition-all rounded-full font-semibold text-nowrap "
-                    >
-                        نسق فعاليتك{" "}
-                        <PlusCircleIcon/>
-                    </Link> */}
+            <div className=" grid place-items-center w-full py-5">
                 <RolesProvider>
-                    <CreateEventDialog />
+                    <CreateEventDialog onCreateButtonClick={onLinkClick} />
                 </RolesProvider>
             </div>
         </div>

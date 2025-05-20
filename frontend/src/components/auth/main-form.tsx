@@ -1,7 +1,7 @@
 import TextField from "@/components/common/text/text-field";
 import Button from "@/components/common/buttons/button";
 import { motion, Variants } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import LogoLoading from "../common/logo-loading";
 import isEmailUniqueAction from "@/proxy/user/is-email-unique-action";
 import isUsernameUniqueAction from "@/proxy/user/is-username-unique-action";
@@ -9,7 +9,7 @@ import useFormVariants from "./hooks/use-form-variants";
 
 export default function mainForm(props: {
     step: number;
-    transitionToSignUpHandler: () => void
+    transitionToSignUpHandler: () => void;
     nextStepHandler: (e: MouseEvent) => void;
 }) {
     const emailRef = useRef({} as HTMLInputElement);
@@ -18,8 +18,19 @@ export default function mainForm(props: {
     const confirmPasswordRef = useRef({} as HTMLInputElement);
     const [formError, setFormError] = useState([] as string[]);
     const [isLoading, setIsLoading] = useState(false);
+    const [didSend, setDidSend] = useState(false);
 
-    const variants: Variants = useFormVariants()
+    useEffect(() => {
+        if (props.step > 1) {
+            setFormError([]);
+            setDidSend(true);
+        }
+        if (props.step === 1) {
+            setDidSend(false);
+        }
+    }, [props.step]);
+
+    const variants: Variants = useFormVariants();
     const isEmailCorrect: () => boolean = () => {
         const re = /\S{2,}@\S{2,}\.\S{2,}/;
         if (!re.test(emailRef.current.value)) {
@@ -52,7 +63,9 @@ export default function mainForm(props: {
             setIsLoading(false);
             return false;
         }
-        setFormError(prev => prev.filter(e => e !== 'EMAIL_NOT_UNIQUE' && e !== 'ERROR'));
+        setFormError(prev =>
+            prev.filter(e => e !== "EMAIL_NOT_UNIQUE" && e !== "ERROR")
+        );
         setIsLoading(false);
         return true;
     };
@@ -65,7 +78,9 @@ export default function mainForm(props: {
             setIsLoading(false);
             return false;
         }
-        setFormError(prev => prev.filter(e => e !== 'USERNAME_NOT_UNIQUE' && e !== 'ERROR'));
+        setFormError(prev =>
+            prev.filter(e => e !== "USERNAME_NOT_UNIQUE" && e !== "ERROR")
+        );
         setIsLoading(false);
         return true;
     };
@@ -104,6 +119,7 @@ export default function mainForm(props: {
     };
 
     const validateInputs = async () => {
+        setDidSend(true);
         if (
             isEmailNotEmpty() &&
             isUsernameNotEmpty() &&
@@ -113,9 +129,11 @@ export default function mainForm(props: {
             (await isEmailUnique()) &&
             (await isUsernameUnique())
         ) {
+            
             setFormError([]);
             return true;
         }
+        setDidSend(false);
         return false;
     };
 
@@ -225,13 +243,16 @@ export default function mainForm(props: {
                     layout
                     className="mt-5 h-10 grid place-items-center"
                 >
-                    {!isLoading ? (
+                    {!isLoading && !didSend ? (
                         <Button
                             disabled={props.step > 1}
                             onClick={async e => {
                                 e.preventDefault();
                                 if (await validateInputs()) {
-                                    props.nextStepHandler(e);
+                                    // create fake delay
+                                    setTimeout(() => {
+                                        props.nextStepHandler(e);
+                                    }, 1000);
                                 }
                             }}
                             className="shadow-xl min-w-full"
@@ -245,14 +266,14 @@ export default function mainForm(props: {
                     )}
                 </motion.div>
                 <motion.p layout className="mt-5 text-[#949494] text-center">
-                                لديك حساب؟{" "}
-                                <span
-                                    onClick={props.transitionToSignUpHandler}
-                                    className="text-custom-light-purple text-nowrap cursor-pointer"
-                                >
-                                    سجل دخولك الآن!
-                                </span>
-                            </motion.p>
+                    لديك حساب؟{" "}
+                    <span
+                        onClick={props.transitionToSignUpHandler}
+                        className="text-custom-light-purple text-nowrap cursor-pointer"
+                    >
+                        سجل دخولك الآن!
+                    </span>
+                </motion.p>
             </motion.div>
         </motion.div>
     );
