@@ -4,6 +4,9 @@ import logo from "@/assets/logo/munaseq-logo-white.svg";
 import Image from "next/image";
 
 export default function Footer() {
+    // Get the current year dynamically
+    const currentYear = new Date().getFullYear();
+    
     return (
         <footer className="pt-10 overflow-hidden relative">
             <Image
@@ -15,7 +18,7 @@ export default function Footer() {
             <div className="bg-gradient-to-r to-[#AE00FE] from-[#652BB7] w-screen grid place-items-center z-10 relative py-10 gap-10">
                 <Image className="w-40" src={logo} alt="Icon" />
                 <p className="text-white">
-                    جميع الحقوق محفوظة منصة منسق 2024 ©
+                    جميع الحقوق محفوظة منصة منسق {currentYear} ©
                 </p>
             </div>
         </footer>
