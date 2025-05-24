@@ -12,6 +12,7 @@ export default async function SearchEventPage({
 }){
   
   const itemsPerPage = 9;
+  const decodedTitle = decodeURIComponent(params.title);
 
   if (!params.title) {
     return (
@@ -26,11 +27,12 @@ export default async function SearchEventPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6 text-center"></h1>
-      <Title>
-        <SearchIcon size={32} color="var(--custom-light-purple)" />
-        نتائج البحث عن "{params.title}"
-      </Title>
+      <div className="grid items-center grid-cols-[min-content_1fr] mt-10 gap-4 w-full">
+                <SearchIcon size={32} color="var(--custom-light-purple)" />
+                <h1 className="font-bold sm:text-4xl text-2xl relative overflow-hidden py-2 w-full text-ellipsis">
+                    نتائج البحث عن "{decodedTitle}"
+                </h1>
+            </div>
       <Suspense
         fallback={
           <div className="grid place-items-center mt-4">
@@ -38,7 +40,7 @@ export default async function SearchEventPage({
           </div>
         }
       >
-        <SearchFetcher searchType={SearchType.TITLE}  searchTerm={params.title} itemsPerPage={itemsPerPage} />
+        <SearchFetcher searchType={SearchType.TITLE}  searchTerm={decodedTitle} itemsPerPage={itemsPerPage} />
       </Suspense>
     </div>
   );

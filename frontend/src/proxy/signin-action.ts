@@ -19,8 +19,7 @@ export async function signinAction(formData: FormData) {
     });
 
 
-
-    if (response.status === 404 || response.status === 401) {
+    if (response.status === 404 || response.status === 401 || response.status === 400) {
       throw new Error('AUTHENTICATION_FAILED');
     }
 
