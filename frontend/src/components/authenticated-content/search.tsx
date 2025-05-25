@@ -143,7 +143,10 @@ const SearchComponent = () => {
                     className="w-full lg:mx-auto bg-white rounded-full shadow-md flex items-center p-3"
                 >
                     {searchType === SearchType.CATEGORY ? (
-                        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                        <Dialog
+                            open={isModalOpen}
+                            onOpenChange={setIsModalOpen}
+                        >
                             <DialogTrigger className="!w-full !flex-1">
                                 <div className=" text-gray-500 text-start flex justify-between gap-5">
                                     ادخل فئة الفعالية
@@ -168,7 +171,9 @@ const SearchComponent = () => {
                                                 onClick={() => {
                                                     setIsModalOpen(false);
                                                     router.push(
-                                                        `/search/category/${convertCategoryArToEng(category)}`
+                                                        `/search/category/${convertCategoryArToEng(
+                                                            category
+                                                        )}`
                                                     );
                                                 }}
                                             >
@@ -201,7 +206,7 @@ const SearchComponent = () => {
                         />
                     )}
                     <SearchTypeDialog onChangeType={handleChangeType} />
-                    <Button gradient className="px-5 h-8">
+                    <Button gradient className="px-5 h-8 hidden lg:block">
                         بحث
                     </Button>
                 </form>
@@ -403,7 +408,10 @@ const SearchComponent = () => {
                                         href={`/user/${profileData.username}`}
                                         className="cursor-pointer hover:bg-[hsl(0,0,90)] flex gap-2 w-full p-3"
                                         key={index}
-                                        onClick={() => setSearchTerm("")}
+                                        onClick={() => {
+                                            setSearchTerm("");
+                                            setIsFocused(false);
+                                        }}
                                     >
                                         <div className="flex  gap-3 items-center">
                                             <div className="w-20 h-20 relative rounded-full overflow-hidden">

@@ -22,7 +22,7 @@ export default function SearchTypeDialog({
     const [open, setOpen] = useState(false);
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger className="mx-3">
+            <DialogTrigger className="mx-3 ">
                 <SlidersHorizontalIcon size={32} />
             </DialogTrigger>
             <DialogContent className="bg-white">
